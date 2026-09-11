@@ -1,10 +1,11 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { LucideBaby, LucideEar, LucideEye, LucideVenus } from '@lucide/angular';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
