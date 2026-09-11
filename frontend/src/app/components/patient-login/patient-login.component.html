@@ -82,10 +82,24 @@
         Unesite podatke kako biste pristupili Vašem nalogu.
       </p>
 
-      <form class="fields" autocomplete="on">
+      <form [formGroup]="loginForm" class="fields" autocomplete="on">
         <label class="field">
           <span>Email</span>
-          <input type="email" name="email" autocomplete="email" placeholder="ime.prezime@email.com">
+          <input
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="ime.prezime@email.com"
+            [class.field-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+          >
+          @if (loginForm.get('email')?.touched && loginForm.get('email')?.invalid) {
+            @if (loginForm.get('email')?.errors?.['required']) {
+              <p class="error-message">Email adresa je obavezna.</p>
+            }
+            @if (loginForm.get('email')?.errors?.['email']) {
+              <p class="error-message">Unesite ispravnu email adresu.</p>
+            }
+          }
         </label>
 
         <label class="field">
@@ -93,9 +107,10 @@
           <span class="password-wrap">
             <input
               [type]="passwordVisible ? 'text' : 'password'"
-              name="password"
+              formControlName="password"
               autocomplete="current-password"
               placeholder="Unesite lozinku"
+              [class.field-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
             >
             <button
               class="password-toggle"
@@ -119,6 +134,11 @@
               }
             </button>
           </span>
+          @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+            @if (loginForm.get('password')?.errors?.['required']) {
+              <p class="error-message">Lozinka je obavezna.</p>
+            }
+          }
         </label>
 
         <div class="field-row">
