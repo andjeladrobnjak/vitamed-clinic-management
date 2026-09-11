@@ -1,0 +1,506 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f5f3ee;
+}
+
+.register-page {
+  --petrol: #17343a;
+  --petrol-soft: #23454c;
+  --ivory: #f5f3ee;
+  --burgundy: #7a3f46;
+  --stone: #d9d6cf;
+  --muted: #5c6564;
+  --sans: "Source Sans 3", "Segoe UI", sans-serif;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  min-height: 100vh;
+  color: var(--petrol);
+  font-family: var(--sans);
+  font-size: 1.04rem;
+  line-height: 1.65;
+}
+
+.register-page *,
+.register-page *::before,
+.register-page *::after {
+  box-sizing: border-box;
+}
+
+.register-brand {
+  position: relative;
+  overflow: hidden;
+  color: var(--ivory);
+  background: var(--petrol);
+}
+
+.register-brand-photo,
+.register-brand-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.register-brand-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 82% 28%;
+}
+
+.register-brand-overlay {
+  background:
+    linear-gradient(180deg, rgba(23, 52, 58, 0.28) 0%, rgba(23, 52, 58, 0.08) 42%, rgba(23, 52, 58, 0.55) 100%),
+    linear-gradient(90deg, #17343a 0%, #17343a 18%, rgba(23, 52, 58, 0.94) 36%, rgba(23, 52, 58, 0.62) 58%, rgba(23, 52, 58, 0.22) 82%, rgba(23, 52, 58, 0.12) 100%);
+}
+
+.register-brand-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 100vh;
+  padding: 2.4rem 3rem 1.8rem;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.22rem;
+  width: fit-content;
+  color: var(--ivory);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.logo-mark {
+  display: flex;
+  align-items: baseline;
+}
+
+.logo-vita,
+.logo-med {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.35rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.logo-med {
+  font-style: italic;
+  margin-left: -0.04em;
+}
+
+.logo-tagline {
+  display: flex;
+  justify-content: center;
+  gap: 0.5em;
+  width: 100%;
+  font-size: 0.48rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b7c4b9;
+}
+
+.register-brand-copy {
+  max-width: 22.5rem;
+  padding: 1.2rem 0 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.55rem;
+  color: var(--burgundy);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.register-brand .eyebrow {
+  color: #c9b4b6;
+}
+
+.brand-line {
+  margin: 0 0 0.95rem;
+  font-family: var(--sans);
+  font-size: clamp(1.7rem, 2.6vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.16;
+}
+
+.brand-note {
+  margin: 0 0 1.6rem;
+  max-width: 21rem;
+  color: #c9d0ce;
+  font-size: 0.94rem;
+}
+
+.brand-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brand-benefits li {
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.brand-benefits svg {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.12rem;
+  fill: none;
+  stroke: #c9b4b6;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-benefits strong {
+  display: block;
+  margin-bottom: 0.12rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.brand-benefits span {
+  color: #b7c4b9;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.brand-footer {
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(245, 243, 238, 0.16);
+  color: #b7c4b9;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.register-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4.4rem 5vw 2.6rem;
+  background: var(--ivory);
+  overflow: hidden;
+}
+
+.register-panel::after {
+  content: "";
+  position: absolute;
+  right: -4rem;
+  bottom: -3.5rem;
+  width: 16rem;
+  height: 16rem;
+  border: 1px solid rgba(23, 52, 58, 0.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.home-return {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: color 0.2s ease;
+}
+
+.home-return svg {
+  display: block;
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home-return:hover {
+  color: var(--petrol);
+}
+
+.register-form {
+  position: relative;
+  z-index: 1;
+  width: min(34.5rem, 100%);
+}
+
+.register-form h1 {
+  margin: 0 0 0.45rem;
+  font-family: var(--sans);
+  font-size: clamp(1.65rem, 2.4vw, 2.05rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+}
+
+.lead {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.78rem;
+}
+
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.field > span {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.68rem 0.85rem;
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--petrol);
+  font-family: inherit;
+  font-size: 0.98rem;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.field input::placeholder {
+  color: #8a9391;
+}
+
+.field input:focus {
+  border-color: var(--petrol);
+  background: #fff;
+}
+
+.password-wrap {
+  position: relative;
+  display: block;
+}
+
+.password-wrap input {
+  padding-right: 2.6rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle svg {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.password-toggle:hover {
+  color: var(--petrol);
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin: 0.15rem 0 0.1rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.consent input {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 0.18rem;
+  flex-shrink: 0;
+  accent-color: var(--petrol);
+}
+
+.consent a {
+  color: var(--petrol);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--burgundy);
+}
+
+.consent a:hover {
+  color: var(--burgundy);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.82rem 1.3rem;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--petrol);
+  color: var(--ivory);
+}
+
+.btn-primary:hover {
+  background: var(--petrol-soft);
+}
+
+.login-note {
+  margin: 1.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.login-note a {
+  color: var(--petrol);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid var(--burgundy);
+}
+
+.login-note a:hover {
+  color: var(--burgundy);
+}
+
+.security-note {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 1.05rem 0 0;
+  color: #8a9391;
+  font-size: 0.78rem;
+}
+
+.security-note svg {
+  display: block;
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 1100px) {
+  .register-brand-inner {
+    padding: 2rem 2.1rem 1.5rem;
+  }
+
+  .brand-line {
+    font-size: 1.7rem;
+  }
+}
+
+@media (max-width: 980px) {
+  .register-page {
+    grid-template-columns: 1fr;
+  }
+
+  .register-brand {
+    min-height: 0;
+  }
+
+  .register-brand-photo,
+  .register-brand-copy,
+  .brand-footer {
+    display: none;
+  }
+
+  .register-brand-inner {
+    min-height: 0;
+    padding: 1.15rem 1.5rem;
+  }
+
+  .logo-vita,
+  .logo-med {
+    font-size: 2rem;
+  }
+
+  .register-panel {
+    padding: 4.6rem 1.5rem 3.2rem;
+    justify-content: flex-start;
+  }
+
+  .home-return {
+    top: 1.2rem;
+    right: 1.2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .field-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .register-form h1 {
+    font-size: 1.6rem;
+  }
+}

@@ -1,0 +1,199 @@
+<div class="register-page">
+  <aside class="register-brand">
+    <div class="register-brand-photo" aria-hidden="true">
+      <img src="/images/vitamed-patient-login-doctor.jpg" alt="">
+      <div class="register-brand-overlay"></div>
+    </div>
+
+    <div class="register-brand-inner">
+      <a class="logo" routerLink="/" aria-label="VitaMed, privatna klinika">
+        <span class="logo-mark">
+          <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+        </span>
+        <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+      </a>
+
+      <div class="register-brand-copy">
+        <p class="eyebrow">Siguran pristup</p>
+        <p class="brand-line">Vaše zdravlje,<br>naša stručnost</p>
+        <p class="brand-note">
+          Prijavite se kako biste pregledali termine, nalaze
+          i komunikaciju sa Vašim lekarom.
+        </p>
+
+        <ul class="brand-benefits">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M8 2v4"></path>
+              <path d="M16 2v4"></path>
+              <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+              <path d="M3 10h18"></path>
+            </svg>
+            <span>
+              <strong>Upravljanje terminima</strong>
+              Jednostavno zakazivanje i pregled termina
+            </span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+              <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+              <path d="M10 9H8"></path>
+              <path d="M16 13H8"></path>
+              <path d="M16 17H8"></path>
+            </svg>
+            <span>
+              <strong>Vaši nalazi</strong>
+              Siguran pristup medicinskoj dokumentaciji
+            </span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>
+              <strong>Direktna komunikacija</strong>
+              Brža i jednostavnija komunikacija sa lekarom
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <p class="brand-footer">Briga · Poverenje · Zdravlje</p>
+    </div>
+  </aside>
+
+  <main class="register-panel">
+    <a class="home-return" routerLink="/">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="m12 19-7-7 7-7"></path>
+        <path d="M19 12H5"></path>
+      </svg>
+      Nazad na početnu
+    </a>
+
+    <div class="register-form">
+      <p class="eyebrow">Portal za pacijente</p>
+      <h1>Kreirajte svoj nalog</h1>
+      <p class="lead">
+        Unesite Vaše podatke kako biste kreirali VitaMed nalog.
+      </p>
+
+      <form class="fields" autocomplete="on">
+        <div class="field-pair">
+          <label class="field">
+            <span>Ime</span>
+            <input type="text" name="firstName" autocomplete="given-name" placeholder="Ana">
+          </label>
+          <label class="field">
+            <span>Prezime</span>
+            <input type="text" name="lastName" autocomplete="family-name" placeholder="Petrović">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>JMBG</span>
+          <input type="text" name="jmbg" inputmode="numeric" maxlength="13" placeholder="Unesite 13 cifara">
+        </label>
+
+        <div class="field-pair">
+          <label class="field">
+            <span>Email adresa</span>
+            <input type="email" name="email" autocomplete="email" placeholder="ime.prezime@email.com">
+          </label>
+          <label class="field">
+            <span>Broj telefona</span>
+            <input type="tel" name="phone" autocomplete="tel" placeholder="+381 60 000 0000">
+          </label>
+        </div>
+
+        <div class="field-pair">
+          <label class="field">
+            <span>Lozinka</span>
+            <span class="password-wrap">
+              <input
+                [type]="passwordVisible ? 'text' : 'password'"
+                name="password"
+                autocomplete="new-password"
+                placeholder="Kreirajte lozinku"
+              >
+              <button
+                class="password-toggle"
+                type="button"
+                (click)="togglePassword()"
+                [attr.aria-label]="passwordVisible ? 'Sakrij lozinku' : 'Prikaži lozinku'"
+                [attr.aria-pressed]="passwordVisible"
+              >
+                @if (passwordVisible) {
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path>
+                    <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path>
+                    <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 2.747-3.941"></path>
+                    <path d="m2 2 20 20"></path>
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                }
+              </button>
+            </span>
+          </label>
+
+          <label class="field">
+            <span>Potvrda lozinke</span>
+            <span class="password-wrap">
+              <input
+                [type]="confirmPasswordVisible ? 'text' : 'password'"
+                name="confirmPassword"
+                autocomplete="new-password"
+                placeholder="Ponovite lozinku"
+              >
+              <button
+                class="password-toggle"
+                type="button"
+                (click)="toggleConfirmPassword()"
+                [attr.aria-label]="confirmPasswordVisible ? 'Sakrij lozinku' : 'Prikaži lozinku'"
+                [attr.aria-pressed]="confirmPasswordVisible"
+              >
+                @if (confirmPasswordVisible) {
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path>
+                    <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path>
+                    <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 2.747-3.941"></path>
+                    <path d="m2 2 20 20"></path>
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                }
+              </button>
+            </span>
+          </label>
+        </div>
+
+        <label class="consent">
+          <input type="checkbox" name="terms">
+          <span>Prihvatam <a href="#">Uslove korišćenja</a> i <a href="#">Politiku privatnosti</a>.</span>
+        </label>
+
+        <button class="btn btn-primary" type="button">Kreirajte nalog</button>
+      </form>
+
+      <p class="login-note">
+        Već imate nalog? <a routerLink="/prijava">Prijavite se</a>
+      </p>
+
+      <p class="security-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+        Vaši podaci su sigurni i zaštićeni.
+      </p>
+    </div>
+  </main>
+</div>
