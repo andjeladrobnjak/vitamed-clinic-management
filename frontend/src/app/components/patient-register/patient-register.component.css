@@ -302,7 +302,7 @@
   font-family: inherit;
   font-size: 0.98rem;
   outline: none;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.28s ease, background-color 0.28s ease, box-shadow 0.28s ease;
 }
 
 .field input::placeholder {
@@ -310,8 +310,24 @@
 }
 
 .field input:focus {
-  border-color: var(--petrol);
-  background: #fff;
+  border-color: #3d5a5f;
+  background: #eef2ef;
+  box-shadow: 0 0 0 3px rgba(23, 52, 58, 0.07);
+}
+
+.field input.field-invalid,
+.field input.field-invalid:focus {
+  border-color: #a56b70;
+  background: rgba(255, 248, 247, 0.92);
+  box-shadow: none;
+}
+
+.error-message {
+  margin: 0;
+  color: #8d555b;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .password-wrap {

@@ -79,31 +79,96 @@
         Unesite Vaše podatke kako biste kreirali VitaMed nalog.
       </p>
 
-      <form class="fields" autocomplete="on">
+      <form [formGroup]="registerForm" class="fields" autocomplete="on">
         <div class="field-pair">
           <label class="field">
             <span>Ime</span>
-            <input type="text" name="firstName" autocomplete="given-name" placeholder="Ana">
+            <input
+              type="text"
+              formControlName="firstName"
+              autocomplete="given-name"
+              placeholder="Ana"
+              [class.field-invalid]="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.invalid"
+            >
+            @if (registerForm.get('firstName')?.touched && registerForm.get('firstName')?.invalid) {
+              @if (registerForm.get('firstName')?.errors?.['required']) {
+                <p class="error-message">Ime je obavezno.</p>
+              }
+            }
           </label>
           <label class="field">
             <span>Prezime</span>
-            <input type="text" name="lastName" autocomplete="family-name" placeholder="Petrović">
+            <input
+              type="text"
+              formControlName="lastName"
+              autocomplete="family-name"
+              placeholder="Petrović"
+              [class.field-invalid]="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.invalid"
+            >
+            @if (registerForm.get('lastName')?.touched && registerForm.get('lastName')?.invalid) {
+              @if (registerForm.get('lastName')?.errors?.['required']) {
+                <p class="error-message">Prezime je obavezno.</p>
+              }
+            }
           </label>
         </div>
 
         <label class="field">
           <span>JMBG</span>
-          <input type="text" name="jmbg" inputmode="numeric" maxlength="13" placeholder="Unesite 13 cifara">
+          <input
+            type="text"
+            formControlName="jmbg"
+            inputmode="numeric"
+            maxlength="13"
+            placeholder="Unesite 13 cifara"
+            [class.field-invalid]="registerForm.get('jmbg')?.touched && registerForm.get('jmbg')?.invalid"
+          >
+          @if (registerForm.get('jmbg')?.touched && registerForm.get('jmbg')?.invalid) {
+            @if (registerForm.get('jmbg')?.errors?.['required']) {
+              <p class="error-message">JMBG je obavezan.</p>
+            }
+            @if (registerForm.get('jmbg')?.errors?.['pattern']) {
+              <p class="error-message">JMBG mora sadržati tačno 13 cifara.</p>
+            }
+          }
         </label>
 
         <div class="field-pair">
           <label class="field">
             <span>Email adresa</span>
-            <input type="email" name="email" autocomplete="email" placeholder="ime.prezime@email.com">
+            <input
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="ime.prezime@email.com"
+              [class.field-invalid]="registerForm.get('email')?.touched && registerForm.get('email')?.invalid"
+            >
+            @if (registerForm.get('email')?.touched && registerForm.get('email')?.invalid) {
+              @if (registerForm.get('email')?.errors?.['required']) {
+                <p class="error-message">Email adresa je obavezna.</p>
+              }
+              @if (registerForm.get('email')?.errors?.['email']) {
+                <p class="error-message">Unesite ispravnu email adresu.</p>
+              }
+            }
           </label>
           <label class="field">
             <span>Broj telefona</span>
-            <input type="tel" name="phone" autocomplete="tel" placeholder="+381 60 000 0000">
+            <input
+              type="tel"
+              formControlName="phone"
+              autocomplete="tel"
+              placeholder="+381 60 000 0000"
+              [class.field-invalid]="registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid"
+            >
+            @if (registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid) {
+              @if (registerForm.get('phone')?.errors?.['required']) {
+                <p class="error-message">Broj telefona je obavezan.</p>
+              }
+              @if (registerForm.get('phone')?.errors?.['pattern']) {
+                <p class="error-message">Unesite ispravan broj telefona.</p>
+              }
+            }
           </label>
         </div>
 
@@ -113,9 +178,10 @@
             <span class="password-wrap">
               <input
                 [type]="passwordVisible ? 'text' : 'password'"
-                name="password"
+                formControlName="password"
                 autocomplete="new-password"
                 placeholder="Kreirajte lozinku"
+                [class.field-invalid]="registerForm.get('password')?.touched && registerForm.get('password')?.invalid"
               >
               <button
                 class="password-toggle"
@@ -139,6 +205,14 @@
                 }
               </button>
             </span>
+            @if (registerForm.get('password')?.touched && registerForm.get('password')?.invalid) {
+              @if (registerForm.get('password')?.errors?.['required']) {
+                <p class="error-message">Lozinka je obavezna.</p>
+              }
+              @if (registerForm.get('password')?.errors?.['minlength']) {
+                <p class="error-message">Lozinka mora imati najmanje 8 karaktera.</p>
+              }
+            }
           </label>
 
           <label class="field">
@@ -146,9 +220,10 @@
             <span class="password-wrap">
               <input
                 [type]="confirmPasswordVisible ? 'text' : 'password'"
-                name="confirmPassword"
+                formControlName="confirmPassword"
                 autocomplete="new-password"
                 placeholder="Ponovite lozinku"
+                [class.field-invalid]="registerForm.get('confirmPassword')?.touched && (registerForm.get('confirmPassword')?.invalid || registerForm.hasError('passwordMismatch'))"
               >
               <button
                 class="password-toggle"
@@ -172,6 +247,12 @@
                 }
               </button>
             </span>
+            @if (registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['required']) {
+              <p class="error-message">Potvrda lozinke je obavezna.</p>
+            }
+            @if (registerForm.get('confirmPassword')?.touched && registerForm.hasError('passwordMismatch')) {
+              <p class="error-message">Lozinke se ne poklapaju.</p>
+            }
           </label>
         </div>
 
