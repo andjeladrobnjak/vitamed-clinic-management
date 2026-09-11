@@ -1,0 +1,335 @@
+<div class="home-page">
+  <!-- Navigacija -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="#" aria-label="VitaMed, privatna klinika">
+        <span class="logo-mark">
+          <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+        </span>
+        <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+      </a>
+
+      <input id="nav-toggle" class="nav-toggle" type="checkbox">
+      <label class="nav-toggle-label" for="nav-toggle">
+        <span class="nav-toggle-icon"></span>
+        <span class="visually-hidden">Meni</span>
+      </label>
+
+      <div class="nav-panel">
+        <nav class="site-nav" aria-label="Glavna navigacija">
+          <a href="#">Početna</a>
+          <a href="#">Lekari</a>
+          <a href="#">Usluge</a>
+          <a href="#">O nama</a>
+          <a href="#">Kontakt</a>
+        </nav>
+
+        <div class="header-actions">
+          <a class="btn btn-ghost" href="#">Prijava</a>
+          <a class="btn btn-primary" href="#">Zakažite pregled</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-shape" aria-hidden="true"></div>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Privatna medicinska klinika</p>
+          <h1>Vaše zdravlje,<br>naša stručnost</h1>
+          <p class="lead">
+            Stručni lekari, savremena dijagnostika i pouzdana medicinska nega — sve na jednom mestu.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#">Zakažite pregled</a>
+            <a class="btn btn-outline" href="#">Naši lekari</a>
+          </div>
+        </div>
+
+        <div class="hero-media">
+          <div class="hero-accent" aria-hidden="true"></div>
+          <img
+            src="/images/vitamed-hero-consultation.jpg"
+            alt="Lekar drži ruku pacijenta tokom pregleda"
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- Medicinske informacije -->
+    <section class="info-strip" aria-label="Medicinske informacije">
+      <div class="container info-strip-grid">
+        <p>Stručni lekari</p>
+        <p>Više specijalnosti</p>
+        <p>Savremena dijagnostika</p>
+        <p>Online zakazivanje</p>
+      </div>
+    </section>
+
+    <!-- Usluge -->
+    <section class="section services" id="usluge">
+      <div class="services-bg" aria-hidden="true">
+        <img src="/images/vitamed-lab-background.jpg" alt="">
+      </div>
+      <div class="services-overlay" aria-hidden="true"></div>
+      <div class="container">
+        <div class="section-intro">
+          <p class="eyebrow">Medicinske oblasti</p>
+          <h2>Specijalistički pregledi</h2>
+          <p>
+            Multidisciplinarna klinika za opštu medicinu, specijalističke preglede
+            i laboratorijsku dijagnostiku.
+          </p>
+        </div>
+
+        <div class="services-grid">
+          <article class="service-item">
+            <div class="service-top">
+              <div class="service-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  @for (node of venusIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'circle') {
+                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                    }
+                  }
+                </svg>
+              </div>
+            </div>
+            <h3>Ginekologija</h3>
+            <p>Preventivni pregledi, ultrazvučna dijagnostika i praćenje zdravlja žena.</p>
+            <a class="text-link" href="#">Saznajte više</a>
+          </article>
+
+          <article class="service-item service-item-alt">
+            <div class="service-top">
+              <div class="service-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  @for (node of babyIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'circle') {
+                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                    }
+                  }
+                </svg>
+              </div>
+            </div>
+            <h3>Pedijatrija</h3>
+            <p>Preventivni i specijalistički pregledi dece i adolescenata.</p>
+            <a class="text-link" href="#">Saznajte više</a>
+          </article>
+
+          <article class="service-item">
+            <div class="service-top">
+              <div class="service-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  @for (node of eyeIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'circle') {
+                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                    }
+                  }
+                </svg>
+              </div>
+            </div>
+            <h3>Oftalmologija</h3>
+            <p>Pregledi vida, dijagnostika i praćenje oboljenja oka.</p>
+            <a class="text-link" href="#">Saznajte više</a>
+          </article>
+
+          <article class="service-item service-item-alt">
+            <div class="service-top">
+              <div class="service-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  @for (node of earIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'circle') {
+                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                    }
+                  }
+                </svg>
+              </div>
+            </div>
+            <h3>ORL</h3>
+            <p>Dijagnostika i lečenje oboljenja uha, grla i nosa.</p>
+            <a class="text-link" href="#">Saznajte više</a>
+          </article>
+        </div>
+
+        <div class="services-cta" #servicesCta>
+          <a class="btn btn-outline services-all-link" href="#">
+            <span>Pogledajte sve preglede</span>
+            <svg class="services-all-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Savremena dijagnostika -->
+    <section class="section diagnostics" id="dijagnostika">
+      <div class="container">
+        <div class="diagnostics-intro">
+          <div class="diagnostics-heading">
+            <p class="eyebrow">Savremena dijagnostika</p>
+            <h2>Preciznost koju omogućava savremena tehnologija</h2>
+          </div>
+          <p class="diagnostics-lead">
+            Savremena medicinska oprema omogućava našim lekarima pouzdanu dijagnostiku i
+            detaljniju procenu zdravstvenog stanja. VitaMed objedinjuje specijalističke
+            preglede i dijagnostičke procedure na jednom mestu, kako bi put od pregleda
+            do dijagnoze bio jednostavniji i efikasniji.
+          </p>
+        </div>
+
+        <div class="diagnostics-showcase diagnostics-collage" #diagnosticsCollage>
+          <article class="diag diag-mri">
+            <div class="diag-frame">
+              <img src="/images/vitamed-diagnostics-mri.jpg" alt="Magnetna rezonanca u VitaMed klinici">
+            </div>
+            <div class="diag-copy diagnostic-card">
+              <h3>Magnetna rezonanca</h3>
+            </div>
+          </article>
+
+          <article class="diag diag-mammo">
+            <div class="diag-frame">
+              <img src="/images/vitamed-diagnostics-mammography.jpg" alt="3D mamografija u VitaMed klinici">
+            </div>
+            <div class="diag-copy diagnostic-card">
+              <h3>3D mamografija</h3>
+            </div>
+          </article>
+
+          <article class="diag diag-lab">
+            <div class="diag-frame">
+              <img src="/images/vitamed-diagnostics-lab.jpg" alt="Laboratorijska dijagnostika u VitaMed klinici">
+            </div>
+            <div class="diag-copy diagnostic-card">
+              <h3>Laboratorijska dijagnostika</h3>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Zašto VitaMed -->
+    <section class="section benefits" id="o-nama">
+      <div class="container benefits-layout">
+        <div class="benefits-intro">
+          <p class="eyebrow">O klinici</p>
+          <h2>Zašto VitaMed</h2>
+          <p>
+            VitaMed je privatna medicinska klinika posvećena pružanju pouzdane, savremene i
+            individualno prilagođene zdravstvene nege.
+          </p>
+          <p>
+            Na jednom mestu okupljamo lekare različitih specijalnosti, savremenu dijagnostiku
+            i pažljivo organizovan sistem pregleda, kako bi svaki pacijent jednostavno mogao
+            da dobije potrebnu medicinsku podršku.
+          </p>
+          <p>
+            Posebnu pažnju posvećujemo odnosu lekara i pacijenta. Verujemo da kvalitetna
+            zdravstvena nega podrazumeva ne samo stručnost, već i vreme, poverenje i jasnu
+            komunikaciju tokom svakog koraka lečenja.
+          </p>
+        </div>
+
+        <div class="benefits-visual">
+          <img src="/images/vitamed-clinic-aerial.jpg" alt="VitaMed, privatna klinika">
+        </div>
+      </div>
+
+      <div class="benefits-strip">
+        <div class="container benefits-list">
+          <article class="benefit">
+            <h3>Iskusni stručnjaci</h3>
+            <p>Lekari specijalisti sa kliničkim iskustvom i jasnim planom pregleda.</p>
+          </article>
+          <article class="benefit">
+            <h3>Savremena dijagnostika</h3>
+            <p>Dijagnostičke procedure koje pomažu u brzoj i tačnoj proceni stanja.</p>
+          </article>
+          <article class="benefit">
+            <h3>Brzo i jednostavno zakazivanje</h3>
+            <p>Odaberite lekara i termin online, bez nepotrebnog čekanja.</p>
+          </article>
+          <article class="benefit">
+            <h3>Sve informacije na jednom mestu</h3>
+            <p>Usluge, lekari i zakazivanje pregleda dostupni su na jednoj platformi.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Poziv na zakazivanje -->
+    <section class="appointment-cta" id="kontakt">
+      <div class="container cta-inner">
+        <p class="eyebrow eyebrow-light">Zakazivanje pregleda</p>
+        <span class="cta-rule" aria-hidden="true"></span>
+        <h2>Zakažite pregled u vreme koje Vama odgovara.</h2>
+        <p>
+          Odaberite specijalistu i rezervišite termin. Medicinski tim će Vas
+          primiti prema zakazanom vremenu.
+        </p>
+        <a class="btn btn-light" href="#">Zakažite pregled</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Podnožje -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" href="#" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a href="#">Početna</a></li>
+          <li><a href="#">Lekari</a></li>
+          <li><a href="#">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>
