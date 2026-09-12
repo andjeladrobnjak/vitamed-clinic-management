@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PatientLoginRequest, PatientService } from '../../services/patient.service';
 import { AuthService } from '../../services/auth.service';
@@ -21,6 +21,7 @@ export class PatientLoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly patientService = inject(PatientService);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -56,7 +57,7 @@ export class PatientLoginComponent {
       next: (response) => {
         this.authService.saveToken(response.token);
         this.isSubmitting = false;
-        this.successMessage = response.message;
+        void this.router.navigate(['/moj-vitamed']);
       },
       error: (error: HttpErrorResponse) => {
         this.isSubmitting = false;

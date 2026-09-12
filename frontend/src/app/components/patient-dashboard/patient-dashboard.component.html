@@ -1,0 +1,157 @@
+<div class="patient-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" routerLink="/" aria-label="VitaMed, privatna klinika">
+        <span class="logo-mark">
+          <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+        </span>
+        <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+      </a>
+
+      <input id="patient-nav-toggle" class="nav-toggle" type="checkbox">
+      <label class="nav-toggle-label" for="patient-nav-toggle">
+        <span class="nav-toggle-icon"></span>
+        <span class="visually-hidden">Meni</span>
+      </label>
+
+      <div class="nav-panel">
+        <nav class="site-nav" aria-label="Glavna navigacija">
+          <a routerLink="/">Početna</a>
+          <a href="#">Lekari</a>
+          <a href="#">Usluge</a>
+          <a href="#">O nama</a>
+          <a href="#">Kontakt</a>
+        </nav>
+
+        <div class="header-actions">
+          <div class="account-menu">
+            <button
+              class="account-toggle"
+              type="button"
+              (click)="toggleAccountMenu($event)"
+              [attr.aria-expanded]="accountMenuOpen"
+              aria-haspopup="true"
+            >
+              <span>{{ firstName || 'Nalog' }}</span>
+              <span class="account-caret" aria-hidden="true">▾</span>
+            </button>
+
+            @if (accountMenuOpen) {
+              <div class="account-panel" (click)="$event.stopPropagation()">
+                <a routerLink="/moj-vitamed" (click)="closeAccountMenu()">Moj VitaMed</a>
+                <button class="account-soon" type="button">Moj profil</button>
+                <span class="account-divider"></span>
+                <button class="account-logout" type="button" (click)="logout()">Odjavi se</button>
+              </div>
+            }
+          </div>
+          <button class="btn btn-primary" type="button">Zakažite pregled</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="welcome">
+      <div class="container welcome-inner">
+        @if (isLoading) {
+          <p class="welcome-status">Učitavanje Vašeg naloga...</p>
+        } @else if (loadError) {
+          <p class="welcome-status">{{ loadError }}</p>
+        } @else {
+          <p class="eyebrow">Portal za pacijente</p>
+          <h1>Dobro došli, {{ firstName }}.</h1>
+          <p class="lead">Ovde možete upravljati svojim pregledima i podacima.</p>
+          <button class="btn btn-primary" type="button">Zakažite pregled</button>
+        }
+      </div>
+    </section>
+
+    <section class="section upcoming" aria-labelledby="upcoming-heading">
+      <div class="container">
+        <p class="eyebrow">Vaš termin</p>
+        <h2 id="upcoming-heading">Predstojeći pregled</h2>
+
+        <div class="upcoming-panel">
+          <div class="upcoming-empty">
+            <p class="upcoming-empty-title">Nemate zakazanih pregleda.</p>
+            <p>Zakažite pregled kod jednog od naših specijalista u nekoliko koraka.</p>
+            <button class="btn btn-outline" type="button">Zakažite pregled</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section access" aria-labelledby="access-heading">
+      <div class="container">
+        <p class="eyebrow">Portal</p>
+        <h2 id="access-heading">Brzi pristup</h2>
+
+        <div class="access-grid">
+          <article class="access-card">
+            <div class="access-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of calendarIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  } @else if (node[0] === 'rect') {
+                    <rect
+                      [attr.x]="$any(node[1]).x"
+                      [attr.y]="$any(node[1]).y"
+                      [attr.width]="$any(node[1]).width"
+                      [attr.height]="$any(node[1]).height"
+                      [attr.rx]="$any(node[1]).rx"
+                      [attr.ry]="$any(node[1]).ry"
+                    ></rect>
+                  }
+                }
+              </svg>
+            </div>
+            <h3>Moji pregledi</h3>
+            <p>Predstojeći termini i istorija pregleda.</p>
+          </article>
+
+          <article class="access-card access-card-alt">
+            <div class="access-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of searchIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+            </div>
+            <h3>Pronađite lekara</h3>
+            <p>Pretražite lekare prema specijalizaciji i ocenama.</p>
+          </article>
+
+          <article class="access-card">
+            <div class="access-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of userIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+            </div>
+            <h3>Moj profil</h3>
+            <p>Pregledajte i upravljajte svojim podacima.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>
