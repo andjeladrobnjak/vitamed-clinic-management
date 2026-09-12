@@ -79,7 +79,7 @@
         Unesite Vaše podatke kako biste kreirali VitaMed nalog.
       </p>
 
-      <form [formGroup]="registerForm" class="fields" autocomplete="on">
+      <form [formGroup]="registerForm" class="fields" autocomplete="on" (ngSubmit)="onSubmit()">
         <div class="field-pair">
           <label class="field">
             <span>Ime</span>
@@ -154,13 +154,23 @@
           </label>
           <label class="field">
             <span>Broj telefona</span>
-            <input
-              type="tel"
-              formControlName="phone"
-              autocomplete="tel"
-              placeholder="+381 60 000 0000"
+            <div
+              class="phone-input"
               [class.field-invalid]="registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid"
             >
+              <span class="phone-prefix" aria-hidden="true">+381</span>
+              <span class="phone-divider" aria-hidden="true"></span>
+              <input
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel-national"
+                placeholder="60 111 2334"
+                [value]="phoneNationalNumber"
+                (input)="onPhoneInput($event)"
+                (blur)="onPhoneBlur()"
+                aria-label="Broj telefona"
+              >
+            </div>
             @if (registerForm.get('phone')?.touched && registerForm.get('phone')?.invalid) {
               @if (registerForm.get('phone')?.errors?.['required']) {
                 <p class="error-message">Broj telefona je obavezan.</p>
@@ -257,11 +267,32 @@
         </div>
 
         <label class="consent">
-          <input type="checkbox" name="terms">
+          <input type="checkbox" formControlName="termsAccepted">
           <span>Prihvatam <a href="#">Uslove korišćenja</a> i <a href="#">Politiku privatnosti</a>.</span>
         </label>
+        @if (registerForm.get('termsAccepted')?.touched && registerForm.get('termsAccepted')?.invalid) {
+          <p class="error-message">Morate prihvatiti Uslove korišćenja i Politiku privatnosti da biste se registrovali.</p>
+        }
 
-        <button class="btn btn-primary" type="button">Kreirajte nalog</button>
+        @if (serverError) {
+          <p class="form-feedback form-feedback-error">{{ serverError }}</p>
+        }
+        @if (successMessage) {
+          <p class="form-feedback form-feedback-success">{{ successMessage }}</p>
+        }
+
+        <button
+          class="btn btn-primary"
+          type="submit"
+          [class.is-submitting]="isSubmitting"
+          [disabled]="registerForm.invalid || isSubmitting"
+        >
+          @if (isSubmitting) {
+            Registracija...
+          } @else {
+            Kreirajte nalog
+          }
+        </button>
       </form>
 
       <p class="login-note">

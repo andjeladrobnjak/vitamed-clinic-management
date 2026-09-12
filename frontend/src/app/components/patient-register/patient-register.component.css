@@ -322,6 +322,65 @@
   box-shadow: none;
 }
 
+.phone-input {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.62);
+  overflow: hidden;
+  transition: border-color 0.28s ease, background-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+.phone-input:focus-within {
+  border-color: #3d5a5f;
+  background: #eef2ef;
+  box-shadow: 0 0 0 3px rgba(23, 52, 58, 0.07);
+}
+
+.phone-input.field-invalid,
+.phone-input.field-invalid:focus-within {
+  border-color: #a56b70;
+  background: rgba(255, 248, 247, 0.92);
+  box-shadow: none;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0.68rem 0 0.68rem 0.85rem;
+  color: var(--petrol);
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.phone-divider {
+  width: 1px;
+  margin: 0.5rem 0.7rem;
+  background: var(--stone);
+  flex-shrink: 0;
+}
+
+.phone-input:focus-within .phone-divider {
+  background: #3d5a5f;
+}
+
+.field .phone-input input,
+.field .phone-input input:focus,
+.field .phone-input.field-invalid input,
+.field .phone-input.field-invalid input:focus {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0.68rem 0.85rem 0.68rem 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .error-message {
   margin: 0;
   color: #8d555b;
@@ -425,6 +484,30 @@
 
 .btn-primary:hover {
   background: var(--petrol-soft);
+}
+
+.btn:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.btn:disabled.is-submitting {
+  cursor: wait;
+}
+
+.form-feedback {
+  margin: 0.15rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.form-feedback-error {
+  color: #8d555b;
+}
+
+.form-feedback-success {
+  color: var(--petrol-soft);
 }
 
 .login-note {
