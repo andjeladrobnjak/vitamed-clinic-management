@@ -82,7 +82,7 @@
         Unesite podatke kako biste pristupili Vašem nalogu.
       </p>
 
-      <form [formGroup]="loginForm" class="fields" autocomplete="on">
+      <form [formGroup]="loginForm" class="fields" autocomplete="on" (ngSubmit)="onSubmit()">
         <label class="field">
           <span>Email</span>
           <input
@@ -145,7 +145,20 @@
           <a class="text-link" href="#">Zaboravili ste lozinku?</a>
         </div>
 
-        <button class="btn btn-primary" type="button">Prijavite se</button>
+        @if (serverError) {
+          <p class="form-feedback form-feedback-error">{{ serverError }}</p>
+        }
+        @if (successMessage) {
+          <p class="form-feedback form-feedback-success">{{ successMessage }}</p>
+        }
+
+        <button class="btn btn-primary" type="submit" [disabled]="isSubmitting">
+          @if (isSubmitting) {
+            Prijava...
+          } @else {
+            Prijavite se
+          }
+        </button>
       </form>
 
       <p class="register-note">

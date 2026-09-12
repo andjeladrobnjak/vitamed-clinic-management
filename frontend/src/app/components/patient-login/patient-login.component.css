@@ -409,6 +409,26 @@
   background: var(--petrol-soft);
 }
 
+.btn:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.form-feedback {
+  margin: 0.15rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.form-feedback-error {
+  color: #8d555b;
+}
+
+.form-feedback-success {
+  color: var(--petrol-soft);
+}
+
 .register-note {
   margin: 1.5rem 0 0;
   color: var(--muted);
