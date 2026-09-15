@@ -55,85 +55,26 @@
         </div>
 
         <div class="services-grid">
-          <article class="service-item">
-            <div class="service-top">
-              <div class="service-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  @for (node of venusIcon; track $index) {
-                    @if (node[0] === 'path') {
-                      <path [attr.d]="$any(node[1]).d"></path>
-                    } @else if (node[0] === 'circle') {
-                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
-                    }
-                  }
-                </svg>
+          @for (specialty of specialistServices; track specialty.slug) {
+            <a
+              class="service-item"
+              [class.service-item-alt]="specialty.alternate"
+              [routerLink]="['/usluge', specialty.slug]"
+            >
+              <div class="service-top">
+                <div class="service-icon" aria-hidden="true">
+                  <app-specialty-icon [name]="specialty.icon" />
+                </div>
               </div>
-            </div>
-            <h3>Ginekologija</h3>
-            <p>Preventivni pregledi, ultrazvučna dijagnostika i praćenje zdravlja žena.</p>
-            <a class="text-link" href="#">Saznajte više</a>
-          </article>
-
-          <article class="service-item service-item-alt">
-            <div class="service-top">
-              <div class="service-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  @for (node of babyIcon; track $index) {
-                    @if (node[0] === 'path') {
-                      <path [attr.d]="$any(node[1]).d"></path>
-                    } @else if (node[0] === 'circle') {
-                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
-                    }
-                  }
-                </svg>
-              </div>
-            </div>
-            <h3>Pedijatrija</h3>
-            <p>Preventivni i specijalistički pregledi dece i adolescenata.</p>
-            <a class="text-link" href="#">Saznajte više</a>
-          </article>
-
-          <article class="service-item">
-            <div class="service-top">
-              <div class="service-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  @for (node of eyeIcon; track $index) {
-                    @if (node[0] === 'path') {
-                      <path [attr.d]="$any(node[1]).d"></path>
-                    } @else if (node[0] === 'circle') {
-                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
-                    }
-                  }
-                </svg>
-              </div>
-            </div>
-            <h3>Oftalmologija</h3>
-            <p>Pregledi vida, dijagnostika i praćenje oboljenja oka.</p>
-            <a class="text-link" href="#">Saznajte više</a>
-          </article>
-
-          <article class="service-item service-item-alt">
-            <div class="service-top">
-              <div class="service-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  @for (node of earIcon; track $index) {
-                    @if (node[0] === 'path') {
-                      <path [attr.d]="$any(node[1]).d"></path>
-                    } @else if (node[0] === 'circle') {
-                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
-                    }
-                  }
-                </svg>
-              </div>
-            </div>
-            <h3>ORL</h3>
-            <p>Dijagnostika i lečenje oboljenja uha, grla i nosa.</p>
-            <a class="text-link" href="#">Saznajte više</a>
-          </article>
+              <h3>{{ specialty.title }}</h3>
+              <p>{{ specialty.description }}</p>
+              <span class="text-link">Saznajte više</span>
+            </a>
+          }
         </div>
 
         <div class="services-cta" #servicesCta>
-          <a class="btn btn-outline services-all-link" href="#">
+          <a class="btn btn-outline services-all-link" routerLink="/usluge">
             <span>Pogledajte sve usluge</span>
             <svg class="services-all-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M5 12h14"></path>
@@ -276,7 +217,7 @@
         <ul class="footer-links">
           <li><a href="#">Početna</a></li>
           <li><a href="#">Lekari</a></li>
-          <li><a href="#">Usluge</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
           <li><a href="#">O nama</a></li>
           <li><a href="#">Kontakt</a></li>
         </ul>

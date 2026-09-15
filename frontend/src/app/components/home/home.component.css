@@ -491,6 +491,9 @@
   padding: 1.45rem 1.3rem 1.35rem;
   border-right: 1px solid var(--stone);
   background: rgba(250, 248, 243, 0.9);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
   transform: scale(1);
   transition: transform 0.35s ease, background 0.35s ease;
 }
@@ -499,17 +502,20 @@
   border-right: 0;
 }
 
-.service-item:hover {
+.service-item:hover,
+.service-item:focus-visible {
   z-index: 1;
   background: rgba(250, 248, 243, 0.96);
   transform: scale(1.03);
+  outline: none;
 }
 
 .service-item-alt {
   background: rgba(232, 232, 229, 0.88);
 }
 
-.service-item-alt:hover {
+.service-item-alt:hover,
+.service-item-alt:focus-visible {
   background: rgba(238, 238, 235, 0.94);
 }
 
@@ -521,19 +527,6 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  color: var(--petrol);
-}
-
-.service-icon svg {
-  display: block;
-  width: 33px;
-  height: 33px;
-  overflow: visible;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .service-icon::after {

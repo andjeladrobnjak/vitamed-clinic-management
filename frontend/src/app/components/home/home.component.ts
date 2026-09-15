@@ -1,20 +1,55 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { LucideBaby, LucideEar, LucideEye, LucideVenus } from '@lucide/angular';
 import { RouterLink } from '@angular/router';
+import { SpecialtyIconComponent, SpecialtyIconName } from '../specialty-icon/specialty-icon.component';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
+
+type HomeSpecialtyCard = {
+  title: string;
+  description: string;
+  icon: SpecialtyIconName;
+  slug: string;
+  alternate: boolean;
+};
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, SiteHeaderComponent],
+  imports: [RouterLink, SpecialtyIconComponent, SiteHeaderComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements AfterViewInit, OnDestroy {
-  readonly venusIcon = LucideVenus.icon.node;
-  readonly babyIcon = LucideBaby.icon.node;
-  readonly eyeIcon = LucideEye.icon.node;
-  readonly earIcon = LucideEar.icon.node;
+  readonly specialistServices: HomeSpecialtyCard[] = [
+    {
+      title: 'Ginekologija',
+      description: 'Preventivni pregledi, ultrazvučna dijagnostika i praćenje zdravlja žena.',
+      icon: 'ginecology',
+      slug: 'ginekologija',
+      alternate: false
+    },
+    {
+      title: 'Pedijatrija',
+      description: 'Preventivni i specijalistički pregledi dece i adolescenata.',
+      icon: 'pediatry',
+      slug: 'pedijatrija',
+      alternate: true
+    },
+    {
+      title: 'Oftalmologija',
+      description: 'Pregledi vida, dijagnostika i praćenje oboljenja oka.',
+      icon: 'oftalmology',
+      slug: 'oftalmologija',
+      alternate: false
+    },
+    {
+      title: 'ORL',
+      description: 'Dijagnostika i lečenje oboljenja uha, grla i nosa.',
+      icon: 'otorinolaringology',
+      slug: 'otorinolaringologija',
+      alternate: true
+    }
+  ];
+
   @ViewChild('diagnosticsCollage') diagnosticsCollage?: ElementRef<HTMLElement>;
   @ViewChild('servicesCta') servicesCta?: ElementRef<HTMLElement>;
 

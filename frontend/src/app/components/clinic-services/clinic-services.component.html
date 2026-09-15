@@ -1,0 +1,98 @@
+<div class="services-page">
+  <app-site-header />
+
+  <main class="services-main">
+    <section class="page-intro">
+      <div class="container intro-inner">
+        <p class="eyebrow">Naše usluge</p>
+        <h1>Specijalistički pregledi</h1>
+        <p class="lead">
+          Sve što vam je potrebno za brigu o zdravlju — na jednom mestu.
+        </p>
+      </div>
+    </section>
+
+    <section class="services-section" aria-labelledby="services-heading">
+      <div class="container">
+        <h2 id="services-heading" class="visually-hidden">Specijalističke usluge</h2>
+
+        @if (isLoading) {
+          <p class="status-message">Učitavanje usluga...</p>
+        } @else if (loadError) {
+          <div class="status-panel">
+            <p>{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+          </div>
+        } @else {
+          <div class="specialty-grid" role="list">
+            @for (specialty of specialties; track specialty.id) {
+              <a
+                class="specialty-card"
+                role="listitem"
+                [routerLink]="specialtySlug(specialty) ? ['/usluge', specialtySlug(specialty)] : '/usluge'"
+              >
+                <app-specialty-icon
+                  class="specialty-card-icon"
+                  [name]="iconForSpecialty(specialty.name)"
+                  size="4.05rem"
+                />
+                <span>{{ specialty.name }}</span>
+              </a>
+            }
+          </div>
+
+          <p class="services-hint">
+            Izaberite medicinsku oblast da biste videli dostupne usluge.
+          </p>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" routerLink="/" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Početna</a></li>
+          <li><a routerLink="/lekari">Lekari</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a routerLink="/lokacije">Lokacije</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>

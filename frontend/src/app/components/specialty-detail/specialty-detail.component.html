@@ -1,0 +1,181 @@
+<div class="specialty-page">
+  <app-site-header />
+
+  <main>
+    @if (isLoading) {
+      <section class="page-status">
+        <div class="container">
+          <p class="status-message">Učitavanje specijalizacije...</p>
+        </div>
+      </section>
+    } @else if (notFound) {
+      <section class="page-status">
+        <div class="container status-panel">
+          <h1>Specijalizacija nije pronađena.</h1>
+          <p>Proverite adresu ili se vratite na pregled svih usluga.</p>
+          <a class="btn btn-outline" routerLink="/usluge">Nazad na usluge</a>
+        </div>
+      </section>
+    } @else if (loadError) {
+      <section class="page-status">
+        <div class="container status-panel">
+          <p>{{ loadError }}</p>
+          <button class="btn btn-outline" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+        </div>
+      </section>
+    } @else if (detail) {
+      <section class="specialty-hero">
+        @if (detail.imageUrl) {
+          <div
+            class="hero-background"
+            [style.background-image]="'url(' + detail.imageUrl + ')'"
+            aria-hidden="true"
+          ></div>
+        }
+        <div class="container hero-copy">
+          <nav class="breadcrumb" aria-label="Putanja">
+            <a routerLink="/usluge">Usluge</a>
+            <span aria-hidden="true">/</span>
+            <span>{{ detail.name }}</span>
+          </nav>
+          <h1>{{ detail.name }}</h1>
+        </div>
+      </section>
+
+      <div class="page-body">
+        <section class="content-section" aria-labelledby="about-heading">
+          <div class="container">
+            <h2 id="about-heading">O specijalizaciji</h2>
+            <p class="about-text">{{ detail.description }}</p>
+          </div>
+        </section>
+
+        <section class="content-section" aria-labelledby="services-heading">
+          <div class="container">
+            <h2 id="services-heading">Pregledi i usluge</h2>
+
+            @if (detail.services.length === 0) {
+              <p class="empty-copy">Trenutno nema unetih usluga za ovu oblast.</p>
+            } @else {
+              <ul class="service-list">
+                @for (service of detail.services; track service.id) {
+                  <li
+                    class="service-row"
+                    [id]="'service-' + service.id"
+                    [class.is-highlighted]="highlightedServiceId === service.id"
+                  >
+                    <div class="service-copy">
+                      <h3>{{ service.name }}</h3>
+                      @if (service.description) {
+                        <p>{{ service.description }}</p>
+                      }
+                    </div>
+                    <div class="service-meta">
+                      <span class="service-duration">{{ formatDuration(service.durationMinutes) }}</span>
+                      <span class="service-price">{{ formatPrice(service.price) }}</span>
+                      <a
+                        class="service-book"
+                        [routerLink]="['/appointment']"
+                        [queryParams]="{ service: service.id }"
+                      >
+                        Zakažite pregled
+                      </a>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </section>
+
+        <section class="content-section doctors-section" aria-labelledby="doctors-heading">
+          <div class="container">
+            <h2 id="doctors-heading">Naši lekari iz ove oblasti</h2>
+
+            @if (detail.doctors.length === 0) {
+              <p class="empty-copy">Trenutno nema unetih lekara za ovu oblast.</p>
+            } @else {
+              <div class="doctors-grid">
+                @for (doctor of detail.doctors; track doctor.id) {
+                  <a class="doctor-card" [routerLink]="['/lekari', doctor.id]">
+                    <div class="doctor-photo">
+                      @if (doctor.imageUrl) {
+                        <img
+                          [src]="doctor.imageUrl"
+                          [alt]="'Dr med. ' + doctor.firstName + ' ' + doctor.lastName"
+                        >
+                      } @else {
+                        <div class="doctor-fallback" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            @for (node of userIcon; track $index) {
+                              @if (node[0] === 'path') {
+                                <path [attr.d]="$any(node[1]).d"></path>
+                              } @else if (node[0] === 'circle') {
+                                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                              }
+                            }
+                          </svg>
+                        </div>
+                      }
+                    </div>
+                    <div class="doctor-meta">
+                      <h3>Dr med. {{ doctor.firstName }} {{ doctor.lastName }}</h3>
+                      <p>{{ specialtyLabel(doctor.specialty.name) }}</p>
+                    </div>
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+    }
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" routerLink="/" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Početna</a></li>
+          <li><a routerLink="/lekari">Lekari</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a routerLink="/lokacije">Lokacije</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>
