@@ -1,0 +1,202 @@
+<div class="locations-page">
+  <app-site-header />
+
+  <main>
+    <section class="page-intro">
+      <div class="container intro-inner">
+        <p class="eyebrow">Naše lokacije</p>
+        <h1>VitaMed Vam je bliže nego što mislite</h1>
+        <p class="lead">
+          Posetite nas na jednoj od naših lokacija u Beogradu. Izaberite lokaciju
+          koja vam najviše odgovara i pronađite sve potrebne informacije za dolazak.
+        </p>
+      </div>
+    </section>
+
+    <section class="locations-section" aria-labelledby="locations-heading">
+      <div class="container">
+        <h2 id="locations-heading" class="visually-hidden">Lokacije klinike</h2>
+
+        @if (isLoading) {
+          <p class="status-message">Učitavanje lokacija...</p>
+        } @else if (loadError) {
+          <div class="status-panel">
+            <p>{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+          </div>
+        } @else if (locations.length === 0) {
+          <p class="status-message">Trenutno nema unetih lokacija.</p>
+        } @else {
+          <div class="locations-layout">
+            <div class="locations-list">
+              <button
+                class="nearest-action"
+                type="button"
+                (click)="findNearest()"
+                [disabled]="geoLoading"
+              >
+                <span class="card-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    @for (node of locateIcon; track $index) {
+                      @if (node[0] === 'path') {
+                        <path [attr.d]="$any(node[1]).d"></path>
+                      } @else if (node[0] === 'circle') {
+                        <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                      } @else if (node[0] === 'line') {
+                        <line [attr.x1]="$any(node[1]).x1" [attr.y1]="$any(node[1]).y1" [attr.x2]="$any(node[1]).x2" [attr.y2]="$any(node[1]).y2"></line>
+                      } @else if (node[0] === 'polyline') {
+                        <polyline [attr.points]="$any(node[1]).points"></polyline>
+                      } @else if (node[0] === 'line') {
+                        <line [attr.x1]="$any(node[1]).x1" [attr.y1]="$any(node[1]).y1" [attr.x2]="$any(node[1]).x2" [attr.y2]="$any(node[1]).y2"></line>
+                      }
+                    }
+                  </svg>
+                </span>
+                {{ geoLoading ? 'Tražimo vašu lokaciju...' : 'Pronađite najbližu lokaciju' }}
+              </button>
+
+              @if (geoMessage) {
+                <p class="geo-message">{{ geoMessage }}</p>
+              }
+
+              @for (location of displayedLocations; track location.id) {
+                <button
+                  class="location-card"
+                  type="button"
+                  [class.is-selected]="selectedId === location.id"
+                  (click)="selectLocation(location.id)"
+                >
+                  <div class="location-card-top">
+                    <div class="location-heading">
+                      <h3>{{ location.name }}</h3>
+                      @if (openingStatus(location.workingHours); as status) {
+                        <span
+                          class="location-status"
+                          [class.is-open]="status.state === 'open'"
+                          [class.is-closed]="status.state === 'closed'"
+                          [class.is-unknown]="status.state === 'unknown'"
+                        >
+                          <span class="location-status-dot" aria-hidden="true"></span>
+                          {{ status.label }}
+                        </span>
+                        @if (status.nextOpenLabel) {
+                          <span class="location-next-open">{{ status.nextOpenLabel }}</span>
+                        }
+                      }
+                    </div>
+                    @if (nearestId === location.id) {
+                      <span class="nearest-label">Najbliža vama</span>
+                    }
+                  </div>
+
+                  <p>
+                    <span class="card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        @for (node of pinIcon; track $index) {
+                          @if (node[0] === 'path') {
+                            <path [attr.d]="$any(node[1]).d"></path>
+                          } @else if (node[0] === 'circle') {
+                            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                          } @else if (node[0] === 'polyline') {
+                            <polyline [attr.points]="$any(node[1]).points"></polyline>
+                          }
+                        }
+                      </svg>
+                    </span>
+                    {{ location.address }}, {{ location.city }}
+                  </p>
+                  <p>
+                    <span class="card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        @for (node of phoneIcon; track $index) {
+                          @if (node[0] === 'path') {
+                            <path [attr.d]="$any(node[1]).d"></path>
+                          } @else if (node[0] === 'circle') {
+                            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                          } @else if (node[0] === 'polyline') {
+                            <polyline [attr.points]="$any(node[1]).points"></polyline>
+                          }
+                        }
+                      </svg>
+                    </span>
+                    {{ location.phone }}
+                  </p>
+                  <p>
+                    <span class="card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        @for (node of clockIcon; track $index) {
+                          @if (node[0] === 'path') {
+                            <path [attr.d]="$any(node[1]).d"></path>
+                          } @else if (node[0] === 'circle') {
+                            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                          } @else if (node[0] === 'polyline') {
+                            <polyline [attr.points]="$any(node[1]).points"></polyline>
+                          }
+                        }
+                      </svg>
+                    </span>
+                    {{ location.workingHours }}
+                  </p>
+                  @if (formatDistance(location.id); as distance) {
+                    <p class="distance-copy">{{ distance }}</p>
+                  }
+                </button>
+              }
+            </div>
+
+            <div class="map-shell">
+              <div #mapContainer class="map-canvas" role="application" aria-label="Mapa VitaMed lokacija"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" routerLink="/" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Početna</a></li>
+          <li><a routerLink="/lekari">Lekari</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a routerLink="/lokacije">Lokacije</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>
