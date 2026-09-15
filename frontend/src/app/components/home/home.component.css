@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Serif+4:ital,wght@0,400;1,400&display=swap");
 
 :host {
   display: block;
@@ -108,12 +108,16 @@
 .site-header .logo {
   flex-shrink: 0;
   margin-right: 0.75rem;
-  color: var(--ivory);
+  color: #eeeae3;
 }
 
 .site-header .logo-vita,
 .site-header .logo-med {
-  font-size: 2.76rem;
+  font-size: 2.48rem;
+}
+
+.site-header .logo-vita {
+  font-weight: 300;
 }
 
 .site-header .logo-tagline {
@@ -311,7 +315,6 @@
   font-weight: 600;
 }
 
-.hero h1,
 .section-intro h2,
 .benefits-intro h2,
 .appointment-cta h2,
@@ -325,8 +328,28 @@
 }
 
 .hero h1 {
-  margin: 0 0 1.15rem;
-  font-size: clamp(2.35rem, 4.2vw, 3.55rem);
+  margin: 0 0 1.25rem;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(2.45rem, 4.5vw, 3.7rem);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  color: var(--petrol);
+}
+
+.hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: #4a6461;
+}
+
+.hero h1::after {
+  content: "";
+  display: block;
+  width: 3.35rem;
+  height: 1.5px;
+  margin-top: 1.05rem;
+  background: var(--burgundy);
 }
 
 .lead {
@@ -364,6 +387,44 @@
   height: 100%;
   object-fit: cover;
   object-position: 48% 72%;
+}
+
+.hero-photo-quote {
+  position: absolute;
+  top: 10%;
+  right: 1.85rem;
+  left: auto;
+  z-index: 3;
+  margin: 0;
+  max-width: 13.5rem;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.18rem, 1.45vw, 1.48rem);
+  line-height: 1.32;
+  color: var(--petrol);
+  pointer-events: none;
+}
+
+.hero-photo-quote-mark {
+  display: block;
+  margin: 0 0 0.28rem;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-style: italic;
+  font-size: 1.55em;
+  font-weight: 400;
+  line-height: 0.85;
+  color: var(--petrol);
+  opacity: 0.72;
+}
+
+.hero-photo-quote::after {
+  content: "";
+  display: block;
+  width: 2.35rem;
+  height: 1.5px;
+  margin-top: 0.8rem;
+  background: var(--burgundy);
 }
 
 .image-placeholder {
@@ -974,6 +1035,13 @@
     min-height: 22rem;
   }
 
+  .hero-photo-quote {
+    top: 8%;
+    right: 1.4rem;
+    left: auto;
+    font-size: 1.18rem;
+  }
+
   .hero-accent {
     top: 12%;
     height: 32%;
@@ -1168,6 +1236,10 @@
 
   .hero-media {
     min-height: 18rem;
+  }
+
+  .hero-photo-quote {
+    display: none;
   }
 
   .services-grid,

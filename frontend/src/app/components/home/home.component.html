@@ -8,12 +8,12 @@
       <div class="hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">Privatna medicinska klinika</p>
-          <h1>Vaše zdravlje,<br>naša stručnost</h1>
+          <h1>Vaše zdravlje,<br><em>naša stručnost</em></h1>
           <p class="lead">
             Stručni lekari, savremena dijagnostika i pouzdana medicinska nega — sve na jednom mestu.
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#">Zakažite pregled</a>
+            <a class="btn btn-primary" routerLink="/appointment">Zakažite pregled</a>
             <a class="btn btn-outline" routerLink="/lekari">Naši lekari</a>
           </div>
         </div>
@@ -24,6 +24,10 @@
             src="/images/vitamed-hero-consultation.jpg"
             alt="Lekar drži ruku pacijenta tokom pregleda"
           >
+          <p class="hero-photo-quote">
+            <span class="hero-photo-quote-mark" aria-hidden="true">“</span>
+            Zdravlje u<br>sigurnim rukama
+          </p>
         </div>
       </div>
     </section>
@@ -191,7 +195,7 @@
           Odaberite specijalistu i rezervišite termin. Medicinski tim će Vas
           primiti prema zakazanom vremenu.
         </p>
-        <a class="btn btn-light" href="#">Zakažite pregled</a>
+        <a class="btn btn-light" routerLink="/appointment">Zakažite pregled</a>
       </div>
     </section>
   </main>
