@@ -61,7 +61,11 @@
                 <p class="eyebrow">{{ doctor.specialty.name }}</p>
                 <h1>Dr med. {{ doctor.firstName }} {{ doctor.lastName }}</h1>
                 <p class="doctor-role">{{ specialistTitle(doctor.specialty.name) }}</p>
-                <app-doctor-rating [averageRating]="doctor.averageRating" [reviewCount]="doctor.reviewCount" />
+                <app-doctor-rating
+                  [averageRating]="doctor.averageRating"
+                  [reviewCount]="doctor.reviewCount"
+                  [showCount]="true"
+                />
               </div>
 
               @if (doctor.biography) {
@@ -170,7 +174,11 @@
         </div>
       </section>
 
-      <section class="content-section locations-section" aria-labelledby="locations-heading">
+      <section
+        class="content-section locations-section"
+        [class.has-reviews]="writtenReviews.length > 0"
+        aria-labelledby="locations-heading"
+      >
         <div class="container">
           <div class="section-heading">
             <h2 id="locations-heading">Lokacije na kojima radi</h2>
@@ -232,6 +240,43 @@
           }
         </div>
       </section>
+
+      @if (writtenReviews.length > 0) {
+        <section class="content-section reviews-section" aria-labelledby="reviews-heading">
+          <div class="container">
+            <div class="section-heading">
+              <p class="eyebrow">Iskustva pacijenata</p>
+              <h2 id="reviews-heading">Šta kažu naši pacijenti</h2>
+            </div>
+
+            <ul class="review-list">
+              @for (review of visibleReviews; track review.id) {
+                <li class="review-card">
+                  <div class="review-card-header">
+                    <p class="review-author">Pacijent VitaMed klinike</p>
+                    <app-doctor-rating
+                      [averageRating]="review.rating"
+                      [reviewCount]="1"
+                      [integerRating]="true"
+                      [compact]="true"
+                    />
+                  </div>
+                  <blockquote class="review-quote">
+                    <p>{{ review.comment }}</p>
+                  </blockquote>
+                  <p class="review-date">{{ formatReviewDate(review.appointmentDate) }}</p>
+                </li>
+              }
+            </ul>
+
+            @if (canToggleReviews) {
+              <button class="reviews-toggle" type="button" (click)="toggleReviews()">
+                {{ showAllReviews ? 'Prikaži manje' : 'Prikaži sve recenzije' }}
+              </button>
+            }
+          </div>
+        </section>
+      }
     }
   </main>
 

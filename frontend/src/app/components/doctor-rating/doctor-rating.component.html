@@ -1,4 +1,4 @@
-<p class="doctor-rating" [class.is-empty]="!hasRating">
+<p class="doctor-rating" [class.is-empty]="!hasRating" [attr.aria-label]="accessibleLabel">
   <svg viewBox="0 0 24 24" aria-hidden="true">
     @for (node of starIcon; track $index) {
       @if (node[0] === 'path') {
@@ -10,6 +10,10 @@
   </svg>
   @if (hasRating) {
     <span>{{ ratingLabel }}</span>
+    @if (showCount()) {
+      <span class="rating-separator" aria-hidden="true">·</span>
+      <span>{{ countLabel }}</span>
+    }
   } @else {
     <span>Još nema ocena</span>
   }

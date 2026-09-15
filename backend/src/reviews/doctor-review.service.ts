@@ -115,6 +115,44 @@ export class DoctorReviewService {
         return this.requireReview(reviewId);
     }
 
+    async listPublicWrittenReviews(doctorId: number): Promise<Array<{
+        id: number;
+        rating: number;
+        comment: string;
+        createdAt: string;
+        appointmentDate: string;
+    }>> {
+        const [rows] = await pool.query<(RowDataPacket & {
+            id: number;
+            rating: number;
+            comment: string;
+            createdAt: Date | string;
+            appointmentDate: string;
+        })[]>(
+            `SELECT
+                r.id,
+                r.rating,
+                r.comment,
+                r.created_at AS createdAt,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate
+             FROM doctor_reviews r
+             INNER JOIN appointments a ON a.id = r.appointment_id
+             WHERE a.doctor_id = ?
+               AND r.comment IS NOT NULL
+               AND TRIM(r.comment) <> ''
+             ORDER BY r.created_at DESC, r.id DESC`,
+            [doctorId]
+        );
+
+        return rows.map((row) => ({
+            id: Number(row.id),
+            rating: Number(row.rating),
+            comment: String(row.comment),
+            createdAt: this.toIso(row.createdAt),
+            appointmentDate: String(row.appointmentDate)
+        }));
+    }
+
     private async findAppointment(appointmentId: number): Promise<{
         id: number;
         patientId: number | null;

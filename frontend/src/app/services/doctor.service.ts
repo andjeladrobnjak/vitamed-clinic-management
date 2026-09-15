@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 export interface Specialty {
   id: number;
@@ -43,6 +43,14 @@ export interface SpecialtyService {
   durationMinutes: number;
 }
 
+export interface PublicDoctorReview {
+  id: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  appointmentDate: string;
+}
+
 export interface DoctorDetail {
   id: number;
   firstName: string;
@@ -82,6 +90,12 @@ export class DoctorService {
 
   getDoctorById(id: number): Observable<DoctorDetail> {
     return this.http.get<DoctorDetail>(`${this.doctorsUrl}/${id}`);
+  }
+
+  getDoctorReviews(id: number): Observable<PublicDoctorReview[]> {
+    return this.http.get<{ reviews: PublicDoctorReview[] }>(`${this.doctorsUrl}/${id}/reviews`).pipe(
+      map((response) => response.reviews ?? [])
+    );
   }
 
   getSpecialties(): Observable<Specialty[]> {

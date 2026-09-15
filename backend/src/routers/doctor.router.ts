@@ -5,6 +5,7 @@ const doctorRouter = Router();
 const doctorController = new DoctorController();
 
 doctorRouter.get('/', (req, res) => doctorController.list(req, res));
+doctorRouter.get('/:id/reviews', (req, res) => doctorController.listReviews(req, res));
 doctorRouter.get('/:id', (req, res) => doctorController.getById(req, res));
 
 export default doctorRouter;

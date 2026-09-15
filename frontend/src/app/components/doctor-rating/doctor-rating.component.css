@@ -37,3 +37,13 @@
   stroke: #9aa3a0;
   stroke-width: 1.5;
 }
+
+.rating-separator {
+  margin: 0 0.06rem;
+  font-weight: 400;
+  color: #17343a;
+}
+
+:host.compact .doctor-rating {
+  margin: 0;
+}

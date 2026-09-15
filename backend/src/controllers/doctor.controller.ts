@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { RowDataPacket } from 'mysql2';
 import pool from '../db/connection';
+import { DoctorReviewService } from '../reviews/doctor-review.service';
 import { DOCTOR_RATINGS_JOIN, mapDoctorRating } from '../doctors/doctor-ratings';
 
 interface DoctorRow extends RowDataPacket {
@@ -47,6 +48,8 @@ interface DoctorServiceRow extends RowDataPacket {
 }
 
 export class DoctorController {
+    constructor(private readonly reviewService = new DoctorReviewService()) {}
+
     async list(req: Request, res: Response): Promise<void> {
         try {
             const [rows] = await pool.query<DoctorRow[]>(
@@ -229,6 +232,37 @@ export class DoctorController {
             console.error('Greška pri učitavanju lekara:', error);
             res.status(500).json({
                 message: 'Trenutno nije moguće učitati podatke o lekaru.'
+            });
+        }
+    }
+
+    async listReviews(req: Request, res: Response): Promise<void> {
+        const doctorId = Number(req.params.id);
+        if (!Number.isInteger(doctorId) || doctorId <= 0) {
+            res.status(404).json({ message: 'Lekar nije pronađen.' });
+            return;
+        }
+
+        try {
+            const [doctorRows] = await pool.query<DoctorRow[]>(
+                `SELECT d.id
+                 FROM doctors d
+                 WHERE d.id = ?
+                 LIMIT 1`,
+                [doctorId]
+            );
+
+            if (!doctorRows[0]) {
+                res.status(404).json({ message: 'Lekar nije pronađen.' });
+                return;
+            }
+
+            const reviews = await this.reviewService.listPublicWrittenReviews(doctorId);
+            res.json({ reviews });
+        } catch (error) {
+            console.error('Greška pri učitavanju recenzija lekara:', error);
+            res.status(500).json({
+                message: 'Trenutno nije moguće učitati recenzije.'
             });
         }
     }
