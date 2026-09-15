@@ -25,6 +25,9 @@
             <p>Ovde će se prikazati pregledi nakon što budu obavljeni.</p>
           </div>
         } @else {
+          @if (successMessage) {
+            <p class="history-success" role="status">{{ successMessage }}</p>
+          }
           <div class="appointment-list">
             @for (appointment of appointments; track appointment.id) {
               <article class="upcoming-card history-card">
@@ -51,9 +54,17 @@
                   </div>
                 </dl>
                 <div class="history-actions">
-                  <button type="button" class="btn btn-muted" disabled>Pogledaj izveštaj</button>
-                  <button type="button" class="btn btn-muted" disabled>Oceni lekara</button>
-                  <p class="coming-later">Uskoro dostupno</p>
+                  <div class="report-action">
+                    <button type="button" class="btn btn-muted" disabled>Pogledaj izveštaj</button>
+                    <p class="coming-later">Uskoro dostupno</p>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-outline"
+                    (click)="openReviewModal(appointment)"
+                  >
+                    {{ appointment.review ? 'Izmeni ocenu' : 'Oceni lekara' }}
+                  </button>
                 </div>
               </article>
             }
@@ -62,6 +73,16 @@
       </div>
     </section>
   </main>
+
+  @if (reviewTarget) {
+    <app-doctor-review-modal
+      [appointment]="reviewTarget"
+      [isSaving]="isSavingReview"
+      [errorMessage]="reviewError"
+      (dismissed)="closeReviewModal()"
+      (submitted)="submitReview($event)"
+    />
+  }
 
   <footer class="site-footer">
     <div class="container footer-bottom">

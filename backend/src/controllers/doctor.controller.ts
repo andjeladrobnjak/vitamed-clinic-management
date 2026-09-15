@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { RowDataPacket } from 'mysql2';
 import pool from '../db/connection';
+import { DOCTOR_RATINGS_JOIN, mapDoctorRating } from '../doctors/doctor-ratings';
 
 interface DoctorRow extends RowDataPacket {
     id: number;
@@ -12,6 +13,8 @@ interface DoctorRow extends RowDataPacket {
     imageUrl: string | null;
     specialtyId: number;
     specialtyName: string;
+    averageRating: number | string | null;
+    reviewCount: number | string | null;
 }
 
 interface DoctorLocationRow extends RowDataPacket {
@@ -54,9 +57,12 @@ export class DoctorController {
                     d.biography,
                     d.image_url AS imageUrl,
                     s.id AS specialtyId,
-                    s.name AS specialtyName
+                    s.name AS specialtyName,
+                    rating_stats.averageRating,
+                    COALESCE(rating_stats.reviewCount, 0) AS reviewCount
                  FROM doctors d
                  INNER JOIN specialties s ON s.id = d.specialty_id
+                 ${DOCTOR_RATINGS_JOIN}
                  ORDER BY d.last_name, d.first_name`
             );
 
@@ -114,7 +120,8 @@ export class DoctorController {
                         name: row.specialtyName
                     },
                     locations: locationsByDoctor.get(Number(row.id)) ?? [],
-                    services: servicesByDoctor.get(Number(row.id)) ?? []
+                    services: servicesByDoctor.get(Number(row.id)) ?? [],
+                    ...mapDoctorRating(row)
                 }))
             );
         } catch (error) {
@@ -143,9 +150,12 @@ export class DoctorController {
                     d.professional_experience AS professionalExperience,
                     d.image_url AS imageUrl,
                     s.id AS specialtyId,
-                    s.name AS specialtyName
+                    s.name AS specialtyName,
+                    rating_stats.averageRating,
+                    COALESCE(rating_stats.reviewCount, 0) AS reviewCount
                  FROM doctors d
                  INNER JOIN specialties s ON s.id = d.specialty_id
+                 ${DOCTOR_RATINGS_JOIN}
                  WHERE d.id = ?
                  LIMIT 1`,
                 [doctorId]
@@ -198,6 +208,7 @@ export class DoctorController {
                     id: Number(doctor.specialtyId),
                     name: doctor.specialtyName
                 },
+                ...mapDoctorRating(doctor),
                 services: serviceRows.map((row) => ({
                     id: Number(row.id),
                     name: row.name,

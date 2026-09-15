@@ -16,6 +16,12 @@ export interface AvailableDatesResponse {
   availableDates: string[];
 }
 
+export interface AppointmentReviewSummary {
+  id: number;
+  rating: number;
+  comment: string | null;
+}
+
 export interface UpcomingAppointment {
   id: number;
   appointmentDate: string;
@@ -34,12 +40,20 @@ export interface UpcomingAppointment {
   };
 }
 
+export interface HistoryAppointment extends UpcomingAppointment {
+  review: AppointmentReviewSummary | null;
+}
+
 export interface UpcomingAppointmentResponse {
   appointment: UpcomingAppointment | null;
 }
 
 export interface AppointmentListResponse {
   appointments: UpcomingAppointment[];
+}
+
+export interface HistoryListResponse {
+  appointments: HistoryAppointment[];
 }
 
 export interface CreatedAppointmentResponse {
@@ -116,8 +130,8 @@ export class AppointmentAvailabilityApi {
     return this.http.get<AppointmentListResponse>(`${this.baseUrl}/upcoming/all`);
   }
 
-  getAppointmentHistory(): Observable<AppointmentListResponse> {
-    return this.http.get<AppointmentListResponse>(`${this.baseUrl}/history`);
+  getAppointmentHistory(): Observable<HistoryListResponse> {
+    return this.http.get<HistoryListResponse>(`${this.baseUrl}/history`);
   }
 
   cancelAppointment(id: number): Observable<{ cancelled: boolean }> {

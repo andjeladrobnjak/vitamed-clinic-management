@@ -31,6 +31,8 @@ export interface Doctor {
   specialty: Specialty;
   locations?: DoctorLocation[];
   services?: DoctorServiceRef[];
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface SpecialtyService {
@@ -50,6 +52,8 @@ export interface DoctorDetail {
   professionalExperience: string | null;
   imageUrl: string | null;
   specialty: Specialty;
+  averageRating: number | null;
+  reviewCount: number;
   services: SpecialtyService[];
   locations: DoctorLocation[];
 }

@@ -94,10 +94,17 @@
   line-height: 1.4;
 }
 
+.history-success {
+  max-width: 640px;
+  margin: 0 0 0.9rem;
+  color: #2f5854;
+  font-size: 0.95rem;
+}
+
 .history-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.45rem 0.55rem;
 }
 
@@ -105,11 +112,15 @@
   padding: 0.5rem 0.9rem;
 }
 
+.report-action {
+  display: grid;
+  gap: 0.2rem;
+}
+
 .coming-later {
   margin: 0;
-  width: 100%;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }

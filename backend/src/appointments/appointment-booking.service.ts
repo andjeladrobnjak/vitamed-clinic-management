@@ -71,6 +71,16 @@ export interface UpcomingAppointment {
     };
 }
 
+export interface AppointmentReviewSummary {
+    id: number;
+    rating: number;
+    comment: string | null;
+}
+
+export interface HistoryAppointment extends UpcomingAppointment {
+    review: AppointmentReviewSummary | null;
+}
+
 interface UpcomingAppointmentRow extends RowDataPacket {
     id: number;
     appointmentDate: string;
@@ -84,6 +94,9 @@ interface UpcomingAppointmentRow extends RowDataPacket {
     locationName: string;
     locationAddress: string;
     locationCity: string;
+    reviewId: number | null;
+    reviewRating: number | null;
+    reviewComment: string | null;
 }
 
 export interface CreatedAppointment {
@@ -146,16 +159,16 @@ export class AppointmentBookingService {
         return rows.map((row) => this.mapUpcoming(row));
     }
 
-    async listHistory(patientId: number): Promise<UpcomingAppointment[]> {
+    async listHistory(patientId: number): Promise<HistoryAppointment[]> {
         const [rows] = await pool.query<UpcomingAppointmentRow[]>(
-            `${this.appointmentSummarySelect()}
+            `${this.appointmentHistorySelect()}
              WHERE a.patient_id = ?
                AND a.status = 'completed'
              ORDER BY a.appointment_date DESC, a.start_time DESC`,
             [patientId]
         );
 
-        return rows.map((row) => this.mapUpcoming(row));
+        return rows.map((row) => this.mapHistory(row));
     }
 
     async cancel(patientId: number, appointmentId: number): Promise<void> {
@@ -425,6 +438,46 @@ export class AppointmentBookingService {
              INNER JOIN doctors d ON d.id = a.doctor_id
              INNER JOIN specialties sp ON sp.id = d.specialty_id
              INNER JOIN locations l ON l.id = a.location_id`;
+    }
+
+    private appointmentHistorySelect(): string {
+        return `SELECT
+                a.id,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
+                a.status AS status,
+                s.name AS serviceName,
+                d.first_name AS doctorFirstName,
+                d.last_name AS doctorLastName,
+                sp.name AS specialtyName,
+                l.name AS locationName,
+                l.address AS locationAddress,
+                l.city AS locationCity,
+                r.id AS reviewId,
+                r.rating AS reviewRating,
+                r.comment AS reviewComment
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             INNER JOIN specialties sp ON sp.id = d.specialty_id
+             INNER JOIN locations l ON l.id = a.location_id
+             LEFT JOIN doctor_reviews r ON r.appointment_id = a.id`;
+    }
+
+    private mapHistory(row: UpcomingAppointmentRow): HistoryAppointment {
+        return {
+            ...this.mapUpcoming(row),
+            review: row.reviewId
+                ? {
+                    id: Number(row.reviewId),
+                    rating: Number(row.reviewRating),
+                    comment: row.reviewComment === null || row.reviewComment === undefined
+                        ? null
+                        : String(row.reviewComment)
+                }
+                : null
+        };
     }
 
     private mapUpcoming(row: UpcomingAppointmentRow): UpcomingAppointment {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { RowDataPacket } from 'mysql2';
 import pool from '../db/connection';
 import { SPECIALTY_NAME_BY_SLUG, slugFromSpecialtyName } from '../specialty-slugs';
+import { DOCTOR_RATINGS_JOIN, mapDoctorRating } from '../doctors/doctor-ratings';
 
 interface SpecialtyRow extends RowDataPacket {
     id: number;
@@ -24,6 +25,8 @@ interface DoctorRow extends RowDataPacket {
     lastName: string;
     biography: string | null;
     imageUrl: string | null;
+    averageRating: number | string | null;
+    reviewCount: number | string | null;
 }
 
 export class SpecialtyController {
@@ -97,14 +100,17 @@ export class SpecialtyController {
 
             const [doctorRows] = await pool.query<DoctorRow[]>(
                 `SELECT
-                    id,
-                    first_name AS firstName,
-                    last_name AS lastName,
-                    biography,
-                    image_url AS imageUrl
-                 FROM doctors
-                 WHERE specialty_id = ?
-                 ORDER BY last_name, first_name`,
+                    d.id,
+                    d.first_name AS firstName,
+                    d.last_name AS lastName,
+                    d.biography,
+                    d.image_url AS imageUrl,
+                    rating_stats.averageRating,
+                    COALESCE(rating_stats.reviewCount, 0) AS reviewCount
+                 FROM doctors d
+                 ${DOCTOR_RATINGS_JOIN}
+                 WHERE d.specialty_id = ?
+                 ORDER BY d.last_name, d.first_name`,
                 [specialtyId]
             );
 
@@ -131,7 +137,8 @@ export class SpecialtyController {
                         id: specialtyId,
                         name: specialty.name,
                         slug
-                    }
+                    },
+                    ...mapDoctorRating(row)
                 }))
             });
         } catch (error) {

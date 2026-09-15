@@ -221,3 +221,27 @@ CREATE TABLE IF NOT EXISTS appointments (
 
     INDEX idx_appointments_doctor_date (doctor_id, appointment_date)
 );
+
+-- =====================================================
+-- DOCTOR_REVIEWS
+-- Reviews from patients about doctors
+-- Not seed/configuration data. Starts empty.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS doctor_reviews (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id BIGINT NOT NULL UNIQUE,
+    rating TINYINT NOT NULL,
+    comment VARCHAR(500) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_doctor_reviews_rating
+        CHECK (rating BETWEEN 1 AND 5),
+
+    CONSTRAINT fk_doctor_reviews_appointment
+        FOREIGN KEY (appointment_id)
+        REFERENCES appointments(id)
+        ON DELETE RESTRICT
+);

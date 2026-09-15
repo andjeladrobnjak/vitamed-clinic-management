@@ -360,6 +360,10 @@
   font-weight: 500;
 }
 
+.doctor-identity app-doctor-rating {
+  margin-top: 0.4rem;
+}
+
 .doctor-bio {
   margin: 0;
   color: var(--muted);

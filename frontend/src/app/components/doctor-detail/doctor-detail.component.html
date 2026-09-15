@@ -61,6 +61,7 @@
                 <p class="eyebrow">{{ doctor.specialty.name }}</p>
                 <h1>Dr med. {{ doctor.firstName }} {{ doctor.lastName }}</h1>
                 <p class="doctor-role">{{ specialistTitle(doctor.specialty.name) }}</p>
+                <app-doctor-rating [averageRating]="doctor.averageRating" [reviewCount]="doctor.reviewCount" />
               </div>
 
               @if (doctor.biography) {

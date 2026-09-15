@@ -1,0 +1,16 @@
+<p class="doctor-rating" [class.is-empty]="!hasRating">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    @for (node of starIcon; track $index) {
+      @if (node[0] === 'path') {
+        <path [attr.d]="$any(node[1]).d"></path>
+      } @else if (node[0] === 'polygon') {
+        <polygon [attr.points]="$any(node[1]).points"></polygon>
+      }
+    }
+  </svg>
+  @if (hasRating) {
+    <span>{{ ratingLabel }}</span>
+  } @else {
+    <span>Još nema ocena</span>
+  }
+</p>

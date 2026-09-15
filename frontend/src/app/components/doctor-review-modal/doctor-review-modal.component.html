@@ -1,0 +1,106 @@
+<div class="review-overlay" (click)="onOverlayClick($event)">
+  <div
+    #dialog
+    class="review-dialog"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'review-title'"
+  >
+    <button
+      #closeButton
+      class="review-close"
+      type="button"
+      [disabled]="isSaving()"
+      (click)="dismissed.emit()"
+      aria-label="Zatvori"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of closeIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'line') {
+            <line [attr.x1]="$any(node[1]).x1" [attr.y1]="$any(node[1]).y1" [attr.x2]="$any(node[1]).x2" [attr.y2]="$any(node[1]).y2"></line>
+          }
+        }
+      </svg>
+    </button>
+
+    <p class="review-kicker">Ocena lekara</p>
+    <h2 id="review-title">{{ isEditMode ? 'Izmenite ocenu' : 'Ocenite lekara' }}</h2>
+
+    <p class="review-doctor">
+      <strong>dr {{ appointment().doctor.firstName }} {{ appointment().doctor.lastName }}</strong>
+      <span>{{ appointment().doctor.specialty.name }}</span>
+    </p>
+
+    <div class="star-row" role="radiogroup" aria-label="Ocena od 1 do 5" (mouseleave)="clearHovered()">
+      @for (star of stars; track star) {
+        <button
+          type="button"
+          class="star-btn"
+          [class.is-active]="star <= displayedRating"
+          [disabled]="isSaving()"
+          role="radio"
+          [attr.aria-checked]="selectedRating === star"
+          [attr.aria-label]="star + ' od 5'"
+          (mouseenter)="setHovered(star)"
+          (focus)="setHovered(star)"
+          (blur)="clearHovered()"
+          (click)="selectRating(star)"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of starIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'polygon') {
+                <polygon [attr.points]="$any(node[1]).points"></polygon>
+              }
+            }
+          </svg>
+        </button>
+      }
+    </div>
+
+    <label class="comment-field">
+      <span>Komentar (opciono)</span>
+      <textarea
+        [value]="comment"
+        [disabled]="isSaving()"
+        maxlength="500"
+        rows="4"
+        placeholder="Napišite ukratko svoje iskustvo sa lekarom..."
+        (input)="onCommentInput($event)"
+      ></textarea>
+      <span class="char-count">{{ commentLength }} / 500</span>
+    </label>
+
+    @if (errorMessage()) {
+      <p class="review-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="review-actions">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="isSaving()"
+        (click)="dismissed.emit()"
+      >
+        Odustani
+      </button>
+      <button
+        class="btn btn-primary"
+        type="button"
+        [disabled]="!canSubmit"
+        (click)="submit()"
+      >
+        @if (isSaving()) {
+          Čuvanje...
+        } @else if (isEditMode) {
+          Sačuvaj izmene
+        } @else {
+          Pošalji ocenu
+        }
+      </button>
+    </div>
+  </div>
+</div>

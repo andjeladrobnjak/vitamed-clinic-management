@@ -16,7 +16,9 @@ describe('DoctorsComponent name search', () => {
       lastName: 'Ilić',
       biography: null,
       imageUrl: null,
-      specialty: { id: 3, name: 'Endokrinologija' }
+      specialty: { id: 3, name: 'Endokrinologija' },
+      averageRating: null,
+      reviewCount: 0
     },
     {
       id: 2,
@@ -24,7 +26,9 @@ describe('DoctorsComponent name search', () => {
       lastName: 'Petrović',
       biography: null,
       imageUrl: null,
-      specialty: { id: 1, name: 'Kardiologija' }
+      specialty: { id: 1, name: 'Kardiologija' },
+      averageRating: null,
+      reviewCount: 0
     },
     {
       id: 3,
@@ -32,7 +36,9 @@ describe('DoctorsComponent name search', () => {
       lastName: 'Marković',
       biography: null,
       imageUrl: null,
-      specialty: { id: 1, name: 'Kardiologija' }
+      specialty: { id: 1, name: 'Kardiologija' },
+      averageRating: null,
+      reviewCount: 0
     }
   ];
 

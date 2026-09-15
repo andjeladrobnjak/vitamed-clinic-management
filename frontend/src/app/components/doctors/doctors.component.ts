@@ -5,11 +5,12 @@ import { LucideChevronDown, LucideSearch, LucideUser } from '@lucide/angular';
 import { Doctor, DoctorService, Specialty } from '../../services/doctor.service';
 import { doctorSpecialtyLabel } from '../../utils/specialty-label';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
+import { DoctorRatingComponent } from '../doctor-rating/doctor-rating.component';
 
 @Component({
   selector: 'app-doctors',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, SiteHeaderComponent],
+  imports: [RouterLink, RouterLinkActive, SiteHeaderComponent, DoctorRatingComponent],
   templateUrl: './doctors.component.html',
   styleUrl: './doctors.component.css'
 })
