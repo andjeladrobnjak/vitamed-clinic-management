@@ -14,4 +14,9 @@ export const routes: Routes = [
     component: PatientDashboardComponent,
     canActivate: [patientAuthGuard]
   },
+  {
+    path: 'moji-termini',
+    component: PatientDashboardComponent,
+    canActivate: [patientAuthGuard]
+  },
 ];

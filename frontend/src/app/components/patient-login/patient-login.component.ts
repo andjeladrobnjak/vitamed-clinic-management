@@ -55,7 +55,7 @@ export class PatientLoginComponent {
 
     this.patientService.login(payload).subscribe({
       next: (response) => {
-        this.authService.saveToken(response.token);
+        this.authService.saveSession(response.token, response.patient);
         this.isSubmitting = false;
         void this.router.navigate(['/moj-vitamed']);
       },

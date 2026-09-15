@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
 
 :host {
   display: block;
@@ -73,7 +73,7 @@
   align-items: stretch;
   gap: 0.22rem;
   width: fit-content;
-  color: var(--ivory);
+  color: #eeeae3;
   text-decoration: none;
   line-height: 1;
 }
@@ -86,12 +86,17 @@
 .logo-vita,
 .logo-med {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 2.35rem;
-  font-weight: 400;
+  font-size: 2.48rem;
   letter-spacing: 0.01em;
 }
 
+.logo-vita {
+  font-weight: 300;
+  font-style: normal;
+}
+
 .logo-med {
+  font-weight: 400;
   font-style: italic;
   margin-left: -0.04em;
 }
@@ -101,11 +106,14 @@
   justify-content: center;
   gap: 0.5em;
   width: 100%;
-  font-size: 0.48rem;
+  font-family: var(--sans);
+  font-size: 0.52rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #b7c4b9;
+  text-align: center;
+  line-height: 1;
 }
 
 .register-brand-copy {

@@ -1,14 +1,15 @@
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { LucideCalendar, LucideSearch, LucideUser } from '@lucide/angular';
 import { AuthService } from '../../services/auth.service';
 import { PatientService } from '../../services/patient.service';
+import { SiteHeaderComponent } from '../site-header/site-header.component';
 
 @Component({
   selector: 'app-patient-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, SiteHeaderComponent],
   templateUrl: './patient-dashboard.component.html',
   styleUrl: './patient-dashboard.component.css'
 })
@@ -20,13 +21,18 @@ export class PatientDashboardComponent implements OnInit {
   firstName = '';
   isLoading = true;
   loadError = '';
-  accountMenuOpen = false;
 
   private readonly patientService = inject(PatientService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   ngOnInit(): void {
+    const sessionPatient = this.authService.patient();
+    if (sessionPatient?.firstName) {
+      this.firstName = sessionPatient.firstName;
+      this.isLoading = false;
+    }
+
     this.patientService.getMe().subscribe({
       next: (patient) => {
         this.firstName = patient.firstName;
@@ -40,28 +46,10 @@ export class PatientDashboardComponent implements OnInit {
         }
 
         this.isLoading = false;
-        this.loadError = 'Podaci trenutno nisu dostupni. Pokušajte ponovo.';
+        if (!this.firstName) {
+          this.loadError = 'Podaci trenutno nisu dostupni. Pokušajte ponovo.';
+        }
       }
     });
-  }
-
-  toggleAccountMenu(event: Event): void {
-    event.stopPropagation();
-    this.accountMenuOpen = !this.accountMenuOpen;
-  }
-
-  closeAccountMenu(): void {
-    this.accountMenuOpen = false;
-  }
-
-  logout(): void {
-    this.accountMenuOpen = false;
-    this.authService.logout();
-    void this.router.navigate(['/']);
-  }
-
-  @HostListener('document:click')
-  onDocumentClick(): void {
-    this.accountMenuOpen = false;
   }
 }

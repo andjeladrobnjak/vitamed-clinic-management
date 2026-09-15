@@ -1,0 +1,73 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" routerLink="/" aria-label="VitaMed, privatna klinika">
+      <span class="logo-mark">
+        <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+      </span>
+      <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+    </a>
+
+    <input id="site-nav-toggle" class="nav-toggle" type="checkbox">
+    <label class="nav-toggle-label" for="site-nav-toggle">
+      <span class="nav-toggle-icon"></span>
+      <span class="visually-hidden">Meni</span>
+    </label>
+
+    <div class="nav-panel">
+      <nav class="site-nav" aria-label="Glavna navigacija">
+        <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Početna</a>
+        <a routerLink="/lekari" routerLinkActive="is-active">Lekari</a>
+        <a routerLink="/usluge" routerLinkActive="is-active">Usluge</a>
+        <a href="#">O nama</a>
+        <a routerLink="/lokacije" routerLinkActive="is-active">Lokacije</a>
+        <a href="#">Kontakt</a>
+      </nav>
+
+      <div class="header-actions">
+        @if (isAuthenticated()) {
+          <div class="account-menu">
+            <button
+              class="account-toggle"
+              type="button"
+              (click)="toggleAccountMenu($event)"
+              [attr.aria-expanded]="accountMenuOpen"
+              aria-haspopup="true"
+              aria-label="Nalog"
+            >
+              <svg class="account-icon" viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of userIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+              <svg class="account-caret" viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of chevronDownIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </button>
+
+            @if (accountMenuOpen) {
+              <div class="account-panel" (click)="$event.stopPropagation()">
+                <a routerLink="/moj-vitamed" (click)="closeAccountMenu()">Moj nalog</a>
+                <a routerLink="/moji-termini" (click)="closeAccountMenu()">Moji termini</a>
+                <span class="account-divider"></span>
+                <button class="account-logout" type="button" (click)="logout()">Odjavi se</button>
+              </div>
+            }
+          </div>
+        } @else {
+          <a routerLink="/prijava" class="btn btn-ghost">Prijava</a>
+        }
+        <a class="btn btn-primary" routerLink="/appointment" routerLinkActive="is-booking">Zakažite pregled</a>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
 
 :host {
   display: block;
@@ -67,7 +67,9 @@
   align-items: stretch;
   gap: 0.22rem;
   width: fit-content;
-  color: var(--ivory);
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+  color: #eeeae3;
   text-decoration: none;
   line-height: 1;
 }
@@ -80,12 +82,17 @@
 .logo-vita,
 .logo-med {
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 2.76rem;
-  font-weight: 400;
+  font-size: 2.48rem;
   letter-spacing: 0.01em;
 }
 
+.logo-vita {
+  font-weight: 300;
+  font-style: normal;
+}
+
 .logo-med {
+  font-weight: 400;
   font-style: italic;
   margin-left: -0.04em;
 }
@@ -95,11 +102,13 @@
   justify-content: center;
   gap: 0.5em;
   width: 100%;
+  font-family: var(--sans);
   font-size: 0.52rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #b7c4b9;
+  text-align: center;
   line-height: 1;
 }
 
@@ -156,7 +165,7 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.5rem;
 }
 
 .site-header .btn-primary {
@@ -178,15 +187,11 @@
 .account-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.2rem;
   padding: 0.35rem 0;
   border: 0;
   background: transparent;
   color: var(--ivory);
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
   cursor: pointer;
 }
 
@@ -194,9 +199,24 @@
   color: #c9b4b6;
 }
 
+.account-toggle svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-icon {
+  width: 1.22rem;
+  height: 1.22rem;
+}
+
 .account-caret {
-  font-size: 0.72rem;
-  opacity: 0.8;
+  width: 0.85rem;
+  height: 0.85rem;
+  opacity: 0.82;
 }
 
 .account-panel {
@@ -472,6 +492,10 @@
     flex-wrap: wrap;
     min-height: 5.1rem;
     gap: 0.75rem;
+  }
+
+  .logo {
+    margin-right: 0;
   }
 
   .nav-toggle-label {
