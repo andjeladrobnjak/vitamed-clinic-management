@@ -1,0 +1,198 @@
+<div class="doctors-page">
+  <app-site-header />
+
+  <main>
+    <section class="page-intro">
+      <div class="container intro-inner">
+        <p class="eyebrow">Naš tim</p>
+        <h1>Upoznajte naše lekare</h1>
+        <p class="lead">
+          Stručan tim lekara posvećen vašem zdravlju i individualnom pristupu svakom pacijentu.
+        </p>
+      </div>
+    </section>
+
+    <section class="doctors-section" aria-labelledby="doctors-heading">
+      <div class="container">
+        <h2 id="doctors-heading" class="visually-hidden">Lista lekara</h2>
+
+        <div class="filters">
+          <div class="search-field">
+            <label class="visually-hidden" for="doctor-search">Pretraga lekara po imenu</label>
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of searchIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+            </span>
+            <input
+              id="doctor-search"
+              type="text"
+              name="doctorSearch"
+              [value]="searchQuery"
+              (input)="onSearchInput($event)"
+              placeholder="Pretražite lekara po imenu..."
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="specialty-field" (click)="$event.stopPropagation()">
+            <span class="visually-hidden" id="specialty-filter-label">Filter po specijalizaciji</span>
+            <button
+              id="specialty-filter"
+              class="specialty-trigger"
+              type="button"
+              [class.is-open]="specialtyMenuOpen"
+              (click)="toggleSpecialtyMenu($event)"
+              [attr.aria-expanded]="specialtyMenuOpen"
+              aria-haspopup="listbox"
+              aria-labelledby="specialty-filter-label specialty-filter-value"
+              aria-controls="specialty-list"
+            >
+              <span id="specialty-filter-value">{{ selectedSpecialtyLabel }}</span>
+              <svg class="specialty-caret" viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of chevronDownIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </button>
+
+            @if (specialtyMenuOpen) {
+              <ul id="specialty-list" class="specialty-menu" role="listbox" aria-labelledby="specialty-filter-label">
+                <li>
+                  <button
+                    class="specialty-option"
+                    type="button"
+                    role="option"
+                    [class.is-selected]="selectedSpecialtyId === ''"
+                    [attr.aria-selected]="selectedSpecialtyId === ''"
+                    (click)="selectSpecialty('')"
+                  >
+                    Sve specijalizacije
+                  </button>
+                </li>
+                @for (specialty of specialties; track specialty.id) {
+                  <li>
+                    <button
+                      class="specialty-option"
+                      type="button"
+                      role="option"
+                      [class.is-selected]="selectedSpecialtyId === '' + specialty.id"
+                      [attr.aria-selected]="selectedSpecialtyId === '' + specialty.id"
+                      (click)="selectSpecialty('' + specialty.id)"
+                    >
+                      {{ specialty.name }}
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+
+        @if (isLoading) {
+          <p class="status-message">Učitavanje lekara...</p>
+        } @else if (loadError) {
+          <div class="status-panel">
+            <p>{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+          </div>
+        } @else if (filteredDoctors.length === 0) {
+          <div class="status-panel">
+            <p>Nema lekara koji odgovaraju izabranoj pretrazi.</p>
+            @if (hasActiveFilters) {
+              <button class="btn btn-outline" type="button" (click)="clearFilters()">Prikaži sve lekare</button>
+            }
+          </div>
+        } @else {
+          <div class="doctors-grid">
+            @for (doctor of filteredDoctors; track doctor.id) {
+              <a class="doctor-card" [routerLink]="['/lekari', doctor.id]">
+                <div class="doctor-photo">
+                  @if (doctor.imageUrl) {
+                    <img
+                      [src]="doctor.imageUrl"
+                      [alt]="'Dr med. ' + doctor.firstName + ' ' + doctor.lastName"
+                    >
+                  } @else {
+                    <div class="doctor-fallback" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        @for (node of userIcon; track $index) {
+                          @if (node[0] === 'path') {
+                            <path [attr.d]="$any(node[1]).d"></path>
+                          } @else if (node[0] === 'circle') {
+                            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                          }
+                        }
+                      </svg>
+                    </div>
+                  }
+                </div>
+                <div class="doctor-meta">
+                  <h3>Dr med. {{ doctor.firstName }} {{ doctor.lastName }}</h3>
+                  <p>{{ specialtyLabel(doctor.specialty.name) }}</p>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" routerLink="/" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Početna</a></li>
+          <li><a routerLink="/lekari">Lekari</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a routerLink="/lokacije">Lokacije</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>

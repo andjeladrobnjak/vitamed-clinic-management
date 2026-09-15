@@ -1,0 +1,283 @@
+<div class="doctor-page">
+  <app-site-header />
+
+  <main>
+    @if (isLoading) {
+      <section class="page-status">
+        <div class="container">
+          <p class="status-message">Učitavanje lekara...</p>
+        </div>
+      </section>
+    } @else if (notFound) {
+      <section class="page-status">
+        <div class="container status-panel">
+          <h1>Lekar nije pronađen.</h1>
+          <p>Proverite adresu ili se vratite na pregled svih lekara.</p>
+          <a class="btn btn-outline" routerLink="/lekari">Nazad na lekare</a>
+        </div>
+      </section>
+    } @else if (loadError) {
+      <section class="page-status">
+        <div class="container status-panel">
+          <p>{{ loadError }}</p>
+          <button class="btn btn-outline" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+        </div>
+      </section>
+    } @else if (doctor) {
+      <section class="doctor-hero">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Putanja">
+            <a routerLink="/">Početna</a>
+            <span aria-hidden="true">/</span>
+            <a routerLink="/lekari">Naši lekari</a>
+            <span aria-hidden="true">/</span>
+            <span>Dr med. {{ doctor.firstName }} {{ doctor.lastName }}</span>
+          </nav>
+
+          <div class="hero-layout">
+            <div class="hero-photo">
+              @if (doctor.imageUrl) {
+                <img
+                  [src]="doctor.imageUrl"
+                  [alt]="'Dr ' + doctor.firstName + ' ' + doctor.lastName"
+                >
+              } @else {
+                <div class="hero-fallback" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    @for (node of userIcon; track $index) {
+                      @if (node[0] === 'path') {
+                        <path [attr.d]="$any(node[1]).d"></path>
+                      } @else if (node[0] === 'circle') {
+                        <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                      }
+                    }
+                  </svg>
+                </div>
+              }
+            </div>
+
+            <div class="hero-copy">
+              <div class="doctor-identity">
+                <p class="eyebrow">{{ doctor.specialty.name }}</p>
+                <h1>Dr med. {{ doctor.firstName }} {{ doctor.lastName }}</h1>
+                <p class="doctor-role">{{ specialistTitle(doctor.specialty.name) }}</p>
+              </div>
+
+              @if (doctor.biography) {
+                <p class="doctor-bio">{{ doctor.biography }}</p>
+              }
+
+              @if (doctor.education || doctor.professionalExperience) {
+                <div class="hero-credentials">
+                  @if (doctor.education) {
+                    <div class="credential-block">
+                      <h2>
+                        <span class="card-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            @for (node of graduationIcon; track $index) {
+                              @if (node[0] === 'path') {
+                                <path [attr.d]="$any(node[1]).d"></path>
+                              } @else if (node[0] === 'circle') {
+                                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                              } @else if (node[0] === 'polyline') {
+                                <polyline [attr.points]="$any(node[1]).points"></polyline>
+                              } @else if (node[0] === 'line') {
+                                <line [attr.x1]="$any(node[1]).x1" [attr.y1]="$any(node[1]).y1" [attr.x2]="$any(node[1]).x2" [attr.y2]="$any(node[1]).y2"></line>
+                              } @else if (node[0] === 'polygon') {
+                                <polygon [attr.points]="$any(node[1]).points"></polygon>
+                              }
+                            }
+                          </svg>
+                        </span>
+                        Obrazovanje
+                      </h2>
+                      <p>{{ doctor.education }}</p>
+                    </div>
+                  }
+
+                  @if (doctor.professionalExperience) {
+                    <div class="credential-block">
+                      <h2>
+                        <span class="card-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            @for (node of briefcaseIcon; track $index) {
+                              @if (node[0] === 'path') {
+                                <path [attr.d]="$any(node[1]).d"></path>
+                              } @else if (node[0] === 'circle') {
+                                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                              } @else if (node[0] === 'polyline') {
+                                <polyline [attr.points]="$any(node[1]).points"></polyline>
+                              } @else if (node[0] === 'rect') {
+                                <rect
+                                  [attr.x]="$any(node[1]).x"
+                                  [attr.y]="$any(node[1]).y"
+                                  [attr.width]="$any(node[1]).width"
+                                  [attr.height]="$any(node[1]).height"
+                                  [attr.rx]="$any(node[1]).rx"
+                                  [attr.ry]="$any(node[1]).ry"
+                                ></rect>
+                              }
+                            }
+                          </svg>
+                        </span>
+                        Profesionalno iskustvo
+                      </h2>
+                      <p>{{ doctor.professionalExperience }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <a
+              class="btn hero-book"
+              [routerLink]="['/appointment']"
+              [queryParams]="{ doctor: doctor.id }"
+            >
+              Zakažite pregled
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="services-heading">
+        <div class="container">
+          <div class="section-heading">
+            <h2 id="services-heading">Pregledi koje obavlja</h2>
+          </div>
+
+          @if (doctor.services.length === 0) {
+            <p class="empty-copy">Trenutno nema unetih pregleda za ovog lekara.</p>
+          } @else {
+            <ul class="service-list">
+              @for (service of doctor.services; track service.id) {
+                <li class="service-row">
+                  <div class="service-copy">
+                    <h3>{{ service.name }}</h3>
+                    @if (service.description) {
+                      <p>{{ service.description }}</p>
+                    }
+                  </div>
+                  <div class="service-meta">
+                    <span class="service-duration">{{ formatDuration(service.durationMinutes) }}</span>
+                    <span class="service-price">{{ formatPrice(service.price) }}</span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </section>
+
+      <section class="content-section locations-section" aria-labelledby="locations-heading">
+        <div class="container">
+          <div class="section-heading">
+            <h2 id="locations-heading">Lokacije na kojima radi</h2>
+          </div>
+
+          @if (doctor.locations.length === 0) {
+            <p class="empty-copy">Lokacije za ovog lekara trenutno nisu unete.</p>
+          } @else {
+            <ul class="location-grid">
+              @for (location of doctor.locations; track location.id) {
+                <li class="location-card">
+                  <div>
+                    <h3>{{ location.name }}</h3>
+                    @if (location.address || location.city) {
+                      <p>
+                        <span class="card-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            @for (node of pinIcon; track $index) {
+                              @if (node[0] === 'path') {
+                                <path [attr.d]="$any(node[1]).d"></path>
+                              } @else if (node[0] === 'circle') {
+                                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                              } @else if (node[0] === 'polyline') {
+                                <polyline [attr.points]="$any(node[1]).points"></polyline>
+                              }
+                            }
+                          </svg>
+                        </span>
+                        {{ location.address }}{{ location.city ? ', ' + location.city : '' }}
+                      </p>
+                    }
+                    @if (location.workingHours) {
+                      <p>
+                        <span class="card-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            @for (node of clockIcon; track $index) {
+                              @if (node[0] === 'path') {
+                                <path [attr.d]="$any(node[1]).d"></path>
+                              } @else if (node[0] === 'circle') {
+                                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                              }
+                            }
+                          </svg>
+                        </span>
+                        {{ location.workingHours }}
+                      </p>
+                    }
+                  </div>
+                  <a
+                    class="text-link"
+                    routerLink="/lokacije"
+                    [queryParams]="{ location: location.id }"
+                  >
+                    Pogledajte lokaciju
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </section>
+    }
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" routerLink="/" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Početna</a></li>
+          <li><a routerLink="/lekari">Lekari</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a routerLink="/lokacije">Lokacije</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>

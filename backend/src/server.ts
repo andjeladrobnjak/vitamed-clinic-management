@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import pool from './db/connection';
 import patientRouter from './routers/patient.router';
+import doctorRouter from './routers/doctor.router';
 import specialtyRouter from './routers/specialty.router';
 import clinicServiceRouter from './routers/clinic-service.router';
 
@@ -15,6 +16,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/patients', patientRouter);
+app.use('/api/doctors', doctorRouter);
 app.use('/api/specialties', specialtyRouter);
 app.use('/api/services', clinicServiceRouter);
 
