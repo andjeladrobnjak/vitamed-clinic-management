@@ -123,6 +123,73 @@ export class AppointmentController {
         }
     }
 
+    async upcoming(req: Request, res: Response): Promise<void> {
+        try {
+            const patientId = (req as AuthenticatedRequest).patientId;
+            if (!patientId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            const appointment = await this.bookingService.getUpcoming(patientId);
+            res.json({ appointment });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati predstojeći pregled.');
+        }
+    }
+
+    async upcomingAll(req: Request, res: Response): Promise<void> {
+        try {
+            const patientId = (req as AuthenticatedRequest).patientId;
+            if (!patientId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            const appointments = await this.bookingService.listUpcoming(patientId);
+            res.json({ appointments });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati predstojeće preglede.');
+        }
+    }
+
+    async history(req: Request, res: Response): Promise<void> {
+        try {
+            const patientId = (req as AuthenticatedRequest).patientId;
+            if (!patientId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            const appointments = await this.bookingService.listHistory(patientId);
+            res.json({ appointments });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati istoriju pregleda.');
+        }
+    }
+
+    async cancel(req: Request, res: Response): Promise<void> {
+        try {
+            const patientId = (req as AuthenticatedRequest).patientId;
+            const appointmentId = parsePositiveId(req.params.id);
+
+            if (!patientId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            if (!appointmentId) {
+                res.status(400).json({ message: 'Neispravan identifikator pregleda.' });
+                return;
+            }
+
+            await this.bookingService.cancel(patientId, appointmentId);
+            res.json({ cancelled: true });
+        } catch (error) {
+            this.handleError(res, error, 'Pregled trenutno nije moguće otkazati.');
+        }
+    }
+
     private formatSerbianDate(isoDate: string): string {
         const [year, month, day] = isoDate.split('-').map(Number);
         return new Intl.DateTimeFormat('sr-Latn-RS', {

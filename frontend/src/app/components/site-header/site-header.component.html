@@ -56,8 +56,7 @@
 
             @if (accountMenuOpen) {
               <div class="account-panel" (click)="$event.stopPropagation()">
-                <a routerLink="/moj-vitamed" (click)="closeAccountMenu()">Moj nalog</a>
-                <a routerLink="/moji-termini" (click)="closeAccountMenu()">Moji termini</a>
+                <a routerLink="/moj-vitamed" (click)="closeAccountMenu()">Moj VitaMed</a>
                 <span class="account-divider"></span>
                 <button class="account-logout" type="button" (click)="logout()">Odjavi se</button>
               </div>

@@ -1,0 +1,135 @@
+:host {
+  --petrol: #17343a;
+  --petrol-soft: #23454c;
+  --ivory: #f5f3ee;
+  --white: #ffffff;
+  --burgundy: #7a3f46;
+  --muted: #5c6564;
+  --sans: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+.cancel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(23, 52, 58, 0.46);
+}
+
+.cancel-dialog {
+  width: min(28.5rem, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow: auto;
+  padding: 2rem 1.85rem 1.65rem;
+  background: var(--white);
+  color: var(--petrol);
+  font-family: var(--sans);
+  border: 1px solid #e7e2d8;
+  border-radius: 6px;
+  box-shadow: 0 18px 48px rgba(23, 52, 58, 0.16);
+}
+
+.cancel-kicker {
+  margin: 0 0 0.4rem;
+  color: var(--burgundy);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cancel-dialog h2 {
+  margin: 0 0 1rem;
+  font-size: 1.42rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.cancel-summary {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0 0 1rem;
+  padding: 0.95rem 1rem;
+  background: var(--ivory);
+  border: 1px solid #e7e2d8;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.cancel-summary strong {
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.cancel-lead,
+.cancel-error {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.cancel-error {
+  color: var(--burgundy);
+}
+
+.cancel-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.78rem 1.1rem;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, opacity 0.2s ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.btn-secondary {
+  background: var(--ivory);
+  color: var(--petrol);
+  border-color: var(--petrol);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e4ebe5;
+}
+
+.btn-danger {
+  background: var(--white);
+  color: var(--burgundy);
+  border-color: var(--burgundy);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #f6ecec;
+}
+
+@media (max-width: 560px) {
+  .cancel-actions {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,7 +2,7 @@
   <app-site-header />
 
   <main>
-    <section class="welcome">
+    <section class="welcome dashboard-section">
       <div class="container welcome-inner">
         @if (isLoading) {
           <p class="welcome-status">Učitavanje Vašeg naloga...</p>
@@ -12,33 +12,67 @@
           <p class="eyebrow">Portal za pacijente</p>
           <h1>Dobro došli, {{ firstName }}.</h1>
           <p class="lead">Ovde možete upravljati svojim pregledima i podacima.</p>
-          <a class="btn btn-primary" routerLink="/appointment">Zakažite pregled</a>
         }
       </div>
     </section>
 
-    <section class="section upcoming" aria-labelledby="upcoming-heading">
+    <section class="section dashboard-section upcoming" aria-labelledby="upcoming-heading">
       <div class="container">
         <p class="eyebrow">Vaš termin</p>
         <h2 id="upcoming-heading">Predstojeći pregled</h2>
 
         <div class="upcoming-panel">
-          <div class="upcoming-empty">
-            <p class="upcoming-empty-title">Nemate zakazanih pregleda.</p>
-            <p>Zakažite pregled kod jednog od naših specijalista u nekoliko koraka.</p>
-            <a class="btn btn-outline" routerLink="/appointment">Zakažite pregled</a>
-          </div>
+          @if (upcomingLoading) {
+            <p class="upcoming-status">Učitavanje predstojećeg pregleda...</p>
+          } @else if (upcomingError) {
+            <div class="upcoming-empty upcoming-empty-compact">
+              <p class="upcoming-empty-title">{{ upcomingError }}</p>
+              <button class="btn btn-outline" type="button" (click)="retryUpcoming()">Pokušajte ponovo</button>
+            </div>
+          } @else if (upcomingAppointment) {
+            <article class="upcoming-card">
+              <p class="upcoming-kicker">Sledeći termin</p>
+              <h3>{{ upcomingAppointment.service.name }}</h3>
+              <p class="upcoming-clinician">
+                <span class="upcoming-doctor">dr {{ upcomingAppointment.doctor.firstName }} {{ upcomingAppointment.doctor.lastName }}</span>
+                <span class="upcoming-sep" aria-hidden="true">·</span>
+                <span class="upcoming-specialty">{{ upcomingAppointment.doctor.specialty.name }}</span>
+              </p>
+              <dl class="upcoming-meta">
+                <div>
+                  <dt>Datum i vreme</dt>
+                  <dd>{{ formatDisplayDate(upcomingAppointment.appointmentDate) }} · {{ upcomingAppointment.startTime }}</dd>
+                </div>
+                <div>
+                  <dt>Lokacija</dt>
+                  <dd>
+                    {{ upcomingAppointment.location.name }}
+                    @if (upcomingAppointment.location.address) {
+                      <span class="upcoming-address">{{ upcomingAppointment.location.address }}, {{ upcomingAppointment.location.city }}</span>
+                    }
+                  </dd>
+                </div>
+              </dl>
+              <button class="btn btn-cancel" type="button" (click)="openCancelModal()">Otkaži pregled</button>
+            </article>
+          } @else {
+            <div class="upcoming-empty upcoming-empty-compact">
+              <p class="upcoming-empty-title">Nemate zakazanih pregleda.</p>
+              <p>Zakažite pregled kod jednog od naših specijalista.</p>
+              <a class="btn btn-outline" routerLink="/appointment">Zakažite pregled</a>
+            </div>
+          }
         </div>
       </div>
     </section>
 
-    <section class="section access" aria-labelledby="access-heading">
+    <section class="section dashboard-section access" aria-labelledby="access-heading">
       <div class="container">
         <p class="eyebrow">Portal</p>
         <h2 id="access-heading">Brzi pristup</h2>
 
         <div class="access-grid">
-          <article class="access-card">
+          <a class="access-card" routerLink="/moji-termini">
             <div class="access-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 @for (node of calendarIcon; track $index) {
@@ -60,13 +94,24 @@
               </svg>
             </div>
             <h3>Moji pregledi</h3>
-            <p>Predstojeći termini i istorija pregleda.</p>
-          </article>
+            <p>Pregledajte sve predstojeće zakazane preglede.</p>
+            <span class="access-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of chevronIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </span>
+          </a>
 
-          <article class="access-card access-card-alt">
+          <a class="access-card" routerLink="/istorija-pregleda">
             <div class="access-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
-                @for (node of searchIcon; track $index) {
+                @for (node of clockIcon; track $index) {
                   @if (node[0] === 'path') {
                     <path [attr.d]="$any(node[1]).d"></path>
                   } @else if (node[0] === 'circle') {
@@ -75,11 +120,22 @@
                 }
               </svg>
             </div>
-            <h3>Pronađite lekara</h3>
-            <p>Pretražite lekare prema specijalizaciji i ocenama.</p>
-          </article>
+            <h3>Istorija pregleda</h3>
+            <p>Pregledajte prethodno obavljene preglede.</p>
+            <span class="access-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of chevronIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </span>
+          </a>
 
-          <article class="access-card">
+          <a class="access-card" routerLink="/moj-profil">
             <div class="access-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 @for (node of userIcon; track $index) {
@@ -92,12 +148,34 @@
               </svg>
             </div>
             <h3>Moj profil</h3>
-            <p>Pregledajte i upravljajte svojim podacima.</p>
-          </article>
+            <p>Pregledajte i izmenite svoje lične podatke.</p>
+            <span class="access-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of chevronIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </span>
+          </a>
         </div>
       </div>
     </section>
   </main>
+
+  @if (cancelModalOpen && upcomingAppointment) {
+    <app-cancel-appointment-modal
+      [appointment]="upcomingAppointment"
+      [dateLabel]="formatDisplayDate(upcomingAppointment.appointmentDate)"
+      [isCancelling]="isCancelling"
+      [errorMessage]="cancelError"
+      (dismissed)="closeCancelModal()"
+      (confirmed)="confirmCancel()"
+    />
+  }
 
   <footer class="site-footer">
     <div class="container footer-bottom">

@@ -1,0 +1,94 @@
+<div class="patient-page">
+  <app-site-header />
+
+  <main>
+    <section class="portal-intro">
+      <div class="container">
+        <p class="eyebrow">Portal za pacijente</p>
+        <h1>Moj profil</h1>
+        <p class="lead">Pregledajte i izmenite svoje lične podatke.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        @if (isLoading) {
+          <p class="status-note">Učitavanje profila...</p>
+        } @else if (loadError) {
+          <div class="empty-panel">
+            <p class="empty-title">{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retry()">Pokušajte ponovo</button>
+          </div>
+        } @else {
+          <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="onSubmit()" novalidate>
+            <div class="field-pair">
+              <label class="field">
+                <span>Ime</span>
+                <input type="text" formControlName="firstName" autocomplete="given-name">
+                @if (profileForm.controls.firstName.touched && profileForm.controls.firstName.invalid) {
+                  <p class="error-message">Unesite ime.</p>
+                }
+              </label>
+              <label class="field">
+                <span>Prezime</span>
+                <input type="text" formControlName="lastName" autocomplete="family-name">
+                @if (profileForm.controls.lastName.touched && profileForm.controls.lastName.invalid) {
+                  <p class="error-message">Unesite prezime.</p>
+                }
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Email</span>
+              <input type="email" formControlName="email" autocomplete="email">
+              @if (profileForm.controls.email.touched && profileForm.controls.email.invalid) {
+                <p class="error-message">Unesite ispravnu email adresu.</p>
+              }
+            </label>
+
+            <label class="field">
+              <span>Telefon</span>
+              <div class="phone-input" [class.field-invalid]="profileForm.controls.phone.touched && profileForm.controls.phone.invalid">
+                <span class="phone-prefix">+381</span>
+                <input
+                  type="tel"
+                  [value]="phoneNationalNumber"
+                  (input)="onPhoneInput($event)"
+                  (blur)="onPhoneBlur()"
+                  autocomplete="tel-national"
+                  inputmode="numeric"
+                >
+              </div>
+              @if (profileForm.controls.phone.touched && profileForm.controls.phone.invalid) {
+                <p class="error-message">Unesite ispravan broj telefona.</p>
+              }
+            </label>
+
+            <label class="field">
+              <span>JMBG</span>
+              <input type="text" [value]="jmbg" readonly disabled>
+              <p class="field-hint">JMBG se ne može menjati.</p>
+            </label>
+
+            @if (serverError) {
+              <p class="form-alert" role="alert">{{ serverError }}</p>
+            }
+            @if (successMessage) {
+              <p class="form-success" role="status">{{ successMessage }}</p>
+            }
+
+            <button class="btn btn-primary" type="submit" [disabled]="isSaving">
+              {{ isSaving ? 'Čuvanje…' : 'Sačuvaj izmene' }}
+            </button>
+          </form>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>

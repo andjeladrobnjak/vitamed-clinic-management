@@ -2,7 +2,13 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import type { PoolConnection } from 'mysql2/promise';
 import pool from '../db/connection';
 import { ISO_DATE_PATTERN } from '../availability/availability.constants';
-import { isIsoDate, normalizeTimeLabel } from '../availability/availability.logic';
+import {
+    clinicClock,
+    compareIsoDates,
+    isIsoDate,
+    normalizeTimeLabel,
+    timeToMinutes
+} from '../availability/availability.logic';
 import { AvailabilityContextError, AvailabilityService, parsePositiveId } from '../availability/availability.service';
 
 interface PatientRow extends RowDataPacket {
@@ -47,6 +53,39 @@ export interface CreateAppointmentInput {
     authenticatedPatientId?: number | null;
 }
 
+export interface UpcomingAppointment {
+    id: number;
+    appointmentDate: string;
+    startTime: string;
+    endTime: string;
+    service: { name: string };
+    doctor: {
+        firstName: string;
+        lastName: string;
+        specialty: { name: string };
+    };
+    location: {
+        name: string;
+        address: string;
+        city: string;
+    };
+}
+
+interface UpcomingAppointmentRow extends RowDataPacket {
+    id: number;
+    appointmentDate: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    serviceName: string;
+    doctorFirstName: string;
+    doctorLastName: string;
+    specialtyName: string;
+    locationName: string;
+    locationAddress: string;
+    locationCity: string;
+}
+
 export interface CreatedAppointment {
     id: number;
     status: 'confirmed';
@@ -74,6 +113,103 @@ const JMBG_PATTERN = /^\d{13}$/;
 
 export class AppointmentBookingService {
     constructor(private readonly availabilityService = new AvailabilityService()) {}
+
+    async getUpcoming(patientId: number): Promise<UpcomingAppointment | null> {
+        const appointments = await this.listUpcoming(patientId, 1);
+        return appointments[0] ?? null;
+    }
+
+    async listUpcoming(patientId: number, limit?: number): Promise<UpcomingAppointment[]> {
+        const clock = clinicClock();
+        const params: Array<string | number> = [
+            patientId,
+            clock.date,
+            clock.date,
+            this.minutesToSqlTime(clock.minutes)
+        ];
+
+        let sql = `${this.appointmentSummarySelect()}
+             WHERE a.patient_id = ?
+               AND a.status = 'confirmed'
+               AND (
+                    a.appointment_date > ?
+                    OR (a.appointment_date = ? AND a.start_time > ?)
+               )
+             ORDER BY a.appointment_date ASC, a.start_time ASC`;
+
+        if (limit !== undefined) {
+            sql += ' LIMIT ?';
+            params.push(limit);
+        }
+
+        const [rows] = await pool.query<UpcomingAppointmentRow[]>(sql, params);
+        return rows.map((row) => this.mapUpcoming(row));
+    }
+
+    async listHistory(patientId: number): Promise<UpcomingAppointment[]> {
+        const [rows] = await pool.query<UpcomingAppointmentRow[]>(
+            `${this.appointmentSummarySelect()}
+             WHERE a.patient_id = ?
+               AND a.status = 'completed'
+             ORDER BY a.appointment_date DESC, a.start_time DESC`,
+            [patientId]
+        );
+
+        return rows.map((row) => this.mapUpcoming(row));
+    }
+
+    async cancel(patientId: number, appointmentId: number): Promise<void> {
+        const [rows] = await pool.query<UpcomingAppointmentRow[]>(
+            `SELECT
+                a.id,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
+                a.status AS status,
+                s.name AS serviceName,
+                d.first_name AS doctorFirstName,
+                d.last_name AS doctorLastName,
+                sp.name AS specialtyName,
+                l.name AS locationName,
+                l.address AS locationAddress,
+                l.city AS locationCity
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             INNER JOIN specialties sp ON sp.id = d.specialty_id
+             INNER JOIN locations l ON l.id = a.location_id
+             WHERE a.id = ?
+               AND a.patient_id = ?
+             LIMIT 1`,
+            [appointmentId, patientId]
+        );
+
+        const row = rows[0];
+        if (!row) {
+            throw new AvailabilityContextError(404, 'Zakazani pregled nije pronađen.');
+        }
+
+        if (String(row.status) !== 'confirmed') {
+            throw new AvailabilityContextError(409, 'Ovaj pregled nije moguće otkazati.');
+        }
+
+        if (!this.isStartInFuture(String(row.appointmentDate), String(row.startTime))) {
+            throw new AvailabilityContextError(409, 'Termin koji je već počeo nije moguće otkazati.');
+        }
+
+        const [result] = await pool.query<ResultSetHeader>(
+            `UPDATE appointments
+             SET status = 'cancelled'
+             WHERE id = ?
+               AND patient_id = ?
+               AND status = 'confirmed'`,
+            [appointmentId, patientId]
+        );
+
+        if (result.affectedRows !== 1) {
+            throw new AvailabilityContextError(409, 'Ovaj pregled nije moguće otkazati.');
+        }
+    }
 
     async create(input: CreateAppointmentInput): Promise<CreatedAppointment> {
         const doctorId = parsePositiveId(input.doctorId);
@@ -268,6 +404,69 @@ export class AppointmentBookingService {
                 phone: String(row.locationPhone)
             }
         };
+    }
+
+    private appointmentSummarySelect(): string {
+        return `SELECT
+                a.id,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
+                a.status AS status,
+                s.name AS serviceName,
+                d.first_name AS doctorFirstName,
+                d.last_name AS doctorLastName,
+                sp.name AS specialtyName,
+                l.name AS locationName,
+                l.address AS locationAddress,
+                l.city AS locationCity
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             INNER JOIN specialties sp ON sp.id = d.specialty_id
+             INNER JOIN locations l ON l.id = a.location_id`;
+    }
+
+    private mapUpcoming(row: UpcomingAppointmentRow): UpcomingAppointment {
+        return {
+            id: Number(row.id),
+            appointmentDate: String(row.appointmentDate),
+            startTime: String(row.startTime),
+            endTime: String(row.endTime),
+            service: {
+                name: String(row.serviceName)
+            },
+            doctor: {
+                firstName: String(row.doctorFirstName),
+                lastName: String(row.doctorLastName),
+                specialty: {
+                    name: String(row.specialtyName)
+                }
+            },
+            location: {
+                name: String(row.locationName),
+                address: String(row.locationAddress),
+                city: String(row.locationCity)
+            }
+        };
+    }
+
+    private isStartInFuture(appointmentDate: string, startTime: string): boolean {
+        const clock = clinicClock();
+        const dateOrder = compareIsoDates(appointmentDate, clock.date);
+        if (dateOrder > 0) {
+            return true;
+        }
+        if (dateOrder < 0) {
+            return false;
+        }
+        return timeToMinutes(startTime) > clock.minutes;
+    }
+
+    private minutesToSqlTime(totalMinutes: number): string {
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
     }
 
     private requiredName(value: unknown, message: string): string {

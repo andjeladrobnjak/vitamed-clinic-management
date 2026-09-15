@@ -8,5 +8,6 @@ const patientController = new PatientController();
 patientRouter.post('/register', (req, res) => patientController.register(req, res));
 patientRouter.post('/login', (req, res) => patientController.login(req, res));
 patientRouter.get('/me', authenticatePatient, (req, res) => patientController.me(req, res));
+patientRouter.patch('/me', authenticatePatient, (req, res) => patientController.updateMe(req, res));
 
 export default patientRouter;

@@ -42,6 +42,13 @@ export interface PatientProfile {
   phone?: string;
 }
 
+export interface PatientProfileUpdate {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -61,5 +68,9 @@ export class PatientService {
 
   getMe(): Observable<PatientProfile> {
     return this.http.get<PatientProfile>(this.meUrl);
+  }
+
+  updateMe(data: PatientProfileUpdate): Observable<PatientProfile> {
+    return this.http.patch<PatientProfile>(this.meUrl, data);
   }
 }

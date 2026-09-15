@@ -1,0 +1,136 @@
+.profile-form {
+  display: grid;
+  gap: 0.95rem;
+  max-width: 640px;
+  padding: 1.2rem 1.25rem 1.25rem;
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  box-shadow: 0 8px 22px rgba(23, 52, 58, 0.045);
+}
+
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.field > span {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.field input {
+  width: 100%;
+  padding: 0.68rem 0.85rem;
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  background: #fafaf7;
+  color: var(--petrol);
+  font-family: inherit;
+  font-size: 0.98rem;
+  outline: none;
+  transition: border-color 0.28s ease, background-color 0.28s ease, box-shadow 0.28s ease;
+}
+
+.field input:focus {
+  border-color: #3d5a5f;
+  background: #eef2ef;
+  box-shadow: 0 0 0 3px rgba(23, 52, 58, 0.07);
+}
+
+.field input:disabled,
+.field input[readonly] {
+  color: var(--muted);
+  background: #eef0ed;
+}
+
+.phone-input {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  background: #fafaf7;
+  overflow: hidden;
+}
+
+.phone-input:focus-within {
+  border-color: #3d5a5f;
+  background: #eef2ef;
+  box-shadow: 0 0 0 3px rgba(23, 52, 58, 0.07);
+}
+
+.phone-input.field-invalid {
+  border-color: #a56b70;
+  background: rgba(255, 248, 247, 0.92);
+  box-shadow: none;
+}
+
+.phone-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0.68rem 0 0.68rem 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.phone-input input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-left: 0.45rem;
+}
+
+.phone-input input:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+.error-message {
+  margin: 0;
+  color: #7a3f46;
+  font-size: 0.86rem;
+}
+
+.field-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.form-alert,
+.form-success {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.form-alert {
+  color: #7a3f46;
+}
+
+.form-success {
+  color: #2f5854;
+}
+
+.profile-form .btn {
+  justify-self: start;
+}
+
+@media (max-width: 620px) {
+  .field-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-form .btn {
+    width: 100%;
+  }
+}

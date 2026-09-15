@@ -306,7 +306,7 @@
 }
 
 .welcome {
-  padding: 4.4rem 0 3.2rem;
+  padding: 3.4rem 0 1.35rem;
 }
 
 .welcome-inner {
@@ -347,7 +347,7 @@
 }
 
 .lead {
-  margin: 0 0 1.7rem;
+  margin: 0;
   color: var(--muted);
   font-size: 1.08rem;
 }
@@ -358,7 +358,7 @@
 }
 
 .section {
-  padding: 0 0 4.2rem;
+  padding: 0 0 1.5rem;
 }
 
 .section h2 {
@@ -366,7 +366,21 @@
   font-size: clamp(1.45rem, 2.2vw, 1.85rem);
 }
 
-.upcoming-panel {
+.dashboard-section + .dashboard-section::before {
+  content: "";
+  display: block;
+  width: min(var(--max), calc(100% - 2.75rem));
+  height: 1px;
+  margin: 1.25rem auto 2rem;
+  background: var(--stone);
+  opacity: 0.85;
+}
+
+.dashboard-section:last-of-type {
+  padding-bottom: 3.6rem;
+}
+
+.upcoming-panel:not(:has(.upcoming-card)) {
   background: var(--white);
   border: 1px solid var(--stone);
   border-radius: 2px;
@@ -377,9 +391,23 @@
   padding: 2.4rem 2rem;
 }
 
+.upcoming-empty-compact {
+  padding: 1.05rem 1.35rem 1.15rem;
+}
+
+.upcoming-status {
+  margin: 0;
+  padding: 1.05rem 1.35rem;
+  color: var(--muted);
+}
+
 .upcoming-empty-title {
   margin: 0 0 0.45rem;
   font-weight: 600;
+}
+
+.upcoming-empty-compact .upcoming-empty-title {
+  margin-bottom: 0.25rem;
 }
 
 .upcoming-empty p {
@@ -388,41 +416,170 @@
   max-width: 32rem;
 }
 
+.upcoming-empty-compact p {
+  margin-bottom: 0.75rem;
+}
+
+.upcoming-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+  margin: 0;
+  padding: 0.88rem 1.1rem 0.82rem;
+  background: var(--white);
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  box-shadow: 0 8px 22px rgba(23, 52, 58, 0.045);
+}
+
+.upcoming-kicker {
+  margin: 0 0 0.16rem;
+  color: var(--burgundy);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.upcoming-card h3 {
+  margin: 0 0 0.16rem;
+  font-size: 1.24rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.upcoming-clinician {
+  margin: 0 0 0.58rem;
+  font-size: 0.96rem;
+  line-height: 1.35;
+}
+
+.upcoming-doctor {
+  font-weight: 500;
+}
+
+.upcoming-sep {
+  margin: 0 0.38em;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.upcoming-specialty {
+  color: var(--muted);
+  font-size: 0.94em;
+  font-weight: 400;
+}
+
+.upcoming-meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.52rem;
+  margin: 0 0 0.62rem;
+  min-width: 0;
+}
+
+.upcoming-meta div {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.upcoming-meta dt {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--burgundy);
+}
+
+.upcoming-meta dd {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.upcoming-address {
+  display: block;
+  margin-top: 0.08rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.upcoming-card .btn-cancel {
+  align-self: flex-end;
+  padding: 0.5rem 0.95rem;
+}
+
+@media (min-width: 621px) {
+  .upcoming-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.9rem;
+  }
+
+  .upcoming-kicker,
+  .upcoming-card h3,
+  .upcoming-clinician {
+    grid-column: 1 / -1;
+  }
+
+  .upcoming-meta {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+
+  .upcoming-card .btn-cancel {
+    grid-column: 2;
+    align-self: end;
+  }
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--burgundy);
+  border-color: var(--burgundy);
+}
+
+.btn-cancel:hover {
+  background: #f6ecec;
+}
+
 .access-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
+  align-items: stretch;
 }
 
 .access-card {
   display: flex;
   flex-direction: column;
-  padding: 1.55rem 1.35rem 1.4rem;
+  height: 100%;
+  min-height: 13.5rem;
+  padding: 1.55rem 1.35rem 1.2rem;
   background: var(--white);
   border: 1px solid var(--stone);
+  border-bottom-width: 2px;
   border-radius: 2px;
   box-shadow: 0 8px 22px rgba(23, 52, 58, 0.045);
+  color: inherit;
+  text-decoration: none;
   transform: translateY(0);
   transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
-}
-
-.access-card:last-child {
-  border-right: 1px solid var(--stone);
 }
 
 .access-card:hover {
   z-index: 1;
   transform: translateY(-3px);
-  border-color: rgba(23, 52, 58, 0.22);
+  border-color: rgba(23, 52, 58, 0.18);
+  border-bottom-color: var(--burgundy);
   box-shadow: 0 12px 26px rgba(23, 52, 58, 0.07);
-}
-
-.access-card-alt {
-  background: var(--white);
-}
-
-.access-card-alt:hover {
-  background: var(--white);
 }
 
 .access-icon {
@@ -464,6 +621,24 @@
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.access-arrow {
+  display: inline-flex;
+  margin-top: auto;
+  padding-top: 1.05rem;
+  color: var(--burgundy);
+}
+
+.access-arrow svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .site-footer {
@@ -564,10 +739,29 @@
   }
 
   .welcome {
-    padding: 2.6rem 0 2.2rem;
+    padding: 2.4rem 0 1.15rem;
+  }
+
+  .dashboard-section + .dashboard-section::before {
+    width: min(var(--max), calc(100% - 1.75rem));
+    margin: 1rem auto 1.85rem;
   }
 
   .upcoming-empty {
     padding: 1.7rem 1.2rem;
+  }
+
+  .upcoming-empty-compact,
+  .upcoming-card,
+  .upcoming-status {
+    padding-left: 1.15rem;
+    padding-right: 1.15rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .upcoming-card .btn-cancel {
+    align-self: stretch;
+    width: 100%;
   }
 }

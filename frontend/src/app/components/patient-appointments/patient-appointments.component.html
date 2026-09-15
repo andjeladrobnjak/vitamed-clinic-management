@@ -1,0 +1,79 @@
+<div class="patient-page">
+  <app-site-header />
+
+  <main>
+    <section class="portal-intro">
+      <div class="container">
+        <p class="eyebrow">Portal za pacijente</p>
+        <h1>Moji pregledi</h1>
+        <p class="lead">Svi Vaši predstojeći zakazani termini, hronološki.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        @if (isLoading) {
+          <p class="status-note">Učitavanje predstojećih pregleda...</p>
+        } @else if (loadError) {
+          <div class="empty-panel">
+            <p class="empty-title">{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retry()">Pokušajte ponovo</button>
+          </div>
+        } @else if (appointments.length === 0) {
+          <div class="empty-panel">
+            <p class="empty-title">Nema predstojećih pregleda.</p>
+            <p>Zakažite pregled kod jednog od naših specijalista.</p>
+            <a class="btn btn-outline" routerLink="/appointment">Zakažite pregled</a>
+          </div>
+        } @else {
+          <div class="appointment-list">
+            @for (appointment of appointments; track appointment.id) {
+              <article class="upcoming-card">
+                <p class="upcoming-kicker">Zakazani pregled</p>
+                <h2>{{ appointment.service.name }}</h2>
+                <p class="upcoming-clinician">
+                  <span class="upcoming-doctor">dr {{ appointment.doctor.firstName }} {{ appointment.doctor.lastName }}</span>
+                  <span class="upcoming-sep" aria-hidden="true">·</span>
+                  <span class="upcoming-specialty">{{ appointment.doctor.specialty.name }}</span>
+                </p>
+                <dl class="upcoming-meta">
+                  <div>
+                    <dt>Datum i vreme</dt>
+                    <dd>{{ formatDisplayDate(appointment.appointmentDate) }} · {{ appointment.startTime }}</dd>
+                  </div>
+                  <div>
+                    <dt>Lokacija</dt>
+                    <dd>
+                      {{ appointment.location.name }}
+                      @if (appointment.location.address) {
+                        <span class="upcoming-address">{{ appointment.location.address }}, {{ appointment.location.city }}</span>
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                <button class="btn btn-cancel" type="button" (click)="openCancelModal(appointment)">Otkaži pregled</button>
+              </article>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+
+  @if (cancelTarget) {
+    <app-cancel-appointment-modal
+      [appointment]="cancelTarget"
+      [dateLabel]="formatDisplayDate(cancelTarget.appointmentDate)"
+      [isCancelling]="isCancelling"
+      [errorMessage]="cancelError"
+      (dismissed)="closeCancelModal()"
+      (confirmed)="confirmCancel()"
+    />
+  }
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>

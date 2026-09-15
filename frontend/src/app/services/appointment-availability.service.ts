@@ -16,6 +16,32 @@ export interface AvailableDatesResponse {
   availableDates: string[];
 }
 
+export interface UpcomingAppointment {
+  id: number;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  service: { name: string };
+  doctor: {
+    firstName: string;
+    lastName: string;
+    specialty: { name: string };
+  };
+  location: {
+    name: string;
+    address: string;
+    city: string;
+  };
+}
+
+export interface UpcomingAppointmentResponse {
+  appointment: UpcomingAppointment | null;
+}
+
+export interface AppointmentListResponse {
+  appointments: UpcomingAppointment[];
+}
+
 export interface CreatedAppointmentResponse {
   id: number;
   status: 'confirmed';
@@ -80,6 +106,22 @@ export class AppointmentAvailabilityApi {
     phone: string;
   }): Observable<CreatedAppointmentResponse> {
     return this.http.post<CreatedAppointmentResponse>(this.baseUrl, payload);
+  }
+
+  getUpcomingAppointment(): Observable<UpcomingAppointmentResponse> {
+    return this.http.get<UpcomingAppointmentResponse>(`${this.baseUrl}/upcoming`);
+  }
+
+  getUpcomingAppointments(): Observable<AppointmentListResponse> {
+    return this.http.get<AppointmentListResponse>(`${this.baseUrl}/upcoming/all`);
+  }
+
+  getAppointmentHistory(): Observable<AppointmentListResponse> {
+    return this.http.get<AppointmentListResponse>(`${this.baseUrl}/history`);
+  }
+
+  cancelAppointment(id: number): Observable<{ cancelled: boolean }> {
+    return this.http.patch<{ cancelled: boolean }>(`${this.baseUrl}/${id}/cancel`, {});
   }
 
   private toParams(values: Record<string, string | number>): HttpParams {

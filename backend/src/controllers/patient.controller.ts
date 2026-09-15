@@ -234,19 +234,142 @@ export class PatientController {
                 phone: string;
             };
 
-            res.status(200).json({
-                id: patient.id,
-                firstName: patient.first_name,
-                lastName: patient.last_name,
-                email: patient.email,
-                jmbg: patient.jmbg,
-                phone: patient.phone
-            });
+            res.status(200).json(this.toPublicProfile(patient));
         } catch (error) {
             console.error('Greška pri dohvatanju pacijenta:', error);
             res.status(500).json({
                 message: 'Došlo je do greške na serveru. Pokušajte ponovo.'
             });
         }
+    }
+
+    async updateMe(req: Request, res: Response): Promise<void> {
+        try {
+            const patientId = (req as AuthenticatedRequest).patientId;
+
+            if (!patientId) {
+                res.status(401).json({
+                    message: 'Niste prijavljeni.'
+                });
+                return;
+            }
+
+            const firstName = String(req.body?.firstName ?? '').trim();
+            const lastName = String(req.body?.lastName ?? '').trim();
+            const email = String(req.body?.email ?? '').trim().toLowerCase();
+            const phone = String(req.body?.phone ?? '').trim();
+
+            if (!firstName || !lastName) {
+                res.status(400).json({
+                    message: 'Ime i prezime su obavezni.'
+                });
+                return;
+            }
+
+            if (firstName.length > 100 || lastName.length > 100) {
+                res.status(400).json({
+                    message: 'Ime i prezime mogu imati najviše 100 karaktera.'
+                });
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                res.status(400).json({
+                    message: 'Unesite ispravnu email adresu.'
+                });
+                return;
+            }
+
+            if (!/^\+381 \d{2} \d{3} \d{4}$/.test(phone)) {
+                res.status(400).json({
+                    message: 'Unesite ispravan broj telefona.'
+                });
+                return;
+            }
+
+            const [emailOwners] = await pool.query(
+                'SELECT id FROM patients WHERE email = ? AND id <> ? LIMIT 1',
+                [email, patientId]
+            );
+
+            if (Array.isArray(emailOwners) && emailOwners.length > 0) {
+                res.status(409).json({
+                    message: 'Pacijent sa unetim emailom već postoji.'
+                });
+                return;
+            }
+
+            await pool.query(
+                `UPDATE patients
+                 SET first_name = ?, last_name = ?, email = ?, phone = ?
+                 WHERE id = ?`,
+                [firstName, lastName, email, phone, patientId]
+            );
+
+            const [patients] = await pool.query(
+                `SELECT id, first_name, last_name, email, jmbg, phone
+                 FROM patients
+                 WHERE id = ?
+                 LIMIT 1`,
+                [patientId]
+            );
+
+            if (!Array.isArray(patients) || patients.length === 0) {
+                res.status(401).json({
+                    message: 'Niste prijavljeni.'
+                });
+                return;
+            }
+
+            res.status(200).json(this.toPublicProfile(patients[0] as {
+                id: number;
+                first_name: string;
+                last_name: string;
+                email: string;
+                jmbg: string;
+                phone: string;
+            }));
+        } catch (error) {
+            const code = typeof error === 'object' && error && 'code' in error
+                ? String((error as { code: string }).code)
+                : '';
+
+            if (code === 'ER_DUP_ENTRY') {
+                res.status(409).json({
+                    message: 'Pacijent sa unetim emailom već postoji.'
+                });
+                return;
+            }
+
+            console.error('Greška pri ažuriranju pacijenta:', error);
+            res.status(500).json({
+                message: 'Došlo je do greške na serveru. Pokušajte ponovo.'
+            });
+        }
+    }
+
+    private toPublicProfile(patient: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        email: string;
+        jmbg: string;
+        phone: string;
+    }): {
+        id: number;
+        firstName: string;
+        lastName: string;
+        email: string;
+        jmbg: string;
+        phone: string;
+    } {
+        return {
+            id: patient.id,
+            firstName: patient.first_name,
+            lastName: patient.last_name,
+            email: patient.email,
+            jmbg: patient.jmbg,
+            phone: patient.phone
+        };
     }
 }

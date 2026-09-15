@@ -67,6 +67,10 @@ export class AuthService {
     this.clearSession();
   }
 
+  setPatient(patient: AuthPatient): void {
+    this.currentPatient.set(patient);
+  }
+
   private restorePatient(): void {
     if (!this.hasValidStoredToken()) {
       return;

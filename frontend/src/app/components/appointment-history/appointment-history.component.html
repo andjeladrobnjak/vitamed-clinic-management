@@ -1,0 +1,71 @@
+<div class="patient-page">
+  <app-site-header />
+
+  <main>
+    <section class="portal-intro">
+      <div class="container">
+        <p class="eyebrow">Portal za pacijente</p>
+        <h1>Istorija pregleda</h1>
+        <p class="lead">Pregledi koji su obavljeni u VitaMed klinici.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        @if (isLoading) {
+          <p class="status-note">Učitavanje istorije pregleda...</p>
+        } @else if (loadError) {
+          <div class="empty-panel">
+            <p class="empty-title">{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retry()">Pokušajte ponovo</button>
+          </div>
+        } @else if (appointments.length === 0) {
+          <div class="empty-panel">
+            <p class="empty-title">Još uvek nemate obavljenih pregleda.</p>
+            <p>Ovde će se prikazati pregledi nakon što budu obavljeni.</p>
+          </div>
+        } @else {
+          <div class="appointment-list">
+            @for (appointment of appointments; track appointment.id) {
+              <article class="upcoming-card history-card">
+                <p class="upcoming-kicker">Obavljen pregled</p>
+                <h2>{{ appointment.service.name }}</h2>
+                <p class="upcoming-clinician">
+                  <span class="upcoming-doctor">dr {{ appointment.doctor.firstName }} {{ appointment.doctor.lastName }}</span>
+                  <span class="upcoming-sep" aria-hidden="true">·</span>
+                  <span class="upcoming-specialty">{{ appointment.doctor.specialty.name }}</span>
+                </p>
+                <dl class="upcoming-meta">
+                  <div>
+                    <dt>Datum i vreme</dt>
+                    <dd>{{ formatDisplayDate(appointment.appointmentDate) }} · {{ appointment.startTime }}</dd>
+                  </div>
+                  <div>
+                    <dt>Lokacija</dt>
+                    <dd>
+                      {{ appointment.location.name }}
+                      @if (appointment.location.address) {
+                        <span class="upcoming-address">{{ appointment.location.address }}, {{ appointment.location.city }}</span>
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                <div class="history-actions">
+                  <button type="button" class="btn btn-muted" disabled>Pogledaj izveštaj</button>
+                  <button type="button" class="btn btn-muted" disabled>Oceni lekara</button>
+                  <p class="coming-later">Uskoro dostupno</p>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>
