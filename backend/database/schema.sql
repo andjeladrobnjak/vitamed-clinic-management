@@ -52,6 +52,35 @@ CREATE TABLE IF NOT EXISTS doctors (
 
 
 -- =====================================================
+-- DOCTOR ACCOUNTS
+-- Login credentials for the doctor portal.
+-- One optional account per doctor. Not public catalog data.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS doctor_accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id BIGINT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_doctor_accounts_doctor_id
+        UNIQUE (doctor_id),
+
+    CONSTRAINT uq_doctor_accounts_email
+        UNIQUE (email),
+
+    CONSTRAINT fk_doctor_accounts_doctor
+        FOREIGN KEY (doctor_id)
+        REFERENCES doctors(id)
+        ON DELETE RESTRICT
+);
+
+
+-- =====================================================
 -- SERVICES
 -- =====================================================
 
@@ -244,4 +273,26 @@ CREATE TABLE IF NOT EXISTS doctor_reviews (
         FOREIGN KEY (appointment_id)
         REFERENCES appointments(id)
         ON DELETE RESTRICT
+);
+
+-- =====================================================
+-- DOCTOR_ACCOUNTS
+-- Login credentials for the doctor portal.
+-- One optional account per doctor. Not public catalog data.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS doctor_accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id BIGINT NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_doctor_accounts_doctor_id UNIQUE (doctor_id),
+    CONSTRAINT uq_doctor_accounts_email UNIQUE (email),
+    CONSTRAINT fk_doctor_accounts_doctor
+        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE RESTRICT
 );
