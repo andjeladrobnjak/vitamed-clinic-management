@@ -38,6 +38,8 @@ export interface PatientProfile {
   firstName: string;
   lastName: string;
   email: string;
+  jmbg?: string;
+  phone?: string;
 }
 
 @Injectable({

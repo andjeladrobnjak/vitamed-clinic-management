@@ -166,3 +166,58 @@ CREATE TABLE IF NOT EXISTS doctor_schedules (
     CONSTRAINT chk_doctor_schedules_time
         CHECK (start_time < end_time)
 );
+
+
+-- =====================================================
+-- APPOINTMENTS
+-- Runtime bookings (authenticated patients or guests).
+-- Not seed/configuration data. Starts empty.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS appointments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    patient_id BIGINT NULL,
+    doctor_id BIGINT NOT NULL,
+    service_id BIGINT NOT NULL,
+    location_id BIGINT NOT NULL,
+    appointment_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    patient_first_name VARCHAR(100) NOT NULL,
+    patient_last_name VARCHAR(100) NOT NULL,
+    patient_jmbg CHAR(13) NOT NULL,
+    patient_email VARCHAR(255) NOT NULL,
+    patient_phone VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_appointments_patient
+        FOREIGN KEY (patient_id)
+        REFERENCES patients(id)
+        ON DELETE SET NULL,
+
+    CONSTRAINT fk_appointments_doctor
+        FOREIGN KEY (doctor_id)
+        REFERENCES doctors(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_appointments_service
+        FOREIGN KEY (service_id)
+        REFERENCES services(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_appointments_location
+        FOREIGN KEY (location_id)
+        REFERENCES locations(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT chk_appointments_time
+        CHECK (start_time < end_time),
+
+    CONSTRAINT chk_appointments_status
+        CHECK (status IN ('confirmed', 'cancelled', 'completed')),
+
+    INDEX idx_appointments_doctor_date (doctor_id, appointment_date)
+);

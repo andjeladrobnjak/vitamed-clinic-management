@@ -8,6 +8,7 @@ import { DoctorDetailComponent } from './components/doctor-detail/doctor-detail.
 import { ClinicServicesComponent } from './components/clinic-services/clinic-services.component';
 import { SpecialtyDetailComponent } from './components/specialty-detail/specialty-detail.component';
 import { LocationsComponent } from './components/locations/locations.component';
+import { AppointmentComponent } from './components/appointment/appointment.component';
 import { patientAuthGuard } from './guards/patient-auth.guard';
 
 export const routes: Routes = [
@@ -19,6 +20,7 @@ export const routes: Routes = [
   { path: 'usluge', component: ClinicServicesComponent },
   { path: 'usluge/:slug', component: SpecialtyDetailComponent },
   { path: 'lokacije', component: LocationsComponent },
+  { path: 'appointment', component: AppointmentComponent },
   {
     path: 'moj-vitamed',
     component: PatientDashboardComponent,

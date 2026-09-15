@@ -6,6 +6,8 @@ import doctorRouter from './routers/doctor.router';
 import specialtyRouter from './routers/specialty.router';
 import clinicServiceRouter from './routers/clinic-service.router';
 import locationRouter from './routers/location.router';
+import appointmentRouter from './routers/appointment.router';
+import { MailService } from './mail/mail.service';
 
 const app = express();
 
@@ -21,7 +23,9 @@ app.use('/api/doctors', doctorRouter);
 app.use('/api/specialties', specialtyRouter);
 app.use('/api/services', clinicServiceRouter);
 app.use('/api/locations', locationRouter);
+app.use('/api/appointments', appointmentRouter);
 
 app.listen(3000, () => {
     console.log('VitaMed server pokrenut na portu 3000');
+    void new MailService().verifyAtStartup();
 });

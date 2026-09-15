@@ -1,0 +1,583 @@
+<div class="appointment-page">
+  <app-site-header />
+
+  <main>
+    <section class="page-intro">
+      <div class="container intro-inner">
+        <p class="eyebrow">Zakazivanje</p>
+        <h1>Zakažite pregled</h1>
+        <p class="lead">Izaberite uslugu, lokaciju i termin koji vam odgovara.</p>
+      </div>
+    </section>
+
+    <section class="booking-section">
+      <div class="container">
+        @if (isLoading) {
+          <p class="status-message">Učitavanje zakazivanja...</p>
+        } @else if (loadError) {
+          <div class="status-panel">
+            <p>{{ loadError }}</p>
+            <button class="btn btn-outline" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+          </div>
+        } @else {
+          <ol class="stepper" aria-label="Koraci zakazivanja">
+            @for (step of steps; track step.id) {
+              <li
+                class="stepper-item"
+                [class.is-done]="stepState(step.id) === 'done'"
+                [class.is-current]="stepState(step.id) === 'current'"
+                [class.is-upcoming]="stepState(step.id) === 'upcoming'"
+              >
+                <button
+                  class="stepper-btn"
+                  type="button"
+                  [disabled]="!canOpenStep(step.id)"
+                  (click)="goToStep(step.id)"
+                >
+                  <span class="stepper-index" aria-hidden="true">
+                    @if (stepState(step.id) === 'done') {
+                      ✓
+                    } @else {
+                      {{ stepIndexLabel(step.id) }}
+                    }
+                  </span>
+                  <span class="stepper-label">{{ step.label }}</span>
+                </button>
+                @if (step.id < 7) {
+                  <span class="stepper-line" aria-hidden="true"></span>
+                }
+              </li>
+            }
+          </ol>
+
+          <div class="stepper-mobile" aria-label="Koraci zakazivanja">
+            <p class="stepper-mobile-kicker">Korak {{ activeStep }} od 7</p>
+            <p class="stepper-mobile-title">{{ activeStepLabel }}</p>
+            <div class="stepper-mobile-track" aria-hidden="true">
+              <span class="stepper-mobile-fill" [style.width.%]="(activeStep / 7) * 100"></span>
+            </div>
+          </div>
+
+          <div class="booking-layout">
+            <div class="booking-flow">
+              <div class="step-panel" [attr.data-step]="activeStep">
+                @if (activeStep > 1) {
+                  <button class="step-back" type="button" (click)="goToPreviousStep()">← Nazad</button>
+                }
+
+              @if (activeStep === 1) {
+              <section class="booking-step" aria-labelledby="step-service">
+                <h2 id="step-service">1. Izaberite uslugu</h2>
+
+                @if (displayedSpecialties.length > 1) {
+                  <div class="specialty-tabs" role="tablist" aria-label="Oblasti">
+                    @for (specialty of displayedSpecialties; track specialty.id) {
+                      <button
+                        class="specialty-tab"
+                        type="button"
+                        role="tab"
+                        [class.is-selected]="selectedSpecialtyId === specialty.id"
+                        (click)="selectSpecialty(specialty.id)"
+                      >
+                        {{ specialty.name }}
+                      </button>
+                    }
+                  </div>
+                }
+
+                @if (doctorServicesLoading) {
+                  <p class="step-hint">Učitavanje usluga lekara...</p>
+                } @else if (specialtyServices.length === 0) {
+                  <p class="step-hint">Nema unetih usluga za izabranog lekara.</p>
+                } @else {
+                  <div class="option-list">
+                    @for (service of specialtyServices; track service.id) {
+                      <button
+                        class="option-card service-option"
+                        type="button"
+                        [class.is-selected]="selectedService?.id === service.id"
+                        (click)="selectService(service)"
+                      >
+                        <span class="option-copy">
+                          <span class="option-title">{{ service.name }}</span>
+                          <span class="option-meta">{{ formatDuration(service.durationMinutes) }}</span>
+                        </span>
+                        <span class="option-price">{{ formatPrice(service.price) }}</span>
+                      </button>
+                    }
+                  </div>
+                }
+              </section>
+              }
+
+              @if (activeStep === 2) {
+              <section class="booking-step" aria-labelledby="step-location">
+                <h2 id="step-location">2. Izaberite lokaciju</h2>
+
+                <div class="location-grid">
+                  @for (location of displayedLocations; track location.id) {
+                    <button
+                      class="option-card location-option"
+                      type="button"
+                      [class.is-selected]="selectedLocation?.id === location.id"
+                      (click)="selectLocation(location)"
+                    >
+                      <span class="option-title">{{ location.name }}</span>
+                      <span class="option-meta">{{ location.address }}, {{ location.city }}</span>
+                    </button>
+                  }
+                </div>
+              </section>
+              }
+
+              @if (activeStep === 3) {
+              <section class="booking-step" aria-labelledby="step-doctor">
+                <h2 id="step-doctor">3. Izaberite lekara</h2>
+
+                @if (!selectedService || !selectedLocation) {
+                  @if (selectedDoctor) {
+                    <div class="doctor-grid">
+                      <button class="option-card doctor-option is-selected" type="button">
+                        <span class="doctor-photo">
+                          @if (selectedDoctor.imageUrl) {
+                            <img [src]="selectedDoctor.imageUrl" [alt]="doctorDisplayName(selectedDoctor)">
+                          } @else {
+                            <span class="doctor-fallback">{{ selectedDoctor.firstName.charAt(0) }}{{ selectedDoctor.lastName.charAt(0) }}</span>
+                          }
+                        </span>
+                        <span class="option-copy">
+                          <span class="option-title">{{ doctorDisplayName(selectedDoctor) }}</span>
+                          <span class="option-meta">{{ selectedDoctor.specialty.name }}</span>
+                        </span>
+                      </button>
+                    </div>
+                    <p class="step-hint">Izaberite uslugu i lokaciju ovog lekara da biste nastavili.</p>
+                  } @else {
+                    <p class="step-hint">Izaberite uslugu i lokaciju da biste videli dostupne lekare.</p>
+                  }
+                } @else if (!doctorRelationshipsReady) {
+                  <p class="step-hint">Učitavanje lekara...</p>
+                } @else if (eligibleDoctors.length === 0) {
+                  <p class="step-hint">Nema lekara za izabranu kombinaciju usluge i lokacije.</p>
+                } @else {
+                  <div class="doctor-grid">
+                    @for (doctor of eligibleDoctors; track doctor.id) {
+                      <button
+                        class="option-card doctor-option"
+                        type="button"
+                        [class.is-selected]="selectedDoctor?.id === doctor.id"
+                        (click)="selectDoctor(doctor)"
+                      >
+                        <span class="doctor-photo">
+                          @if (doctor.imageUrl) {
+                            <img [src]="doctor.imageUrl" [alt]="doctorDisplayName(doctor)">
+                          } @else {
+                            <span class="doctor-fallback">{{ doctor.firstName.charAt(0) }}{{ doctor.lastName.charAt(0) }}</span>
+                          }
+                        </span>
+                        <span class="option-copy">
+                          <span class="option-title">{{ doctorDisplayName(doctor) }}</span>
+                          <span class="option-meta">{{ doctor.specialty.name }}</span>
+                        </span>
+                      </button>
+                    }
+                  </div>
+                }
+              </section>
+              }
+
+              @if (activeStep === 4) {
+              <section class="booking-step" aria-labelledby="step-date">
+                <h2 id="step-date">4. Izaberite datum</h2>
+                @if (!canSelectDate) {
+                  <p class="step-hint">Datum je dostupan nakon izbora usluge, lokacije i lekara.</p>
+                } @else if (datesError) {
+                  <div class="status-panel">
+                    <p>{{ datesError }}</p>
+                    <button class="btn btn-outline" type="button" (click)="refreshAvailableDates()">Pokušajte ponovo</button>
+                  </div>
+                } @else {
+                  <div class="booking-calendar" aria-label="Kalendar dostupnih datuma">
+                    <div class="calendar-nav">
+                      <button class="calendar-nav-btn" type="button" (click)="previousCalendarMonth()" [disabled]="!canGoToPreviousMonth" aria-label="Prethodni mesec">←</button>
+                      <p class="calendar-title">{{ calendarTitle }}</p>
+                      <button class="calendar-nav-btn" type="button" (click)="nextCalendarMonth()" [disabled]="!canGoToNextMonth" aria-label="Sledeći mesec">→</button>
+                    </div>
+                    <div class="calendar-weekdays" aria-hidden="true">
+                      @for (label of weekdayLabels; track label) {
+                        <span>{{ label }}</span>
+                      }
+                    </div>
+                    <div class="calendar-grid">
+                      @for (week of calendarWeeks; track $index) {
+                        @for (cell of week; track cell.date) {
+                          <button
+                            class="calendar-day"
+                            type="button"
+                            [class.is-outside]="!cell.inMonth"
+                            [class.is-available]="!datesLoading && isDateAvailable(cell.date)"
+                            [class.is-selected]="selectedDate === cell.date"
+                            [disabled]="datesLoading || !isDateAvailable(cell.date)"
+                            (click)="selectCalendarDate(cell.date)"
+                          >
+                            {{ cell.day }}
+                          </button>
+                        }
+                      }
+                    </div>
+                  </div>
+                  @if (datesLoading) {
+                    <p class="step-hint">Učitavanje dostupnih datuma...</p>
+                  } @else if (!visibleMonthHasAvailableDate) {
+                    <p class="step-hint">Nema dostupnih termina u ovom periodu.</p>
+                  } @else {
+                    <p class="calendar-legend">Dostupni datumi su označeni i mogu se izabrati.</p>
+                  }
+                }
+              </section>
+              }
+
+              @if (activeStep === 5) {
+              <section class="booking-step" aria-labelledby="step-time">
+                <h2 id="step-time">5. Izaberite termin</h2>
+                @if (slotConflictMessage) {
+                  <p class="step-hint">{{ slotConflictMessage }}</p>
+                }
+                <div class="time-slot-shell" aria-live="polite">
+                  @if (!selectedDate) {
+                    <p class="step-hint">Izaberite datum da biste videli dostupne termine.</p>
+                  } @else if (timesError) {
+                    <div class="status-panel">
+                      <p>{{ timesError }}</p>
+                      <button class="btn btn-outline" type="button" (click)="loadAvailableTimes()">Pokušajte ponovo</button>
+                    </div>
+                  } @else if (timesLoading) {
+                    <p class="step-hint">Učitavanje dostupnih termina...</p>
+                  } @else if (availableTimes.length === 0) {
+                    <p class="step-hint">Nema dostupnih termina za izabrani datum.</p>
+                    <p class="step-hint">Izaberite drugi datum kako biste videli dostupne termine.</p>
+                    <button class="btn btn-outline step-continue" type="button" (click)="goToDateStep()">Izaberite drugi datum</button>
+                  } @else {
+                    <div class="time-slots">
+                      @for (time of availableTimes; track time) {
+                        <button
+                          class="time-slot"
+                          type="button"
+                          [class.is-selected]="selectedTime === time"
+                          (click)="selectTime(time)"
+                        >
+                          {{ time }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </section>
+              }
+
+              @if (activeStep === 6) {
+              <section class="booking-step" aria-labelledby="step-patient">
+                <h2 id="step-patient">6. Podaci pacijenta</h2>
+                @if (isAuthenticated) {
+                  <p class="step-hint">Vaši podaci su preuzeti sa naloga. Email i telefon možete prilagoditi za ovaj pregled.</p>
+                }
+
+                <form class="patient-fields" [formGroup]="patientForm" autocomplete="on">
+                  <div class="field-pair">
+                    <label class="field">
+                      <span>Ime</span>
+                      <input
+                        type="text"
+                        formControlName="firstName"
+                        autocomplete="given-name"
+                        [attr.readonly]="identityLocked ? true : null"
+                        [class.is-readonly]="identityLocked"
+                        [class.field-invalid]="patientForm.get('firstName')?.touched && patientForm.get('firstName')?.invalid"
+                      >
+                      @if (patientForm.get('firstName')?.touched && patientForm.get('firstName')?.invalid) {
+                        <p class="error-message">Ime je obavezno.</p>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Prezime</span>
+                      <input
+                        type="text"
+                        formControlName="lastName"
+                        autocomplete="family-name"
+                        [attr.readonly]="identityLocked ? true : null"
+                        [class.is-readonly]="identityLocked"
+                        [class.field-invalid]="patientForm.get('lastName')?.touched && patientForm.get('lastName')?.invalid"
+                      >
+                      @if (patientForm.get('lastName')?.touched && patientForm.get('lastName')?.invalid) {
+                        <p class="error-message">Prezime je obavezno.</p>
+                      }
+                    </label>
+                  </div>
+
+                  <label class="field">
+                    <span>JMBG</span>
+                    <input
+                      type="text"
+                      formControlName="jmbg"
+                      inputmode="numeric"
+                      maxlength="13"
+                      [attr.readonly]="identityLocked ? true : null"
+                      [class.is-readonly]="identityLocked"
+                      [class.field-invalid]="patientForm.get('jmbg')?.touched && patientForm.get('jmbg')?.invalid"
+                    >
+                    @if (patientForm.get('jmbg')?.touched && patientForm.get('jmbg')?.invalid) {
+                      @if (patientForm.get('jmbg')?.errors?.['required']) {
+                        <p class="error-message">JMBG je obavezan.</p>
+                      }
+                      @if (patientForm.get('jmbg')?.errors?.['pattern']) {
+                        <p class="error-message">JMBG mora sadržati tačno 13 cifara.</p>
+                      }
+                    }
+                  </label>
+
+                  <div class="field-pair">
+                    <label class="field">
+                      <span>Email</span>
+                      <input type="email" formControlName="email" autocomplete="email" [class.field-invalid]="patientForm.get('email')?.touched && patientForm.get('email')?.invalid">
+                      @if (patientForm.get('email')?.touched && patientForm.get('email')?.invalid) {
+                        <p class="error-message">Unesite ispravnu email adresu.</p>
+                      }
+                    </label>
+                    <label class="field">
+                      <span>Telefon</span>
+                      <div class="phone-input" [class.field-invalid]="patientForm.get('phone')?.touched && patientForm.get('phone')?.invalid">
+                        <span class="phone-prefix" aria-hidden="true">+381</span>
+                        <span class="phone-divider" aria-hidden="true"></span>
+                        <input
+                          type="tel"
+                          inputmode="numeric"
+                          autocomplete="tel-national"
+                          placeholder="60 111 2334"
+                          [value]="phoneNationalNumber"
+                          (input)="onPhoneInput($event)"
+                          (blur)="onPhoneBlur()"
+                          aria-label="Broj telefona"
+                        >
+                      </div>
+                      @if (patientForm.get('phone')?.touched && patientForm.get('phone')?.invalid) {
+                        <p class="error-message">Unesite ispravan broj telefona.</p>
+                      }
+                    </label>
+                  </div>
+                </form>
+
+                <button class="btn btn-outline step-continue" type="button" (click)="continueToReview()">
+                  Nastavite na pregled
+                </button>
+              </section>
+              }
+
+              @if (activeStep === 7) {
+              <section class="booking-step review-step" aria-labelledby="step-review">
+                @if (bookingResult) {
+                  <h2 id="step-review">7. Potvrda</h2>
+                  <p class="success-kicker">Zakazivanje</p>
+                  <p class="success-title">Pregled je uspešno zakazan</p>
+                  @if (bookingResult.emailSent) {
+                    <p class="step-hint">Potvrdu zakazivanja poslali smo na {{ bookingResult.email }}.</p>
+                  } @else {
+                    <p class="step-hint">Pregled je uspešno zakazan, ali potvrdu trenutno nije moguće poslati na email.</p>
+                  }
+
+                  <dl class="review-list">
+                    <div>
+                      <dt>Pregled</dt>
+                      <dd>{{ bookingResult.service.name }}</dd>
+                    </div>
+                    <div>
+                      <dt>Lekar</dt>
+                      <dd>dr {{ bookingResult.doctor.firstName }} {{ bookingResult.doctor.lastName }}</dd>
+                    </div>
+                    <div>
+                      <dt>Lokacija</dt>
+                      <dd>
+                        {{ bookingResult.location.name }}<br>
+                        {{ bookingResult.location.address }}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Datum i vreme</dt>
+                      <dd>{{ formatDisplayDate(bookingResult.appointmentDate) }} • {{ bookingResult.startTime }}</dd>
+                    </div>
+                  </dl>
+
+                  @if (bookingResult.registered) {
+                    <p class="step-hint">Svojim terminima možete upravljati putem svog naloga.</p>
+                    <a class="btn btn-confirm" routerLink="/moji-termini">Moji termini</a>
+                  } @else {
+                    <p class="step-hint">Ukoliko želite da otkažete termin, pozovite broj {{ bookingResult.location.phone }}.</p>
+                  }
+                } @else {
+                <h2 id="step-review">7. Pregled i potvrda</h2>
+                <dl class="review-list">
+                  <div>
+                    <dt>Pregled</dt>
+                    <dd>{{ summaryValue(selectedService?.name) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Lekar</dt>
+                    <dd>{{ selectedDoctor ? doctorDisplayName(selectedDoctor) : 'Nije izabrano' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Lokacija</dt>
+                    <dd>
+                      @if (selectedLocation) {
+                        {{ selectedLocation.name }}<br>
+                        {{ selectedLocation.address }}
+                      } @else {
+                        Nije izabrano
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Datum i vreme</dt>
+                    <dd>
+                      {{ selectedDate ? formatDisplayDate(selectedDate) : 'Nije izabrano' }}
+                      @if (selectedTime) {
+                        <span> • {{ selectedTime }}</span>
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Trajanje</dt>
+                    <dd>{{ selectedService ? formatDuration(selectedService.durationMinutes) : '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Cena</dt>
+                    <dd>{{ selectedService ? formatPrice(selectedService.price) : '—' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Pacijent</dt>
+                    <dd>
+                      @if (patientForm.getRawValue().firstName && patientForm.getRawValue().lastName) {
+                        {{ patientForm.getRawValue().firstName }} {{ patientForm.getRawValue().lastName }}
+                      } @else {
+                        Nije izabrano
+                      }
+                    </dd>
+                  </div>
+                </dl>
+
+                @if (confirmError) {
+                  <p class="confirm-error">{{ confirmError }}</p>
+                }
+                @if (confirmMessage) {
+                  <p class="confirm-message">{{ confirmMessage }}</p>
+                }
+
+                <button
+                  class="btn btn-confirm"
+                  type="button"
+                  [disabled]="isSubmitting"
+                  (click)="confirmBooking()"
+                >
+                  @if (isSubmitting) {
+                    Zakazivanje...
+                  } @else {
+                    Potvrdite zakazivanje
+                  }
+                </button>
+                }
+              </section>
+              }
+              </div>
+            </div>
+
+            <aside class="summary-card" aria-label="Pregled izbora">
+              <p class="summary-eyebrow">Vaš pregled</p>
+              <ul class="summary-list">
+                <li>
+                  <span>Usluga</span>
+                  <strong>{{ summaryValue(selectedService?.name) }}</strong>
+                </li>
+                <li>
+                  <span>Lokacija</span>
+                  <strong>{{ summaryValue(selectedLocation?.name) }}</strong>
+                </li>
+                <li>
+                  <span>Lekar</span>
+                  <strong>{{ selectedDoctor ? doctorDisplayName(selectedDoctor) : 'Nije izabrano' }}</strong>
+                </li>
+                <li>
+                  <span>Datum</span>
+                  <strong>{{ selectedDate ? formatDisplayDate(selectedDate) : 'Nije izabrano' }}</strong>
+                </li>
+                <li>
+                  <span>Termin</span>
+                  <strong>{{ summaryValue(selectedTime) }}</strong>
+                </li>
+              </ul>
+              @if (selectedService) {
+                <p class="summary-footer">
+                  {{ formatDuration(selectedService.durationMinutes) }}
+                  <span>{{ formatPrice(selectedService.price) }}</span>
+                </p>
+              }
+            </aside>
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="logo logo-light" routerLink="/" aria-label="VitaMed, privatna klinika">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </a>
+        <p>
+          Privatna medicinska klinika za specijalističke preglede, dijagnostiku
+          i praćenje pacijenata.
+        </p>
+      </div>
+
+      <div>
+        <h3>Brzi linkovi</h3>
+        <ul class="footer-links">
+          <li><a routerLink="/">Početna</a></li>
+          <li><a routerLink="/lekari">Lekari</a></li>
+          <li><a routerLink="/usluge">Usluge</a></li>
+          <li><a href="#">O nama</a></li>
+          <li><a routerLink="/lokacije">Lokacije</a></li>
+          <li><a href="#">Kontakt</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Kontakt</h3>
+        <p>+381 11 000 0000</p>
+        <p>info&#64;vitamed.rs</p>
+        <p>Knez Mihailova 1, Beograd</p>
+      </div>
+
+      <div>
+        <h3>Radno vreme</h3>
+        <p>Ponedeljak – Petak: 08:00 – 20:00</p>
+        <p>Subota: 09:00 – 14:00</p>
+        <p>Nedelja: zatvoreno</p>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+    </footer>
+
+    @if (authChoiceOpen) {
+      <app-appointment-auth-choice-modal
+        (login)="goToLoginFromBooking()"
+        (guest)="continueAsGuest()"
+        (register)="goToRegisterFromBooking()"
+        (closed)="closeAuthChoice()"
+      />
+    }
+  </div>

@@ -1,0 +1,48 @@
+<div class="auth-choice-overlay" (click)="onOverlayClick($event)">
+  <div
+    #dialog
+    class="auth-choice-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="auth-choice-title"
+    aria-describedby="auth-choice-description"
+  >
+    <button class="auth-choice-close" type="button" (click)="closed.emit()" aria-label="Zatvorite">
+      ×
+    </button>
+
+    <p class="auth-choice-kicker">Zakazivanje</p>
+    <h2 id="auth-choice-title">Kako želite da nastavite?</h2>
+    <p id="auth-choice-description" class="auth-choice-lead">
+      Prijavite se na svoj VitaMed nalog za brže zakazivanje i jednostavno upravljanje terminima.
+    </p>
+
+    <div class="auth-choice-actions">
+      <div class="auth-choice-option">
+        <button
+          #loginButton
+          class="btn btn-primary"
+          type="button"
+          (click)="login.emit()"
+        >
+          Prijavite se
+        </button>
+        <p>Vaši podaci biće automatski popunjeni, a zakazanim terminima možete upravljati sa svog naloga.</p>
+      </div>
+
+      <div class="auth-choice-option">
+        <button class="btn btn-secondary" type="button" (click)="guest.emit()">
+          Nastavite kao gost
+        </button>
+        <p>Pregled možete zakazati i bez kreiranja naloga.</p>
+      </div>
+    </div>
+
+    <p class="auth-choice-register">
+      Nemate nalog?
+      <button class="auth-choice-register-link" type="button" (click)="register.emit()">
+        Registrujte se
+      </button>
+    </p>
+  </div>
+</div>

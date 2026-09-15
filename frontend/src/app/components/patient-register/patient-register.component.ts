@@ -1,8 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { PatientRegisterRequest, PatientService } from '../../services/patient.service';
+import { returnUrlQueryParams, sanitizeReturnUrl } from '../../utils/safe-return-url';
 
 function passwordsMatchValidator(form: AbstractControl): ValidationErrors | null {
   const password = form.get('password')?.value;
@@ -34,6 +35,7 @@ export class PatientRegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly patientService = inject(PatientService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   registerForm = this.fb.group({
     firstName: ['', Validators.required],
@@ -47,6 +49,14 @@ export class PatientRegisterComponent {
   }, {
     validators: passwordsMatchValidator
   });
+
+  get loginQueryParams(): Record<string, string> {
+    return returnUrlQueryParams(this.returnUrl);
+  }
+
+  private get returnUrl(): string | null {
+    return sanitizeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+  }
 
   togglePassword(): void {
     this.passwordVisible = !this.passwordVisible;
@@ -119,7 +129,9 @@ export class PatientRegisterComponent {
         this.isSubmitting = false;
         this.successMessage = response.message;
         setTimeout(() => {
-          void this.router.navigate(['/prijava']);
+          void this.router.navigate(['/prijava'], {
+            queryParams: this.loginQueryParams
+          });
         }, 1500);
       },
       error: (error: HttpErrorResponse) => {

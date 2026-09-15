@@ -211,7 +211,7 @@ export class PatientController {
             }
 
             const [patients] = await pool.query(
-                `SELECT id, first_name, last_name, email
+                `SELECT id, first_name, last_name, email, jmbg, phone
                  FROM patients
                  WHERE id = ?
                  LIMIT 1`,
@@ -230,13 +230,17 @@ export class PatientController {
                 first_name: string;
                 last_name: string;
                 email: string;
+                jmbg: string;
+                phone: string;
             };
 
             res.status(200).json({
                 id: patient.id,
                 firstName: patient.first_name,
                 lastName: patient.last_name,
-                email: patient.email
+                email: patient.email,
+                jmbg: patient.jmbg,
+                phone: patient.phone
             });
         } catch (error) {
             console.error('Greška pri dohvatanju pacijenta:', error);

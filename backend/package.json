@@ -4,7 +4,8 @@
   "description": "VitaMed backend",
   "main": "dist/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:mail": "npx tsc && node dist/scripts/test-mail.js"
   },
   "author": "Andjela",
   "license": "ISC",
@@ -14,6 +15,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.20.2",
+    "@types/nodemailer": "^8.0.1",
     "typescript": "^7.0.2"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.24.4"
+    "mysql2": "^3.24.4",
+    "nodemailer": "^10.0.10"
   }
 }

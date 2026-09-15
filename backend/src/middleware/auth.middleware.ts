@@ -56,3 +56,14 @@ export function authenticatePatient(req: Request, res: Response, next: NextFunct
         });
     }
 }
+
+export function optionalAuthenticatePatient(req: Request, res: Response, next: NextFunction): void {
+    const authorization = req.headers.authorization;
+
+    if (!authorization) {
+        next();
+        return;
+    }
+
+    authenticatePatient(req, res, next);
+}
