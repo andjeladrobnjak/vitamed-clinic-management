@@ -285,7 +285,8 @@ export class AppointmentBookingService {
 
         const [result] = await pool.query<ResultSetHeader>(
             `UPDATE appointments
-             SET status = 'cancelled'
+             SET status = 'cancelled',
+                 cancelled_by = 'patient'
              WHERE id = ?
                AND patient_id = ?
                AND status = 'confirmed'`,

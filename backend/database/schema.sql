@@ -218,6 +218,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     patient_email VARCHAR(255) NOT NULL,
     patient_phone VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
+    cancelled_by ENUM('patient', 'doctor', 'admin') NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
