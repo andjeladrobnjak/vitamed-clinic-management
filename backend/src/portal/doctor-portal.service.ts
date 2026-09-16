@@ -30,6 +30,7 @@ export interface DoctorDashboardAppointment {
     startTime: string;
     endTime: string;
     status: 'confirmed' | 'completed';
+    hasReport: boolean;
     patient: DoctorDashboardPatient;
     service: { id: number; name: string };
     location: { id: number; name: string };
@@ -77,9 +78,44 @@ export interface DoctorPortalPatientHistoryItem {
     endTime: string;
     status: 'completed';
     isOwnAppointment: boolean;
+    hasReport: boolean;
     service: { name: string };
     doctor: { firstName: string; lastName: string };
     location: { name: string };
+}
+
+export interface DoctorPortalAppointmentReport {
+    patient: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        dateOfBirth: string | null;
+    };
+    appointment: {
+        id: number;
+        date: string;
+        startTime: string;
+        endTime: string;
+        status: 'completed';
+        service: { name: string };
+        location: { name: string };
+    };
+    doctor: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        specialty: { name: string };
+    };
+    report: {
+        id: number;
+        anamnesis: string;
+        findings: string;
+        diagnosis: string;
+        therapyRecommendations: string | null;
+        createdAt: string;
+        updatedAt: string;
+    };
+    isOwnReport: boolean;
 }
 
 export interface DoctorPortalPatientDetail {
@@ -120,6 +156,7 @@ interface DashboardAppointmentRow extends RowDataPacket {
     serviceName: string;
     locationId: number;
     locationName: string;
+    reportId: number | null;
 }
 
 interface CompletionAppointmentRow extends RowDataPacket {
@@ -150,10 +187,12 @@ export class DoctorPortalService {
                 s.id AS serviceId,
                 s.name AS serviceName,
                 l.id AS locationId,
-                l.name AS locationName
+                l.name AS locationName,
+                r.id AS reportId
              FROM appointments a
              INNER JOIN services s ON s.id = a.service_id
              INNER JOIN locations l ON l.id = a.location_id
+             LEFT JOIN appointment_reports r ON r.appointment_id = a.id
              WHERE a.doctor_id = ?
                AND a.appointment_date = ?
                AND a.status IN ('confirmed', 'completed')
@@ -340,17 +379,7 @@ export class DoctorPortalService {
             throw new DoctorPortalError(400, 'Neispravan identifikator pacijenta.');
         }
 
-        const [accessRows] = await pool.query<RowDataPacket[]>(
-            `SELECT 1 AS allowed
-             FROM appointments
-             WHERE doctor_id = ?
-               AND patient_id = ?
-             LIMIT 1`,
-            [doctorId, patientId]
-        );
-        if (!accessRows[0]) {
-            throw new DoctorPortalError(404, 'Pacijent nije pronađen.');
-        }
+        await this.assertPatientAccess(doctorId, patientId);
 
         const [patientRows] = await pool.query<(RowDataPacket & {
             id: number;
@@ -415,6 +444,7 @@ export class DoctorPortalService {
             startTime: string;
             endTime: string;
             doctorId: number;
+            reportId: number | null;
             serviceName: string;
             doctorFirstName: string;
             doctorLastName: string;
@@ -426,6 +456,7 @@ export class DoctorPortalService {
                 TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
                 TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
                 a.doctor_id AS doctorId,
+                r.id AS reportId,
                 s.name AS serviceName,
                 d.first_name AS doctorFirstName,
                 d.last_name AS doctorLastName,
@@ -434,6 +465,7 @@ export class DoctorPortalService {
              INNER JOIN services s ON s.id = a.service_id
              INNER JOIN doctors d ON d.id = a.doctor_id
              INNER JOIN locations l ON l.id = a.location_id
+             LEFT JOIN appointment_reports r ON r.appointment_id = a.id
              WHERE a.patient_id = ?
                AND a.status = 'completed'
              ORDER BY a.appointment_date DESC, a.start_time DESC, a.id DESC`,
@@ -468,6 +500,7 @@ export class DoctorPortalService {
                 endTime: String(row.endTime),
                 status: 'completed' as const,
                 isOwnAppointment: Number(row.doctorId) === doctorId,
+                hasReport: row.reportId !== null && Number(row.reportId) > 0,
                 service: { name: String(row.serviceName) },
                 doctor: {
                     firstName: String(row.doctorFirstName),
@@ -476,6 +509,143 @@ export class DoctorPortalService {
                 location: { name: String(row.locationName) }
             }))
         };
+    }
+
+    async getAppointmentReport(
+        doctorId: number,
+        patientIdInput: unknown,
+        appointmentIdInput: unknown
+    ): Promise<DoctorPortalAppointmentReport> {
+        const patientId = parsePositiveId(patientIdInput);
+        if (!patientId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pacijenta.');
+        }
+
+        const appointmentId = parsePositiveId(appointmentIdInput);
+        if (!appointmentId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pregleda.');
+        }
+
+        await this.assertPatientAccess(doctorId, patientId);
+
+        const [rows] = await pool.query<(RowDataPacket & {
+            patientId: number;
+            patientFirstName: string;
+            patientLastName: string;
+            jmbg: string;
+            appointmentId: number;
+            appointmentDoctorId: number;
+            appointmentDate: string;
+            startTime: string;
+            endTime: string;
+            serviceName: string;
+            locationName: string;
+            doctorId: number;
+            doctorFirstName: string;
+            doctorLastName: string;
+            specialtyName: string;
+            reportId: number;
+            anamnesis: string;
+            findings: string;
+            diagnosis: string;
+            therapyRecommendations: string | null;
+            createdAt: string;
+            updatedAt: string;
+        })[]>(
+            `SELECT
+                p.id AS patientId,
+                p.first_name AS patientFirstName,
+                p.last_name AS patientLastName,
+                p.jmbg,
+                a.id AS appointmentId,
+                a.doctor_id AS appointmentDoctorId,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
+                s.name AS serviceName,
+                l.name AS locationName,
+                d.id AS doctorId,
+                d.first_name AS doctorFirstName,
+                d.last_name AS doctorLastName,
+                sp.name AS specialtyName,
+                r.id AS reportId,
+                r.anamnesis,
+                r.findings,
+                r.diagnosis,
+                r.therapy_recommendations AS therapyRecommendations,
+                DATE_FORMAT(r.created_at, '%Y-%m-%dT%H:%i:%s') AS createdAt,
+                DATE_FORMAT(r.updated_at, '%Y-%m-%dT%H:%i:%s') AS updatedAt
+             FROM appointments a
+             INNER JOIN patients p ON p.id = a.patient_id
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN locations l ON l.id = a.location_id
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             INNER JOIN specialties sp ON sp.id = d.specialty_id
+             INNER JOIN appointment_reports r ON r.appointment_id = a.id
+             WHERE a.id = ?
+               AND a.patient_id = ?
+               AND a.status = 'completed'
+             LIMIT 1`,
+            [appointmentId, patientId]
+        );
+
+        const row = rows[0];
+        if (!row) {
+            throw new DoctorPortalError(404, 'Izveštaj nije pronađen.');
+        }
+
+        const authorDoctorId = Number(row.appointmentDoctorId);
+        const therapy = row.therapyRecommendations;
+        const therapyRecommendations =
+            therapy === null || therapy === undefined ? null : String(therapy).trim() || null;
+
+        return {
+            patient: {
+                id: Number(row.patientId),
+                firstName: String(row.patientFirstName),
+                lastName: String(row.patientLastName),
+                dateOfBirth: dateOfBirthFromJmbg(row.jmbg)
+            },
+            appointment: {
+                id: Number(row.appointmentId),
+                date: String(row.appointmentDate),
+                startTime: String(row.startTime),
+                endTime: String(row.endTime),
+                status: 'completed',
+                service: { name: String(row.serviceName) },
+                location: { name: String(row.locationName) }
+            },
+            doctor: {
+                id: Number(row.doctorId),
+                firstName: String(row.doctorFirstName),
+                lastName: String(row.doctorLastName),
+                specialty: { name: String(row.specialtyName) }
+            },
+            report: {
+                id: Number(row.reportId),
+                anamnesis: String(row.anamnesis),
+                findings: String(row.findings),
+                diagnosis: String(row.diagnosis),
+                therapyRecommendations,
+                createdAt: String(row.createdAt),
+                updatedAt: String(row.updatedAt)
+            },
+            isOwnReport: authorDoctorId === doctorId
+        };
+    }
+
+    private async assertPatientAccess(doctorId: number, patientId: number): Promise<void> {
+        const [accessRows] = await pool.query<RowDataPacket[]>(
+            `SELECT 1 AS allowed
+             FROM appointments
+             WHERE doctor_id = ?
+               AND patient_id = ?
+             LIMIT 1`,
+            [doctorId, patientId]
+        );
+        if (!accessRows[0]) {
+            throw new DoctorPortalError(404, 'Pacijent nije pronađen.');
+        }
     }
 
     private hasAppointmentStarted(appointmentDate: string, startTime: string): boolean {
@@ -524,6 +694,7 @@ export class DoctorPortalService {
             startTime: String(row.startTime),
             endTime: String(row.endTime),
             status,
+            hasReport: row.reportId !== null && Number(row.reportId) > 0,
             patient: {
                 id: row.patientId === null ? null : Number(row.patientId),
                 firstName: String(row.patientFirstName),

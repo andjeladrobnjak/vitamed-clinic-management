@@ -69,6 +69,25 @@ export class DoctorPortalController {
         }
     }
 
+    async getAppointmentReport(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const report = await this.portalService.getAppointmentReport(
+                doctorId,
+                req.params.patientId,
+                req.params.appointmentId
+            );
+            res.status(200).json(report);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati izveštaj.');
+        }
+    }
+
     private handleError(res: Response, error: unknown, fallback: string): void {
         if (error instanceof DoctorPortalError) {
             res.status(error.statusCode).json({ message: error.message });

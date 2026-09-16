@@ -19,6 +19,9 @@ import { DoctorPortalComponent } from './components/doctor-portal/doctor-portal.
 import { DoctorScheduleComponent } from './components/doctor-schedule/doctor-schedule.component';
 import { DoctorPatientsComponent } from './components/doctor-patients/doctor-patients.component';
 import { DoctorPatientDetailComponent } from './components/doctor-patient-detail/doctor-patient-detail.component';
+import {
+  DoctorAppointmentReportComponent
+} from './components/doctor-appointment-report/doctor-appointment-report.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -64,6 +67,11 @@ export const routes: Routes = [
   {
     path: 'lekar/pacijenti',
     component: DoctorPatientsComponent,
+    canActivate: [doctorAuthGuard]
+  },
+  {
+    path: 'lekar/pacijenti/:patientId/pregledi/:appointmentId',
+    component: DoctorAppointmentReportComponent,
     canActivate: [doctorAuthGuard]
   },
   {

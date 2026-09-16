@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { LucideChevronRight } from '@lucide/angular';
 import { DoctorAuthService } from '../../services/doctor-auth.service';
 import {
   DoctorPortalPatientDetail,
@@ -18,7 +17,6 @@ import { formatSerbianNumericDate } from '../../utils/format-serbian-numeric-dat
   styleUrl: './doctor-patient-detail.component.css'
 })
 export class DoctorPatientDetailComponent implements OnInit {
-  readonly chevronIcon = LucideChevronRight.icon.node;
   detail: DoctorPortalPatientDetail | null = null;
   isLoading = true;
   loadError = '';

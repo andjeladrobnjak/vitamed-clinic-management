@@ -13,6 +13,7 @@ export interface DoctorDashboardAppointment {
   startTime: string;
   endTime: string;
   status: 'confirmed' | 'completed';
+  hasReport: boolean;
   patient: DoctorDashboardPatient;
   service: { id: number; name: string };
   location: { id: number; name: string };
@@ -84,10 +85,45 @@ export interface DoctorPortalPatientDetail {
     endTime: string;
     status: 'completed';
     isOwnAppointment: boolean;
+    hasReport: boolean;
     service: { name: string };
     doctor: { firstName: string; lastName: string };
     location: { name: string };
   }>;
+}
+
+export interface DoctorPortalAppointmentReport {
+  patient: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+  };
+  appointment: {
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: 'completed';
+    service: { name: string };
+    location: { name: string };
+  };
+  doctor: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    specialty: { name: string };
+  };
+  report: {
+    id: number;
+    anamnesis: string;
+    findings: string;
+    diagnosis: string;
+    therapyRecommendations: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  isOwnReport: boolean;
 }
 
 @Injectable({
@@ -117,5 +153,14 @@ export class DoctorPortalService {
 
   getPatient(patientId: number): Observable<DoctorPortalPatientDetail> {
     return this.http.get<DoctorPortalPatientDetail>(`${this.portalUrl}/patients/${patientId}`);
+  }
+
+  getAppointmentReport(
+    patientId: number,
+    appointmentId: number
+  ): Observable<DoctorPortalAppointmentReport> {
+    return this.http.get<DoctorPortalAppointmentReport>(
+      `${this.portalUrl}/patients/${patientId}/appointments/${appointmentId}/report`
+    );
   }
 }

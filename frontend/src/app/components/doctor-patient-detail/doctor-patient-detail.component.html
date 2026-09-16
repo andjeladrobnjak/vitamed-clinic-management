@@ -87,27 +87,21 @@
               <ul class="history-list">
                 @for (item of visibleHistory; track item.id) {
                   <li class="history-row">
-                    <div class="history-top">
+                    <div class="history-copy">
                       <p class="history-date">{{ appointmentDateLabel(item.date) }}</p>
-                      <p class="status is-done">Završeno</p>
+                      <p class="history-service">{{ item.service.name }}</p>
+                      <p class="history-doctor">{{ doctorLabel(item.doctor.firstName, item.doctor.lastName) }}</p>
                     </div>
-                    <div class="history-body">
-                      <div>
-                        <p class="history-service">{{ item.service.name }}</p>
-                        <p class="history-doctor">{{ doctorLabel(item.doctor.firstName, item.doctor.lastName) }}</p>
-                        <p class="history-meta">
-                          {{ item.startTime }}–{{ item.endTime }} · {{ item.location.name }}
-                        </p>
-                      </div>
-                      <svg class="row-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                        @for (node of chevronIcon; track $index) {
-                          @if (node[0] === 'polyline') {
-                            <polyline [attr.points]="$any(node[1]).points"></polyline>
-                          } @else if (node[0] === 'path') {
-                            <path [attr.d]="$any(node[1]).d"></path>
-                          }
-                        }
-                      </svg>
+                    <div class="history-aside">
+                      <p class="status is-done">Završeno</p>
+                      @if (item.hasReport && detail) {
+                        <a
+                          class="report-action"
+                          [routerLink]="['/lekar/pacijenti', detail.patient.id, 'pregledi', item.id]"
+                        >
+                          Pogledaj izveštaj →
+                        </a>
+                      }
                     </div>
                   </li>
                 }

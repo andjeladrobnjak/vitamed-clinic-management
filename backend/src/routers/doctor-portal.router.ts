@@ -23,4 +23,10 @@ doctorPortalRouter.get('/patients/:patientId', authenticateDoctor, (req, res) =>
     doctorPortalController.getPatient(req, res)
 );
 
+doctorPortalRouter.get(
+    '/patients/:patientId/appointments/:appointmentId/report',
+    authenticateDoctor,
+    (req, res) => doctorPortalController.getAppointmentReport(req, res)
+);
+
 export default doctorPortalRouter;

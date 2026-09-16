@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DoctorAuthService } from '../../services/doctor-auth.service';
 import {
   CompleteAppointmentReportInput,
@@ -14,7 +14,7 @@ import { AppointmentReportModalComponent } from './appointment-report-modal.comp
 @Component({
   selector: 'app-doctor-portal',
   standalone: true,
-  imports: [DoctorPortalHeaderComponent, AppointmentReportModalComponent],
+  imports: [DoctorPortalHeaderComponent, AppointmentReportModalComponent, RouterLink],
   templateUrl: './doctor-portal.component.html',
   styleUrl: './doctor-portal.component.css'
 })
@@ -138,6 +138,13 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
       return 'next';
     }
     return 'scheduled';
+  }
+
+  canViewReport(appointment: DoctorDashboardAppointment): boolean {
+    return appointment.status === 'completed'
+      && appointment.hasReport
+      && appointment.patient.id !== null
+      && appointment.patient.id > 0;
   }
 
   openCompletion(appointment: DoctorDashboardAppointment): void {

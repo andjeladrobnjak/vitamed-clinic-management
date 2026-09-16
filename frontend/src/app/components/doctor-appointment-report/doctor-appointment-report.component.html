@@ -1,0 +1,62 @@
+<div class="report-page">
+  <app-doctor-portal-header />
+
+  <main class="report-main">
+    <div class="container">
+      @if (isLoading) {
+        <p class="state">Učitavanje izveštaja...</p>
+      } @else if (loadError) {
+        @if (patientId) {
+          <a class="back-link" [routerLink]="['/lekar/pacijenti', patientId]">{{ backLabel }}</a>
+        }
+        <p class="state is-error">{{ loadError }}</p>
+      } @else if (detail) {
+        <section class="intro">
+          <a class="back-link" [routerLink]="['/lekar/pacijenti', detail.patient.id]">{{ backLabel }}</a>
+          <p class="eyebrow">Izveštaj sa pregleda</p>
+          <h1>{{ detail.appointment.service.name }}</h1>
+        </section>
+
+        <dl class="facts">
+          <div>
+            <dt>Pacijent</dt>
+            <dd>{{ patientName }}</dd>
+          </div>
+          <div>
+            <dt>Datum i vreme</dt>
+            <dd>{{ appointmentWhen(detail.appointment.date, detail.appointment.startTime, detail.appointment.endTime) }}</dd>
+          </div>
+          <div>
+            <dt>Lekar</dt>
+            <dd>{{ doctorLabel(detail.doctor.firstName, detail.doctor.lastName) }}</dd>
+          </div>
+          <div>
+            <dt>Lokacija</dt>
+            <dd>{{ detail.appointment.location.name }}</dd>
+          </div>
+        </dl>
+
+        <article class="document" aria-labelledby="report-heading">
+          <h2 id="report-heading" class="visually-hidden">Medicinski izveštaj</h2>
+
+          <section>
+            <h3>Anamneza i tegobe</h3>
+            <p>{{ detail.report.anamnesis }}</p>
+          </section>
+          <section>
+            <h3>Nalaz</h3>
+            <p>{{ detail.report.findings }}</p>
+          </section>
+          <section>
+            <h3>Dijagnoza</h3>
+            <p>{{ detail.report.diagnosis }}</p>
+          </section>
+          <section>
+            <h3>Terapija i preporuke</h3>
+            <p [class.is-empty]="!detail.report.therapyRecommendations">{{ therapyText(detail.report.therapyRecommendations) }}</p>
+          </section>
+        </article>
+      }
+    </div>
+  </main>
+</div>
