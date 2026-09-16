@@ -11,7 +11,7 @@
       class="report-close"
       type="button"
       [disabled]="isSaving()"
-      (click)="dismissed.emit()"
+      (click)="requestClose()"
       aria-label="Zatvori"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -30,7 +30,7 @@
       </svg>
     </button>
 
-    <p class="report-kicker">Završetak pregleda</p>
+    <p class="report-kicker">Medicinski izveštaj</p>
     <h2 id="report-title">Izveštaj sa pregleda</h2>
     <p class="report-patient">{{ patientLine }}</p>
     <p class="report-when">{{ scheduleLine }}</p>
@@ -84,12 +84,26 @@
         <p class="report-error" role="alert">{{ errorMessage() }}</p>
       }
 
+      @if (discardConfirmOpen) {
+        <div class="discard-banner" role="alertdialog" aria-labelledby="discard-title">
+          <p id="discard-title">Želite li da zatvorite izveštaj? Uneti podaci neće biti sačuvani.</p>
+          <div class="discard-actions">
+            <button class="btn btn-secondary" type="button" (click)="keepEditing()">
+              Nastavi sa unosom
+            </button>
+            <button class="btn btn-primary" type="button" (click)="confirmDiscard()">
+              Zatvori izveštaj
+            </button>
+          </div>
+        </div>
+      }
+
       <div class="report-actions">
         <button
           class="btn btn-secondary"
           type="button"
           [disabled]="isSaving()"
-          (click)="dismissed.emit()"
+          (click)="requestClose()"
         >
           Otkaži
         </button>

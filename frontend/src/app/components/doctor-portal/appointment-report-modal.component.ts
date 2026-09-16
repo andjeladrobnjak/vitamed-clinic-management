@@ -46,6 +46,7 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
 
   readonly closeIcon = LucideX.icon.node;
   submittedAttempt = false;
+  discardConfirmOpen = false;
 
   private readonly fb = inject(FormBuilder);
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
@@ -117,9 +118,14 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
   onDocumentKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       event.preventDefault();
-      if (!this.isSaving()) {
-        this.dismissed.emit();
+      if (this.isSaving()) {
+        return;
       }
+      if (this.discardConfirmOpen) {
+        this.keepEditing();
+        return;
+      }
+      this.requestClose();
       return;
     }
 
@@ -150,8 +156,30 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
       return;
     }
     if (event.target === event.currentTarget) {
-      this.dismissed.emit();
+      this.requestClose();
     }
+  }
+
+  requestClose(): void {
+    if (this.isSaving()) {
+      return;
+    }
+    if (this.hasUnsavedInput()) {
+      this.discardConfirmOpen = true;
+      return;
+    }
+    this.dismissed.emit();
+  }
+
+  keepEditing(): void {
+    this.discardConfirmOpen = false;
+  }
+
+  confirmDiscard(): void {
+    if (this.isSaving()) {
+      return;
+    }
+    this.dismissed.emit();
   }
 
   submit(): void {
@@ -169,6 +197,12 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
       diagnosis: value.diagnosis?.trim() ?? '',
       ...(therapy ? { therapyRecommendations: therapy } : {})
     });
+  }
+
+  private hasUnsavedInput(): boolean {
+    const value = this.reportForm.getRawValue();
+    return [value.anamnesis, value.findings, value.diagnosis, value.therapyRecommendations]
+      .some((field) => typeof field === 'string' && field.trim() !== '');
   }
 
   private formatDate(isoDate: string): string {

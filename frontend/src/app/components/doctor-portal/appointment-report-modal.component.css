@@ -159,6 +159,25 @@
   font-size: 0.94rem;
 }
 
+.discard-banner {
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(122, 63, 70, 0.28);
+  background: #f6ecec;
+}
+
+.discard-banner p {
+  margin: 0 0 0.75rem;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
+.discard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
 .report-actions {
   display: flex;
   justify-content: flex-end;
