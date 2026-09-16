@@ -264,6 +264,7 @@
               @if (activeStep === 5) {
               <section class="booking-step" aria-labelledby="step-time">
                 <h2 id="step-time">5. Izaberite termin</h2>
+                <p class="time-slot-lead">Prikazani su dostupni termini za izabrani datum.</p>
                 @if (slotConflictMessage) {
                   <p class="step-hint">{{ slotConflictMessage }}</p>
                 }
