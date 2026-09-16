@@ -1,0 +1,76 @@
+<div class="portal-page">
+  <app-doctor-portal-header />
+
+  <main class="portal-main">
+    <div class="container">
+      <section class="welcome">
+        <p class="eyebrow">Pregled</p>
+        <h1>
+          @if (displayName()) {
+            Dobro došli, {{ displayName() }}.
+          } @else {
+            Dobro došli.
+          }
+        </h1>
+        <p class="welcome-meta">
+          @if (doctor()?.specialty?.name) {
+            {{ doctor()?.specialty?.name }} · {{ todayLabel }}
+          } @else {
+            {{ todayLabel }}
+          }
+        </p>
+      </section>
+
+      @if (loadError) {
+        <p class="load-error">{{ loadError }}</p>
+      }
+
+      <section class="summary" aria-label="Pregled dana">
+        <article class="summary-card">
+          <p class="summary-label">Današnji pregledi</p>
+          <p class="summary-value">{{ isLoading ? '—' : appointmentCount }}</p>
+          <p class="summary-note">zakazanih termina</p>
+        </article>
+        <article class="summary-card">
+          <p class="summary-label">Sledeći termin</p>
+          <p class="summary-value">{{ isLoading ? '—' : nextTimeLabel }}</p>
+          <p class="summary-note">{{ isLoading ? 'učitavanje' : nextCountdownLabel }}</p>
+        </article>
+      </section>
+
+      <section class="schedule" aria-labelledby="schedule-heading">
+        <div class="schedule-heading">
+          <div>
+            <p class="eyebrow">Današnji raspored</p>
+            <h2 id="schedule-heading">Današnji pregledi</h2>
+          </div>
+          <p class="schedule-date">{{ todayLabel }}</p>
+        </div>
+
+        @if (isLoading) {
+          <p class="schedule-empty">Učitavanje rasporeda...</p>
+        } @else if (loadError) {
+          <p class="schedule-empty">Raspored trenutno nije dostupan.</p>
+        } @else if (!dashboard || dashboard.today.appointments.length === 0) {
+          <p class="schedule-empty">Danas nemate zakazanih pregleda.</p>
+        } @else {
+          <ul class="schedule-list">
+            @for (appointment of dashboard.today.appointments; track appointment.id) {
+              <li class="schedule-row" [class.is-next]="isNext(appointment)">
+                <p class="row-time">{{ appointment.startTime }}</p>
+                <div class="row-patient">
+                  <p class="row-name">{{ patientName(appointment) }}</p>
+                  <p class="row-service">{{ appointment.service.name }}</p>
+                </div>
+                <p class="row-location">{{ appointment.location.name }}</p>
+                <p class="row-status" [attr.data-status]="statusKey(appointment)">
+                  {{ statusLabel(appointment) }}
+                </p>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  </main>
+</div>

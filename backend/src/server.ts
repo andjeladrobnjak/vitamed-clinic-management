@@ -9,6 +9,7 @@ import locationRouter from './routers/location.router';
 import appointmentRouter from './routers/appointment.router';
 import doctorReviewRouter from './routers/doctor-review.router';
 import doctorAuthRouter from './routers/doctor-auth.router';
+import doctorPortalRouter from './routers/doctor-portal.router';
 import { MailService } from './mail/mail.service';
 
 const app = express();
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/patients', patientRouter);
 app.use('/api/doctor-auth', doctorAuthRouter);
+app.use('/api/doctor-portal', doctorPortalRouter);
 app.use('/api/doctors', doctorRouter);
 app.use('/api/specialties', specialtyRouter);
 app.use('/api/services', clinicServiceRouter);

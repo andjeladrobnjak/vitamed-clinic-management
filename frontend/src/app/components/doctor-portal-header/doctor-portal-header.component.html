@@ -1,0 +1,53 @@
+<header class="portal-header">
+  <div class="container header-inner">
+    <a class="brand" routerLink="/lekar/portal" aria-label="VitaMed, portal za lekare">
+      <span class="logo">
+        <span class="logo-mark">
+          <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+        </span>
+        <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+      </span>
+      <span class="brand-divider" aria-hidden="true"></span>
+      <span class="portal-label">Portal za lekare</span>
+    </a>
+
+    <nav class="portal-nav" aria-label="Navigacija portala za lekare">
+      <a routerLink="/lekar/portal" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Početna</a>
+      <a routerLink="/lekar/raspored" routerLinkActive="is-active">Raspored</a>
+      <a class="is-pending" href="#" (click)="$event.preventDefault()">Pacijenti</a>
+      <a class="is-pending" href="#" (click)="$event.preventDefault()">Ocene i komentari</a>
+    </nav>
+
+    <div class="account-menu">
+      <button
+        class="account-toggle"
+        type="button"
+        (click)="toggleAccountMenu($event)"
+        [attr.aria-expanded]="accountMenuOpen"
+        [attr.aria-label]="displayName() || 'Nalog lekara'"
+        aria-haspopup="true"
+      >
+        @if (displayName()) {
+          <span>{{ displayName() }}</span>
+        }
+        <svg class="account-caret" viewBox="0 0 24 24" aria-hidden="true">
+          @for (node of chevronDownIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'polyline') {
+              <polyline [attr.points]="$any(node[1]).points"></polyline>
+            }
+          }
+        </svg>
+      </button>
+
+      @if (accountMenuOpen) {
+        <div class="account-panel" (click)="$event.stopPropagation()">
+          <a href="#" (click)="$event.preventDefault(); closeAccountMenu()">Moj profil</a>
+          <span class="account-divider"></span>
+          <button class="account-logout" type="button" (click)="logout()">Odjavi se</button>
+        </div>
+      }
+    </div>
+  </div>
+</header>

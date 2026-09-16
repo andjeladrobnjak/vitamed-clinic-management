@@ -13,6 +13,10 @@ import { SpecialtyDetailComponent } from './components/specialty-detail/specialt
 import { LocationsComponent } from './components/locations/locations.component';
 import { AppointmentComponent } from './components/appointment/appointment.component';
 import { patientAuthGuard } from './guards/patient-auth.guard';
+import { doctorAuthGuard } from './guards/doctor-auth.guard';
+import { DoctorLoginComponent } from './components/doctor-login/doctor-login.component';
+import { DoctorPortalComponent } from './components/doctor-portal/doctor-portal.component';
+import { DoctorScheduleComponent } from './components/doctor-schedule/doctor-schedule.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -43,5 +47,16 @@ export const routes: Routes = [
     path: 'moj-profil',
     component: PatientProfileComponent,
     canActivate: [patientAuthGuard]
+  },
+  { path: 'lekar/prijava', component: DoctorLoginComponent },
+  {
+    path: 'lekar/portal',
+    component: DoctorPortalComponent,
+    canActivate: [doctorAuthGuard]
+  },
+  {
+    path: 'lekar/raspored',
+    component: DoctorScheduleComponent,
+    canActivate: [doctorAuthGuard]
   },
 ];
