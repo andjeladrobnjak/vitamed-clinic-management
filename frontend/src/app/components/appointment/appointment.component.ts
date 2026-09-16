@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth.service';
 import { BookingDraft, BookingDraftService } from '../../services/booking-draft.service';
 import { PatientService } from '../../services/patient.service';
 import { AppointmentAvailabilityApi, CreatedAppointmentResponse } from '../../services/appointment-availability.service';
+import { LucideSearch } from '@lucide/angular';
 import { AppointmentAuthChoiceModalComponent } from './appointment-auth-choice-modal.component';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
 
@@ -55,6 +56,7 @@ export interface BookingDoctor {
 })
 export class AppointmentComponent implements OnDestroy {
   readonly steps = BOOKING_STEPS;
+  readonly searchIcon = LucideSearch.icon.node;
 
   services: ClinicService[] = [];
   locations: ClinicLocation[] = [];
@@ -67,6 +69,7 @@ export class AppointmentComponent implements OnDestroy {
   selectedDate = '';
   selectedTime: string | null = null;
   selectedSpecialtyId: number | null = null;
+  serviceSearchQuery = '';
   activeStep = 1;
 
   isLoading = true;
@@ -301,6 +304,24 @@ export class AppointmentComponent implements OnDestroy {
     }
 
     return this.displayedServices.filter((service) => service.specialty.id === this.selectedSpecialtyId);
+  }
+
+  get isSearchingServices(): boolean {
+    return this.serviceSearchQuery.trim() !== '';
+  }
+
+  get visibleServices(): ClinicService[] {
+    const query = this.serviceSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return this.specialtyServices;
+    }
+
+    return this.displayedServices.filter((service) => service.name.toLowerCase().includes(query));
+  }
+
+  onServiceSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.serviceSearchQuery = input.value;
   }
 
   get displayedLocations(): ClinicLocation[] {

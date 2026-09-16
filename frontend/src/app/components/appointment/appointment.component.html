@@ -69,6 +69,28 @@
               <section class="booking-step" aria-labelledby="step-service">
                 <h2 id="step-service">1. Izaberite uslugu</h2>
 
+                <label class="service-search">
+                  <span class="visually-hidden">Pretraga usluga</span>
+                  <span class="search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      @for (node of searchIcon; track $index) {
+                        @if (node[0] === 'path') {
+                          <path [attr.d]="$any(node[1]).d"></path>
+                        } @else if (node[0] === 'circle') {
+                          <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                        }
+                      }
+                    </svg>
+                  </span>
+                  <input
+                    type="search"
+                    [value]="serviceSearchQuery"
+                    placeholder="Pretražite uslugu po nazivu..."
+                    (input)="onServiceSearchInput($event)"
+                    autocomplete="off"
+                  />
+                </label>
+
                 @if (displayedSpecialties.length > 1) {
                   <div class="specialty-tabs" role="tablist" aria-label="Oblasti">
                     @for (specialty of displayedSpecialties; track specialty.id) {
@@ -87,11 +109,13 @@
 
                 @if (doctorServicesLoading) {
                   <p class="step-hint">Učitavanje usluga lekara...</p>
-                } @else if (specialtyServices.length === 0) {
+                } @else if (isSearchingServices && visibleServices.length === 0) {
+                  <p class="step-hint">Nema usluga koje odgovaraju pretrazi.</p>
+                } @else if (visibleServices.length === 0) {
                   <p class="step-hint">Nema unetih usluga za izabranog lekara.</p>
                 } @else {
                   <div class="option-list">
-                    @for (service of specialtyServices; track service.id) {
+                    @for (service of visibleServices; track service.id) {
                       <button
                         class="option-card service-option"
                         type="button"
