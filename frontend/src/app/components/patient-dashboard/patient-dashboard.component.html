@@ -32,27 +32,23 @@
           } @else if (upcomingAppointment) {
             <article class="upcoming-card">
               <p class="upcoming-kicker">Sledeći termin</p>
+              <p class="upcoming-when">
+                {{ formatDisplayDate(upcomingAppointment.appointmentDate) }} · {{ upcomingAppointment.startTime }}
+              </p>
               <h3>{{ upcomingAppointment.service.name }}</h3>
               <p class="upcoming-clinician">
                 <span class="upcoming-doctor">dr {{ upcomingAppointment.doctor.firstName }} {{ upcomingAppointment.doctor.lastName }}</span>
                 <span class="upcoming-sep" aria-hidden="true">·</span>
                 <span class="upcoming-specialty">{{ upcomingAppointment.doctor.specialty.name }}</span>
               </p>
-              <dl class="upcoming-meta">
-                <div>
-                  <dt>Datum i vreme</dt>
-                  <dd>{{ formatDisplayDate(upcomingAppointment.appointmentDate) }} · {{ upcomingAppointment.startTime }}</dd>
-                </div>
-                <div>
-                  <dt>Lokacija</dt>
-                  <dd>
-                    {{ upcomingAppointment.location.name }}
-                    @if (upcomingAppointment.location.address) {
-                      <span class="upcoming-address">{{ upcomingAppointment.location.address }}, {{ upcomingAppointment.location.city }}</span>
-                    }
-                  </dd>
-                </div>
-              </dl>
+              <div class="upcoming-details">
+                <p class="upcoming-place">{{ upcomingAppointment.location.name }}</p>
+                @if (upcomingAppointment.location.address) {
+                  <p class="upcoming-address">
+                    {{ upcomingAppointment.location.address }}, {{ upcomingAppointment.location.city }}
+                  </p>
+                }
+              </div>
               <button class="btn btn-cancel" type="button" (click)="openCancelModal()">Otkaži pregled</button>
             </article>
           } @else {

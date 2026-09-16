@@ -33,31 +33,13 @@
               <article class="upcoming-card history-card">
                 <p class="upcoming-kicker">Obavljen pregled</p>
                 <h2>{{ appointment.service.name }}</h2>
-                <p class="upcoming-clinician">
-                  <span class="upcoming-doctor">dr {{ appointment.doctor.firstName }} {{ appointment.doctor.lastName }}</span>
+                <p class="history-line">
+                  {{ formatDisplayDate(appointment.appointmentDate) }}
                   <span class="upcoming-sep" aria-hidden="true">·</span>
-                  <span class="upcoming-specialty">{{ appointment.doctor.specialty.name }}</span>
+                  dr {{ appointment.doctor.firstName }} {{ appointment.doctor.lastName }}
                 </p>
-                <dl class="upcoming-meta">
-                  <div>
-                    <dt>Datum i vreme</dt>
-                    <dd>{{ formatDisplayDate(appointment.appointmentDate) }} · {{ appointment.startTime }}</dd>
-                  </div>
-                  <div>
-                    <dt>Lokacija</dt>
-                    <dd>
-                      {{ appointment.location.name }}
-                      @if (appointment.location.address) {
-                        <span class="upcoming-address">{{ appointment.location.address }}, {{ appointment.location.city }}</span>
-                      }
-                    </dd>
-                  </div>
-                </dl>
+                <p class="history-location">{{ appointment.location.name }}</p>
                 <div class="history-actions">
-                  <div class="report-action">
-                    <button type="button" class="btn btn-muted" disabled>Pogledaj izveštaj</button>
-                    <p class="coming-later">Uskoro dostupno</p>
-                  </div>
                   <button
                     type="button"
                     class="btn btn-outline"

@@ -12,7 +12,11 @@ import { CancelAppointmentModalComponent } from '../patient-dashboard/cancel-app
   standalone: true,
   imports: [RouterLink, SiteHeaderComponent, CancelAppointmentModalComponent],
   templateUrl: './patient-appointments.component.html',
-  styleUrls: ['../patient-portal/patient-portal-page.css', './patient-appointments.component.css']
+  styleUrls: [
+    '../patient-portal/patient-portal-page.css',
+    '../patient-portal/patient-upcoming-card.css',
+    './patient-appointments.component.css'
+  ]
 })
 export class PatientAppointmentsComponent implements OnInit {
   appointments: UpcomingAppointment[] = [];

@@ -30,27 +30,23 @@
             @for (appointment of appointments; track appointment.id) {
               <article class="upcoming-card">
                 <p class="upcoming-kicker">Zakazani pregled</p>
+                <p class="upcoming-when">
+                  {{ formatDisplayDate(appointment.appointmentDate) }} · {{ appointment.startTime }}
+                </p>
                 <h2>{{ appointment.service.name }}</h2>
                 <p class="upcoming-clinician">
                   <span class="upcoming-doctor">dr {{ appointment.doctor.firstName }} {{ appointment.doctor.lastName }}</span>
                   <span class="upcoming-sep" aria-hidden="true">·</span>
                   <span class="upcoming-specialty">{{ appointment.doctor.specialty.name }}</span>
                 </p>
-                <dl class="upcoming-meta">
-                  <div>
-                    <dt>Datum i vreme</dt>
-                    <dd>{{ formatDisplayDate(appointment.appointmentDate) }} · {{ appointment.startTime }}</dd>
-                  </div>
-                  <div>
-                    <dt>Lokacija</dt>
-                    <dd>
-                      {{ appointment.location.name }}
-                      @if (appointment.location.address) {
-                        <span class="upcoming-address">{{ appointment.location.address }}, {{ appointment.location.city }}</span>
-                      }
-                    </dd>
-                  </div>
-                </dl>
+                <div class="upcoming-details">
+                  <p class="upcoming-place">{{ appointment.location.name }}</p>
+                  @if (appointment.location.address) {
+                    <p class="upcoming-address">
+                      {{ appointment.location.address }}, {{ appointment.location.city }}
+                    </p>
+                  }
+                </div>
                 <button class="btn btn-cancel" type="button" (click)="openCancelModal(appointment)">Otkaži pregled</button>
               </article>
             }

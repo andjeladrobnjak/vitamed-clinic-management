@@ -13,7 +13,10 @@ import { CancelAppointmentModalComponent } from './cancel-appointment-modal.comp
   standalone: true,
   imports: [RouterLink, SiteHeaderComponent, CancelAppointmentModalComponent],
   templateUrl: './patient-dashboard.component.html',
-  styleUrl: './patient-dashboard.component.css'
+  styleUrls: [
+    '../patient-portal/patient-upcoming-card.css',
+    './patient-dashboard.component.css'
+  ]
 })
 export class PatientDashboardComponent implements OnInit {
   readonly calendarIcon = LucideCalendar.icon.node;

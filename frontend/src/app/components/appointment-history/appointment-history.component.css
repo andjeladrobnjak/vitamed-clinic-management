@@ -4,21 +4,33 @@
 }
 
 .upcoming-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 640px;
   min-width: 0;
   margin: 0;
-  padding: 0.88rem 1.1rem 0.82rem;
+  padding: 0.72rem 1.1rem 0.7rem 1.15rem;
+  overflow: hidden;
   background: var(--white);
-  border: 1px solid var(--stone);
-  border-radius: 2px;
-  box-shadow: 0 8px 22px rgba(23, 52, 58, 0.045);
+  border: 1px solid rgba(217, 214, 207, 0.62);
+  border-radius: 1px;
+  box-shadow: none;
+}
+
+.upcoming-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--burgundy);
 }
 
 .upcoming-kicker {
-  margin: 0 0 0.16rem;
+  margin: 0 0 0.14rem;
   color: var(--burgundy);
   font-size: 0.7rem;
   font-weight: 600;
@@ -27,22 +39,19 @@
 }
 
 .upcoming-card h2 {
-  margin: 0 0 0.16rem;
-  font-size: 1.24rem;
+  margin: 0 0 0.2rem;
+  font-size: 1.18rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
-.upcoming-clinician {
-  margin: 0 0 0.58rem;
-  font-size: 0.96rem;
-  line-height: 1.35;
-}
-
-.upcoming-doctor {
-  font-weight: 500;
+.history-line {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .upcoming-sep {
@@ -51,46 +60,10 @@
   font-weight: 400;
 }
 
-.upcoming-specialty {
+.history-location {
+  margin: 0.12rem 0 0;
   color: var(--muted);
-  font-size: 0.94em;
-  font-weight: 400;
-}
-
-.upcoming-meta {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.52rem;
-  margin: 0 0 0.7rem;
-  min-width: 0;
-}
-
-.upcoming-meta div {
-  display: grid;
-  gap: 0.08rem;
-  min-width: 0;
-}
-
-.upcoming-meta dt {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--burgundy);
-}
-
-.upcoming-meta dd {
-  margin: 0;
-  font-size: 0.98rem;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.upcoming-address {
-  display: block;
-  margin-top: 0.08rem;
-  color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.4;
 }
 
@@ -106,21 +79,9 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 0.45rem 0.55rem;
+  margin-top: 0.62rem;
 }
 
 .history-actions .btn {
-  padding: 0.5rem 0.9rem;
-}
-
-.report-action {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.coming-later {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  padding: 0.46rem 0.85rem;
 }
