@@ -88,6 +88,25 @@ export class DoctorPortalController {
         }
     }
 
+    async getMonthSchedule(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const schedule = await this.portalService.getMonthSchedule(
+                doctorId,
+                req.query.year,
+                req.query.month
+            );
+            res.status(200).json(schedule);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati raspored.');
+        }
+    }
+
     private handleError(res: Response, error: unknown, fallback: string): void {
         if (error instanceof DoctorPortalError) {
             res.status(error.statusCode).json({ message: error.message });

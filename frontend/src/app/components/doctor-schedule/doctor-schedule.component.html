@@ -3,8 +3,90 @@
 
   <main class="schedule-main">
     <div class="container">
-      <p class="eyebrow">Raspored</p>
-      <h1>Kalendar pregleda</h1>
+      <section class="intro">
+        <p class="eyebrow">Raspored</p>
+        <h1>Moj raspored</h1>
+        <p class="lead">Pregled radnog vremena i zakazanih termina.</p>
+      </section>
+
+      @if (isLoading) {
+        <p class="state">Učitavanje rasporeda...</p>
+      } @else if (loadError) {
+        <p class="state is-error">{{ loadError }}</p>
+      } @else {
+        <div class="schedule-layout" [class.has-panel]="selectedCell">
+          <section class="calendar" aria-label="Mesečni kalendar">
+            <div class="calendar-nav">
+              <button type="button" class="nav-btn" (click)="previousMonth()" aria-label="Prethodni mesec">‹</button>
+              <h2>{{ monthTitle }}</h2>
+              <button type="button" class="nav-btn" (click)="nextMonth()" aria-label="Sledeći mesec">›</button>
+            </div>
+
+            <div class="weekday-row" aria-hidden="true">
+              @for (label of weekdayLabels; track label) {
+                <span>{{ label }}</span>
+              }
+            </div>
+
+            <div class="day-grid">
+              @for (cell of cells; track cell.date) {
+                @if (cell.shift) {
+                  <button
+                    type="button"
+                    class="day-cell is-working"
+                    [class.is-outside]="!cell.inMonth"
+                    [class.is-selected]="selectedDate === cell.date"
+                    (click)="selectDay(cell)"
+                  >
+                    <span class="day-number">{{ cell.dayNumber }}</span>
+                    <span class="day-location">{{ cell.shift.location.name }}</span>
+                    <span class="day-hours">{{ cell.shift.startTime }}–{{ cell.shift.endTime }}</span>
+                    <span class="day-count">{{ appointmentCountLabel(cell.appointmentCount) }}</span>
+                  </button>
+                } @else {
+                  <div class="day-cell" [class.is-outside]="!cell.inMonth">
+                    <span class="day-number">{{ cell.dayNumber }}</span>
+                  </div>
+                }
+              }
+            </div>
+          </section>
+
+          @if (selectedCell) {
+            <aside class="day-panel" aria-label="Pregledi izabranog dana">
+              <div class="panel-top">
+                <h2>{{ selectedHeading }}</h2>
+                <button type="button" class="close-panel" (click)="closePanel()">Zatvori</button>
+              </div>
+              <p class="panel-place">{{ selectedCell.shift.location.name }}</p>
+              <p class="panel-hours">{{ selectedCell.shift.startTime }}–{{ selectedCell.shift.endTime }}</p>
+
+              @if (selectedCell.appointments.length === 0) {
+                <p class="panel-empty">Nema zakazanih pregleda za ovaj dan.</p>
+              } @else {
+                <ul class="appointment-list">
+                  @for (appointment of selectedCell.appointments; track appointment.id) {
+                    <li>
+                      <p class="appt-time">{{ appointment.startTime }}</p>
+                      @if (canOpenPatient(appointment) && appointment.patient.id) {
+                        <a
+                          class="appt-name"
+                          [routerLink]="['/lekar/pacijenti', appointment.patient.id]"
+                        >
+                          {{ patientName(appointment) }}
+                        </a>
+                      } @else {
+                        <p class="appt-name is-static">{{ patientName(appointment) }}</p>
+                      }
+                      <p class="appt-service">{{ appointment.service.name }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+            </aside>
+          }
+        </div>
+      }
     </div>
   </main>
 </div>

@@ -126,6 +126,40 @@ export interface DoctorPortalAppointmentReport {
   isOwnReport: boolean;
 }
 
+export interface DoctorPortalScheduleShift {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  location: { name: string };
+}
+
+export interface DoctorPortalScheduleAppointment {
+  id: number;
+  startTime: string;
+  status: 'confirmed' | 'completed';
+  patient: {
+    id: number | null;
+    firstName: string;
+    lastName: string;
+  };
+  service: { name: string };
+}
+
+export interface DoctorPortalScheduleDay {
+  date: string;
+  appointmentCount: number;
+  appointments: DoctorPortalScheduleAppointment[];
+}
+
+export interface DoctorPortalMonthSchedule {
+  year: number;
+  month: number;
+  from: string;
+  to: string;
+  shifts: DoctorPortalScheduleShift[];
+  days: DoctorPortalScheduleDay[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -162,5 +196,14 @@ export class DoctorPortalService {
     return this.http.get<DoctorPortalAppointmentReport>(
       `${this.portalUrl}/patients/${patientId}/appointments/${appointmentId}/report`
     );
+  }
+
+  getMonthSchedule(year: number, month: number): Observable<DoctorPortalMonthSchedule> {
+    return this.http.get<DoctorPortalMonthSchedule>(`${this.portalUrl}/schedule`, {
+      params: {
+        year: String(year),
+        month: String(month)
+      }
+    });
   }
 }

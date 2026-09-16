@@ -29,4 +29,8 @@ doctorPortalRouter.get(
     (req, res) => doctorPortalController.getAppointmentReport(req, res)
 );
 
+doctorPortalRouter.get('/schedule', authenticateDoctor, (req, res) =>
+    doctorPortalController.getMonthSchedule(req, res)
+);
+
 export default doctorPortalRouter;

@@ -1,11 +1,13 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import pool from '../db/connection';
 import {
+    addCalendarDays,
     clinicClock,
     compareIsoDates,
     minutesToTimeLabel,
     parsePositiveId,
-    timeToMinutes
+    timeToMinutes,
+    weekdayFromCalendarDate
 } from '../availability/availability.logic';
 import { dateOfBirthFromJmbg } from '../patients/date-of-birth';
 
@@ -116,6 +118,40 @@ export interface DoctorPortalAppointmentReport {
         updatedAt: string;
     };
     isOwnReport: boolean;
+}
+
+export interface DoctorPortalScheduleShift {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    location: { name: string };
+}
+
+export interface DoctorPortalScheduleAppointment {
+    id: number;
+    startTime: string;
+    status: 'confirmed' | 'completed';
+    patient: {
+        id: number | null;
+        firstName: string;
+        lastName: string;
+    };
+    service: { name: string };
+}
+
+export interface DoctorPortalScheduleDay {
+    date: string;
+    appointmentCount: number;
+    appointments: DoctorPortalScheduleAppointment[];
+}
+
+export interface DoctorPortalMonthSchedule {
+    year: number;
+    month: number;
+    from: string;
+    to: string;
+    shifts: DoctorPortalScheduleShift[];
+    days: DoctorPortalScheduleDay[];
 }
 
 export interface DoctorPortalPatientDetail {
@@ -237,6 +273,7 @@ export class DoctorPortalService {
         const findings = this.requiredReportText(body.findings, 'Nalaz je obavezan.');
         const diagnosis = this.requiredReportText(body.diagnosis, 'Dijagnoza je obavezna.');
         const therapyRecommendations = this.optionalReportText(body.therapyRecommendations);
+
 
         const connection = await pool.getConnection();
         try {
@@ -631,6 +668,110 @@ export class DoctorPortalService {
                 updatedAt: String(row.updatedAt)
             },
             isOwnReport: authorDoctorId === doctorId
+        };
+    }
+
+    async getMonthSchedule(
+        doctorId: number,
+        yearInput: unknown,
+        monthInput: unknown
+    ): Promise<DoctorPortalMonthSchedule> {
+        const year = Number(yearInput);
+        const month = Number(monthInput);
+        if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+            throw new DoctorPortalError(400, 'Neispravna godina.');
+        }
+        if (!Number.isInteger(month) || month < 1 || month > 12) {
+            throw new DoctorPortalError(400, 'Neispravan mesec.');
+        }
+
+        const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+        const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+        const monthEnd = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        const from = addCalendarDays(monthStart, -(weekdayFromCalendarDate(monthStart) - 1));
+        const to = addCalendarDays(monthEnd, 7 - weekdayFromCalendarDate(monthEnd));
+
+        const [shiftRows] = await pool.query<(RowDataPacket & {
+            dayOfWeek: number;
+            startTime: string;
+            endTime: string;
+            locationName: string;
+        })[]>(
+            `SELECT
+                ds.day_of_week AS dayOfWeek,
+                TIME_FORMAT(ds.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(ds.end_time, '%H:%i') AS endTime,
+                l.name AS locationName
+             FROM doctor_schedules ds
+             INNER JOIN locations l ON l.id = ds.location_id
+             WHERE ds.doctor_id = ?
+             ORDER BY ds.day_of_week ASC`,
+            [doctorId]
+        );
+
+        const [appointmentRows] = await pool.query<(RowDataPacket & {
+            id: number;
+            appointmentDate: string;
+            startTime: string;
+            status: string;
+            patientId: number | null;
+            patientFirstName: string;
+            patientLastName: string;
+            serviceName: string;
+        })[]>(
+            `SELECT
+                a.id,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                a.status,
+                a.patient_id AS patientId,
+                a.patient_first_name AS patientFirstName,
+                a.patient_last_name AS patientLastName,
+                s.name AS serviceName
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             WHERE a.doctor_id = ?
+               AND a.appointment_date BETWEEN ? AND ?
+               AND a.status IN ('confirmed', 'completed')
+             ORDER BY a.appointment_date ASC, a.start_time ASC, a.id ASC`,
+            [doctorId, from, to]
+        );
+
+        const daysByDate = new Map<string, DoctorPortalScheduleDay>();
+        for (const row of appointmentRows) {
+            const date = String(row.appointmentDate);
+            const day = daysByDate.get(date) ?? {
+                date,
+                appointmentCount: 0,
+                appointments: []
+            };
+            day.appointments.push({
+                id: Number(row.id),
+                startTime: String(row.startTime),
+                status: String(row.status) === 'completed' ? 'completed' : 'confirmed',
+                patient: {
+                    id: row.patientId === null ? null : Number(row.patientId),
+                    firstName: String(row.patientFirstName),
+                    lastName: String(row.patientLastName)
+                },
+                service: { name: String(row.serviceName) }
+            });
+            day.appointmentCount = day.appointments.length;
+            daysByDate.set(date, day);
+        }
+
+        return {
+            year,
+            month,
+            from,
+            to,
+            shifts: shiftRows.map((row) => ({
+                dayOfWeek: Number(row.dayOfWeek),
+                startTime: String(row.startTime),
+                endTime: String(row.endTime),
+                location: { name: String(row.locationName) }
+            })),
+            days: [...daysByDate.values()]
         };
     }
 
