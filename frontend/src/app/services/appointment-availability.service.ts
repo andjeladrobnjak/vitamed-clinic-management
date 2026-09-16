@@ -42,6 +42,21 @@ export interface UpcomingAppointment {
 
 export interface HistoryAppointment extends UpcomingAppointment {
   review: AppointmentReviewSummary | null;
+  hasReport: boolean;
+}
+
+export interface PatientAppointmentReport {
+  service: { name: string };
+  doctor: {
+    firstName: string;
+    lastName: string;
+  };
+  report: {
+    anamnesis: string;
+    findings: string;
+    diagnosis: string;
+    therapyRecommendations: string | null;
+  };
 }
 
 export interface UpcomingAppointmentResponse {
@@ -132,6 +147,10 @@ export class AppointmentAvailabilityApi {
 
   getAppointmentHistory(): Observable<HistoryListResponse> {
     return this.http.get<HistoryListResponse>(`${this.baseUrl}/history`);
+  }
+
+  getAppointmentReport(appointmentId: number): Observable<PatientAppointmentReport> {
+    return this.http.get<PatientAppointmentReport>(`${this.baseUrl}/${appointmentId}/report`);
   }
 
   cancelAppointment(id: number): Observable<{ cancelled: boolean }> {

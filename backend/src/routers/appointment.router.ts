@@ -20,6 +20,9 @@ appointmentRouter.get('/upcoming', authenticatePatient, (req, res) =>
 appointmentRouter.get('/history', authenticatePatient, (req, res) =>
     appointmentController.history(req, res)
 );
+appointmentRouter.get('/:id/report', authenticatePatient, (req, res) =>
+    appointmentController.report(req, res)
+);
 appointmentRouter.post('/', optionalAuthenticatePatient, (req, res) =>
     appointmentController.create(req, res)
 );

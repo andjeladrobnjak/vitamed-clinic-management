@@ -5,6 +5,7 @@ import { PatientRegisterComponent } from './components/patient-register/patient-
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { PatientAppointmentsComponent } from './components/patient-appointments/patient-appointments.component';
 import { AppointmentHistoryComponent } from './components/appointment-history/appointment-history.component';
+import { PatientAppointmentReportComponent } from './components/patient-appointment-report/patient-appointment-report.component';
 import { PatientProfileComponent } from './components/patient-profile/patient-profile.component';
 import { DoctorsComponent } from './components/doctors/doctors.component';
 import { DoctorDetailComponent } from './components/doctor-detail/doctor-detail.component';
@@ -41,6 +42,11 @@ export const routes: Routes = [
   {
     path: 'moji-termini',
     component: PatientAppointmentsComponent,
+    canActivate: [patientAuthGuard]
+  },
+  {
+    path: 'istorija-pregleda/:appointmentId',
+    component: PatientAppointmentReportComponent,
     canActivate: [patientAuthGuard]
   },
   {

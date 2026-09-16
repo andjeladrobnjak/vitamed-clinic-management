@@ -1,0 +1,42 @@
+.report-doctor {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.document {
+  max-width: 640px;
+  padding: 1.3rem 1.35rem 1.45rem;
+  background: var(--white);
+  border: 1px solid rgba(217, 214, 207, 0.62);
+  border-radius: 1px;
+}
+
+.document section + section {
+  margin-top: 1.15rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(217, 214, 207, 0.9);
+}
+
+.document h3 {
+  margin: 0 0 0.5rem;
+  color: var(--burgundy);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.document p {
+  margin: 0;
+  color: var(--petrol);
+  font-size: 1rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.document p.is-empty {
+  color: var(--muted);
+}

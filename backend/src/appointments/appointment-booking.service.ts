@@ -79,6 +79,21 @@ export interface AppointmentReviewSummary {
 
 export interface HistoryAppointment extends UpcomingAppointment {
     review: AppointmentReviewSummary | null;
+    hasReport: boolean;
+}
+
+export interface PatientAppointmentReport {
+    service: { name: string };
+    doctor: {
+        firstName: string;
+        lastName: string;
+    };
+    report: {
+        anamnesis: string;
+        findings: string;
+        diagnosis: string;
+        therapyRecommendations: string | null;
+    };
 }
 
 interface UpcomingAppointmentRow extends RowDataPacket {
@@ -97,6 +112,7 @@ interface UpcomingAppointmentRow extends RowDataPacket {
     reviewId: number | null;
     reviewRating: number | null;
     reviewComment: string | null;
+    reportId: number | null;
 }
 
 export interface CreatedAppointment {
@@ -169,6 +185,63 @@ export class AppointmentBookingService {
         );
 
         return rows.map((row) => this.mapHistory(row));
+    }
+
+    async getReport(patientId: number, appointmentIdInput: unknown): Promise<PatientAppointmentReport> {
+        const appointmentId = parsePositiveId(appointmentIdInput);
+        if (!appointmentId) {
+            throw new AvailabilityContextError(400, 'Neispravan identifikator pregleda.');
+        }
+
+        const [rows] = await pool.query<(RowDataPacket & {
+            serviceName: string;
+            doctorFirstName: string;
+            doctorLastName: string;
+            anamnesis: string;
+            findings: string;
+            diagnosis: string;
+            therapyRecommendations: string | null;
+        })[]>(
+            `SELECT
+                s.name AS serviceName,
+                d.first_name AS doctorFirstName,
+                d.last_name AS doctorLastName,
+                r.anamnesis,
+                r.findings,
+                r.diagnosis,
+                r.therapy_recommendations AS therapyRecommendations
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             INNER JOIN appointment_reports r ON r.appointment_id = a.id
+             WHERE a.id = ?
+               AND a.patient_id = ?
+             LIMIT 1`,
+            [appointmentId, patientId]
+        );
+
+        const row = rows[0];
+        if (!row) {
+            throw new AvailabilityContextError(404, 'Izveštaj nije pronađen.');
+        }
+
+        const therapy = row.therapyRecommendations;
+        const therapyRecommendations =
+            therapy === null || therapy === undefined ? null : String(therapy).trim() || null;
+
+        return {
+            service: { name: String(row.serviceName) },
+            doctor: {
+                firstName: String(row.doctorFirstName),
+                lastName: String(row.doctorLastName)
+            },
+            report: {
+                anamnesis: String(row.anamnesis),
+                findings: String(row.findings),
+                diagnosis: String(row.diagnosis),
+                therapyRecommendations
+            }
+        };
     }
 
     async cancel(patientId: number, appointmentId: number): Promise<void> {
@@ -456,18 +529,21 @@ export class AppointmentBookingService {
                 l.city AS locationCity,
                 r.id AS reviewId,
                 r.rating AS reviewRating,
-                r.comment AS reviewComment
+                r.comment AS reviewComment,
+                ar.id AS reportId
              FROM appointments a
              INNER JOIN services s ON s.id = a.service_id
              INNER JOIN doctors d ON d.id = a.doctor_id
              INNER JOIN specialties sp ON sp.id = d.specialty_id
              INNER JOIN locations l ON l.id = a.location_id
-             LEFT JOIN doctor_reviews r ON r.appointment_id = a.id`;
+             LEFT JOIN doctor_reviews r ON r.appointment_id = a.id
+             LEFT JOIN appointment_reports ar ON ar.appointment_id = a.id`;
     }
 
     private mapHistory(row: UpcomingAppointmentRow): HistoryAppointment {
         return {
             ...this.mapUpcoming(row),
+            hasReport: row.reportId !== null && Number(row.reportId) > 0,
             review: row.reviewId
                 ? {
                     id: Number(row.reviewId),

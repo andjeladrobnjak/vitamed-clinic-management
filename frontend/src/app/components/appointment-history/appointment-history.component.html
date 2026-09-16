@@ -4,6 +4,7 @@
   <main>
     <section class="portal-intro">
       <div class="container">
+        <a class="back-link" routerLink="/moj-vitamed">← Nazad na Moj VitaMed</a>
         <p class="eyebrow">Portal za pacijente</p>
         <h1>Istorija pregleda</h1>
         <p class="lead">Pregledi koji su obavljeni u VitaMed klinici.</p>
@@ -40,6 +41,14 @@
                 </p>
                 <p class="history-location">{{ appointment.location.name }}</p>
                 <div class="history-actions">
+                  @if (appointment.hasReport) {
+                    <a
+                      class="report-link"
+                      [routerLink]="['/istorija-pregleda', appointment.id]"
+                    >
+                      Pogledaj izveštaj →
+                    </a>
+                  }
                   <button
                     type="button"
                     class="btn btn-outline"

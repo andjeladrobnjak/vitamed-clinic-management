@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AppointmentAvailabilityApi, HistoryAppointment } from '../../services/appointment-availability.service';
 import { DoctorReviewApi } from '../../services/doctor-review.service';
@@ -11,7 +11,7 @@ import { DoctorReviewModalComponent } from '../doctor-review-modal/doctor-review
 @Component({
   selector: 'app-appointment-history',
   standalone: true,
-  imports: [SiteHeaderComponent, DoctorReviewModalComponent],
+  imports: [SiteHeaderComponent, DoctorReviewModalComponent, RouterLink],
   templateUrl: './appointment-history.component.html',
   styleUrls: ['../patient-portal/patient-portal-page.css', './appointment-history.component.css']
 })

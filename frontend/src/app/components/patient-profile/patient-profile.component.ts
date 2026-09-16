@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PatientProfileUpdate, PatientService } from '../../services/patient.service';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
@@ -9,7 +9,7 @@ import { SiteHeaderComponent } from '../site-header/site-header.component';
 @Component({
   selector: 'app-patient-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, SiteHeaderComponent],
+  imports: [ReactiveFormsModule, SiteHeaderComponent, RouterLink],
   templateUrl: './patient-profile.component.html',
   styleUrls: ['../patient-portal/patient-portal-page.css', './patient-profile.component.css']
 })

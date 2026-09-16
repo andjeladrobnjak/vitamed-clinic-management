@@ -168,6 +168,21 @@ export class AppointmentController {
         }
     }
 
+    async report(req: Request, res: Response): Promise<void> {
+        try {
+            const patientId = (req as AuthenticatedRequest).patientId;
+            if (!patientId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            const report = await this.bookingService.getReport(patientId, req.params.id);
+            res.json(report);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati izveštaj.');
+        }
+    }
+
     async cancel(req: Request, res: Response): Promise<void> {
         try {
             const patientId = (req as AuthenticatedRequest).patientId;

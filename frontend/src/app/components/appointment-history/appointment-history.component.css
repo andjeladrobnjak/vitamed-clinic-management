@@ -77,11 +77,31 @@
 .history-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0.45rem 0.55rem;
+  align-items: center;
+  gap: 0.55rem 1rem;
   margin-top: 0.62rem;
 }
 
 .history-actions .btn {
   padding: 0.46rem 0.85rem;
+}
+
+.report-link {
+  color: var(--burgundy);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.report-link:hover,
+.report-link:focus-visible {
+  color: #5f3036;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.report-link:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 3px;
 }

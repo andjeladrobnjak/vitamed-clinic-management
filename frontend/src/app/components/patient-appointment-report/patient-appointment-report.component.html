@@ -1,0 +1,54 @@
+<div class="patient-page">
+  <app-site-header />
+
+  <main>
+    <section class="portal-intro">
+      <div class="container">
+        <a class="back-link" routerLink="/istorija-pregleda">← Nazad na istoriju pregleda</a>
+        @if (isLoading) {
+          <p class="status-note">Učitavanje izveštaja...</p>
+        } @else if (loadError) {
+          <p class="status-note">{{ loadError }}</p>
+        } @else if (detail) {
+          <p class="eyebrow">Izveštaj sa pregleda</p>
+          <h1>{{ detail.service.name }}</h1>
+          <p class="report-doctor">dr {{ detail.doctor.firstName }} {{ detail.doctor.lastName }}</p>
+        }
+      </div>
+    </section>
+
+    @if (detail) {
+      <section class="section">
+        <div class="container">
+          <article class="document" aria-labelledby="report-heading">
+            <h2 id="report-heading" class="visually-hidden">Medicinski izveštaj</h2>
+            <section>
+              <h3>Anamneza</h3>
+              <p>{{ detail.report.anamnesis }}</p>
+            </section>
+            <section>
+              <h3>Nalaz</h3>
+              <p>{{ detail.report.findings }}</p>
+            </section>
+            <section>
+              <h3>Dijagnoza</h3>
+              <p>{{ detail.report.diagnosis }}</p>
+            </section>
+            <section>
+              <h3>Terapija i preporuke</h3>
+              <p [class.is-empty]="!detail.report.therapyRecommendations">
+                {{ therapyText(detail.report.therapyRecommendations) }}
+              </p>
+            </section>
+          </article>
+        </div>
+      </section>
+    }
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <p>&copy; 2026 VitaMed. Sva prava zadržana.</p>
+    </div>
+  </footer>
+</div>
