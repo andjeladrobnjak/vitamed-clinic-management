@@ -124,6 +124,7 @@ export interface DoctorPortalAppointmentReport {
     updatedAt: string;
   };
   isOwnReport: boolean;
+  canEdit: boolean;
 }
 
 export interface DoctorPortalScheduleShift {
@@ -195,6 +196,17 @@ export class DoctorPortalService {
   ): Observable<DoctorPortalAppointmentReport> {
     return this.http.get<DoctorPortalAppointmentReport>(
       `${this.portalUrl}/patients/${patientId}/appointments/${appointmentId}/report`
+    );
+  }
+
+  updateAppointmentReport(
+    patientId: number,
+    appointmentId: number,
+    report: CompleteAppointmentReportInput
+  ): Observable<{ message: string } & DoctorPortalAppointmentReport> {
+    return this.http.put<{ message: string } & DoctorPortalAppointmentReport>(
+      `${this.portalUrl}/patients/${patientId}/appointments/${appointmentId}/report`,
+      report
     );
   }
 

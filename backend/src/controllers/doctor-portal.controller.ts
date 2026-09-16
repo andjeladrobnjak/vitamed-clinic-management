@@ -88,6 +88,26 @@ export class DoctorPortalController {
         }
     }
 
+    async updateAppointmentReport(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const report = await this.portalService.updateAppointmentReport(
+                doctorId,
+                req.params.patientId,
+                req.params.appointmentId,
+                req.body ?? {}
+            );
+            res.status(200).json(report);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće sačuvati izveštaj.');
+        }
+    }
+
     async getMonthSchedule(req: Request, res: Response): Promise<void> {
         const doctorId = (req as AuthenticatedRequest).doctorId;
         if (!doctorId) {

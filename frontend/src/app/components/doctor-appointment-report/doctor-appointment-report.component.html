@@ -56,7 +56,32 @@
             <p [class.is-empty]="!detail.report.therapyRecommendations">{{ therapyText(detail.report.therapyRecommendations) }}</p>
           </section>
         </article>
+
+        @if (successMessage) {
+          <p class="save-success" role="status">{{ successMessage }}</p>
+        }
+
+        @if (canEdit) {
+          <div class="edit-action">
+            <button class="edit-report-btn" type="button" (click)="openEdit()">
+              Izmeni izveštaj
+            </button>
+          </div>
+        }
       }
     </div>
   </main>
 </div>
+
+@if (isEditing && editAppointment && editInitialReport && detail) {
+  <app-appointment-report-modal
+    mode="edit"
+    [appointment]="editAppointment"
+    [appointmentDate]="detail.appointment.date"
+    [initialReport]="editInitialReport"
+    [isSaving]="isSaving"
+    [errorMessage]="saveError"
+    (dismissed)="closeEdit()"
+    (submitted)="submitEdit($event)"
+  />
+}

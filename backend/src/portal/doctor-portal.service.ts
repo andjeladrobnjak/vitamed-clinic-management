@@ -118,6 +118,7 @@ export interface DoctorPortalAppointmentReport {
         updatedAt: string;
     };
     isOwnReport: boolean;
+    canEdit: boolean;
 }
 
 export interface DoctorPortalScheduleShift {
@@ -269,11 +270,7 @@ export class DoctorPortalService {
             throw new DoctorPortalError(400, 'Neispravan identifikator pregleda.');
         }
 
-        const anamnesis = this.requiredReportText(body.anamnesis, 'Anamneza je obavezna.');
-        const findings = this.requiredReportText(body.findings, 'Nalaz je obavezan.');
-        const diagnosis = this.requiredReportText(body.diagnosis, 'Dijagnoza je obavezna.');
-        const therapyRecommendations = this.optionalReportText(body.therapyRecommendations);
-
+        const { anamnesis, findings, diagnosis, therapyRecommendations } = this.parseReportContent(body);
 
         const connection = await pool.getConnection();
         try {
@@ -667,7 +664,109 @@ export class DoctorPortalService {
                 createdAt: String(row.createdAt),
                 updatedAt: String(row.updatedAt)
             },
-            isOwnReport: authorDoctorId === doctorId
+            isOwnReport: authorDoctorId === doctorId,
+            canEdit: authorDoctorId === doctorId
+        };
+    }
+
+    async updateAppointmentReport(
+        doctorId: number,
+        patientIdInput: unknown,
+        appointmentIdInput: unknown,
+        body: {
+            anamnesis?: unknown;
+            findings?: unknown;
+            diagnosis?: unknown;
+            therapyRecommendations?: unknown;
+        }
+    ): Promise<{ message: string } & DoctorPortalAppointmentReport> {
+        const patientId = parsePositiveId(patientIdInput);
+        if (!patientId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pacijenta.');
+        }
+
+        const appointmentId = parsePositiveId(appointmentIdInput);
+        if (!appointmentId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pregleda.');
+        }
+
+        const { anamnesis, findings, diagnosis, therapyRecommendations } = this.parseReportContent(body);
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const [appointmentRows] = await connection.query<(CompletionAppointmentRow & {
+                patientId: number | null;
+            })[]>(
+                `SELECT
+                    a.id,
+                    a.doctor_id AS doctorId,
+                    a.patient_id AS patientId,
+                    a.status,
+                    DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                    TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                    TIME_FORMAT(a.end_time, '%H:%i') AS endTime
+                 FROM appointments a
+                 WHERE a.id = ?
+                 LIMIT 1
+                 FOR UPDATE`,
+                [appointmentId]
+            );
+
+            const appointment = appointmentRows[0];
+            if (
+                !appointment ||
+                Number(appointment.doctorId) !== doctorId ||
+                appointment.patientId === null ||
+                Number(appointment.patientId) !== patientId
+            ) {
+                throw new DoctorPortalError(404, 'Izveštaj nije pronađen.');
+            }
+
+            const status = String(appointment.status);
+            if (status === 'cancelled') {
+                throw new DoctorPortalError(409, 'Otkazani pregled nije moguće izmeniti.');
+            }
+            if (status !== 'completed') {
+                throw new DoctorPortalError(409, 'Izveštaj je moguće izmeniti tek nakon završenog pregleda.');
+            }
+
+            const [reportRows] = await connection.query<ReportIdRow[]>(
+                `SELECT id
+                 FROM appointment_reports
+                 WHERE appointment_id = ?
+                 LIMIT 1
+                 FOR UPDATE`,
+                [appointmentId]
+            );
+            if (!reportRows[0]) {
+                throw new DoctorPortalError(404, 'Izveštaj nije pronađen.');
+            }
+
+            await connection.query<ResultSetHeader>(
+                `UPDATE appointment_reports
+                 SET
+                    anamnesis = ?,
+                    findings = ?,
+                    diagnosis = ?,
+                    therapy_recommendations = ?
+                 WHERE appointment_id = ?`,
+                [anamnesis, findings, diagnosis, therapyRecommendations, appointmentId]
+            );
+
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+
+        const updated = await this.getAppointmentReport(doctorId, patientId, appointmentId);
+        return {
+            message: 'Izveštaj je uspešno sačuvan.',
+            ...updated
         };
     }
 
@@ -799,6 +898,25 @@ export class DoctorPortalService {
             return false;
         }
         return timeToMinutes(startTime) <= clock.minutes;
+    }
+
+    private parseReportContent(body: {
+        anamnesis?: unknown;
+        findings?: unknown;
+        diagnosis?: unknown;
+        therapyRecommendations?: unknown;
+    }): {
+        anamnesis: string;
+        findings: string;
+        diagnosis: string;
+        therapyRecommendations: string | null;
+    } {
+        return {
+            anamnesis: this.requiredReportText(body.anamnesis, 'Anamneza je obavezna.'),
+            findings: this.requiredReportText(body.findings, 'Nalaz je obavezan.'),
+            diagnosis: this.requiredReportText(body.diagnosis, 'Dijagnoza je obavezna.'),
+            therapyRecommendations: this.optionalReportText(body.therapyRecommendations)
+        };
     }
 
     private requiredReportText(value: unknown, message: string): string {

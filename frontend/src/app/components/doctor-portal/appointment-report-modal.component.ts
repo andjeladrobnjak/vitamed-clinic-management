@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { LucideX } from '@lucide/angular';
-import { DoctorDashboardAppointment } from '../../services/doctor-portal.service';
 
 function requiredTrimmed(message: string) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -23,6 +22,20 @@ function requiredTrimmed(message: string) {
   };
 }
 
+export interface ReportModalAppointment {
+  patient: { firstName: string; lastName: string };
+  service: { name: string };
+  startTime: string;
+  endTime: string;
+}
+
+export interface ReportModalValues {
+  anamnesis: string;
+  findings: string;
+  diagnosis: string;
+  therapyRecommendations: string | null;
+}
+
 @Component({
   selector: 'app-appointment-report-modal',
   standalone: true,
@@ -31,10 +44,12 @@ function requiredTrimmed(message: string) {
   styleUrl: './appointment-report-modal.component.css'
 })
 export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy {
-  readonly appointment = input.required<DoctorDashboardAppointment>();
+  readonly appointment = input.required<ReportModalAppointment>();
   readonly appointmentDate = input.required<string>();
   readonly isSaving = input(false);
   readonly errorMessage = input('');
+  readonly mode = input<'complete' | 'edit'>('complete');
+  readonly initialReport = input<ReportModalValues | null>(null);
 
   readonly dismissed = output<void>();
   readonly submitted = output<{
@@ -53,6 +68,12 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
   private previousOverflow = '';
   private previousFocus: HTMLElement | null = null;
+  private originalValues: ReportModalValues = {
+    anamnesis: '',
+    findings: '',
+    diagnosis: '',
+    therapyRecommendations: null
+  };
 
   readonly reportForm = this.fb.group({
     anamnesis: ['', [Validators.required, requiredTrimmed('Unesite anamnezu i tegobe.')]],
@@ -63,12 +84,58 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
 
   constructor() {
     effect(() => {
+      const initial = this.initialReport();
+      if (this.mode() === 'edit' && initial) {
+        this.originalValues = {
+          anamnesis: initial.anamnesis,
+          findings: initial.findings,
+          diagnosis: initial.diagnosis,
+          therapyRecommendations: initial.therapyRecommendations
+        };
+        this.reportForm.reset(
+          {
+            anamnesis: initial.anamnesis,
+            findings: initial.findings,
+            diagnosis: initial.diagnosis,
+            therapyRecommendations: initial.therapyRecommendations ?? ''
+          },
+          { emitEvent: false }
+        );
+      }
+    });
+
+    effect(() => {
       if (this.isSaving()) {
         this.reportForm.disable({ emitEvent: false });
       } else {
         this.reportForm.enable({ emitEvent: false });
       }
     });
+  }
+
+  get isEditMode(): boolean {
+    return this.mode() === 'edit';
+  }
+
+  get title(): string {
+    return this.isEditMode ? 'Izmeni izveštaj' : 'Izveštaj sa pregleda';
+  }
+
+  get submitLabel(): string {
+    if (this.isSaving()) {
+      return 'Čuvanje…';
+    }
+    return this.isEditMode ? 'Sačuvaj izmene' : 'Sačuvaj izveštaj i završi pregled';
+  }
+
+  get cancelLabel(): string {
+    return this.isEditMode ? 'Odustani' : 'Otkaži';
+  }
+
+  get discardMessage(): string {
+    return this.isEditMode
+      ? 'Želite li da zatvorite izveštaj? Izmene neće biti sačuvane.'
+      : 'Želite li da zatvorite izveštaj? Uneti podaci neće biti sačuvani.';
   }
 
   get patientLine(): string {
@@ -201,8 +268,22 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
 
   private hasUnsavedInput(): boolean {
     const value = this.reportForm.getRawValue();
+    if (this.mode() === 'edit') {
+      return (
+        this.normalized(value.anamnesis) !== this.normalized(this.originalValues.anamnesis) ||
+        this.normalized(value.findings) !== this.normalized(this.originalValues.findings) ||
+        this.normalized(value.diagnosis) !== this.normalized(this.originalValues.diagnosis) ||
+        this.normalized(value.therapyRecommendations) !==
+          this.normalized(this.originalValues.therapyRecommendations)
+      );
+    }
+
     return [value.anamnesis, value.findings, value.diagnosis, value.therapyRecommendations]
       .some((field) => typeof field === 'string' && field.trim() !== '');
+  }
+
+  private normalized(value: string | null | undefined): string {
+    return (value ?? '').trim();
   }
 
   private formatDate(isoDate: string): string {

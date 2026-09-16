@@ -29,6 +29,12 @@ doctorPortalRouter.get(
     (req, res) => doctorPortalController.getAppointmentReport(req, res)
 );
 
+doctorPortalRouter.put(
+    '/patients/:patientId/appointments/:appointmentId/report',
+    authenticateDoctor,
+    (req, res) => doctorPortalController.updateAppointmentReport(req, res)
+);
+
 doctorPortalRouter.get('/schedule', authenticateDoctor, (req, res) =>
     doctorPortalController.getMonthSchedule(req, res)
 );

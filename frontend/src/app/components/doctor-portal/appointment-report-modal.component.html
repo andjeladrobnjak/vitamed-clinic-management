@@ -31,7 +31,7 @@
     </button>
 
     <p class="report-kicker">Medicinski izveštaj</p>
-    <h2 id="report-title">Izveštaj sa pregleda</h2>
+    <h2 id="report-title">{{ title }}</h2>
     <p class="report-patient">{{ patientLine }}</p>
     <p class="report-when">{{ scheduleLine }}</p>
 
@@ -86,7 +86,7 @@
 
       @if (discardConfirmOpen) {
         <div class="discard-banner" role="alertdialog" aria-labelledby="discard-title">
-          <p id="discard-title">Želite li da zatvorite izveštaj? Uneti podaci neće biti sačuvani.</p>
+          <p id="discard-title">{{ discardMessage }}</p>
           <div class="discard-actions">
             <button class="btn btn-secondary" type="button" (click)="keepEditing()">
               Nastavi sa unosom
@@ -105,10 +105,10 @@
           [disabled]="isSaving()"
           (click)="requestClose()"
         >
-          Otkaži
+          {{ cancelLabel }}
         </button>
         <button class="btn btn-primary" type="submit" [disabled]="isSaving()">
-          {{ isSaving() ? 'Čuvanje…' : 'Sačuvaj izveštaj i završi pregled' }}
+          {{ submitLabel }}
         </button>
       </div>
     </form>

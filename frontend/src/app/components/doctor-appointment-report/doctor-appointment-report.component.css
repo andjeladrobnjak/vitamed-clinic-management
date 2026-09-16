@@ -133,6 +133,43 @@ h1 {
   color: var(--muted);
 }
 
+.save-success {
+  margin: 1rem 0 0;
+  color: #2f5854;
+  font-size: 0.94rem;
+  font-weight: 500;
+}
+
+.edit-action {
+  margin-top: 1.15rem;
+}
+
+.edit-report-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.58rem 1rem;
+  border: 1px solid var(--petrol);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--petrol);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.edit-report-btn:hover,
+.edit-report-btn:focus-visible {
+  background: #ece8e1;
+}
+
+.edit-report-btn:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 3px;
+}
+
 .state {
   margin: 0;
   color: var(--muted);
