@@ -1,0 +1,121 @@
+<div class="patient-page">
+  <app-doctor-portal-header />
+
+  <main class="patient-main">
+    <div class="container">
+      @if (isLoading) {
+        <p class="state">Učitavanje pacijenta...</p>
+      } @else if (loadError) {
+        <p class="state is-error">{{ loadError }}</p>
+      } @else if (detail) {
+        <section class="intro">
+          <a class="back-link" routerLink="/lekar/pacijenti">← Nazad na pacijente</a>
+          <p class="eyebrow">Pacijent</p>
+          <h1>{{ fullName }}</h1>
+          <p class="lead">{{ birthDateLabel(detail.patient.dateOfBirth) }}</p>
+        </section>
+
+        <section class="panel" aria-labelledby="basic-heading">
+          <p class="eyebrow" id="basic-heading">Osnovni podaci</p>
+          <dl class="facts">
+            <div>
+              <dt>Datum rođenja</dt>
+              <dd>{{ numericDate(detail.patient.dateOfBirth) }}</dd>
+            </div>
+            <div>
+              <dt>Telefon</dt>
+              <dd>{{ detail.patient.phone }}</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>{{ detail.patient.email }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        @if (detail.upcomingAppointment; as upcoming) {
+          <section class="panel upcoming" aria-labelledby="upcoming-heading">
+            <p class="eyebrow" id="upcoming-heading">Predstojeći pregled</p>
+            <div class="upcoming-row">
+              <div>
+                <p class="upcoming-title">{{ upcoming.service.name }}</p>
+                <p class="upcoming-meta">
+                  {{ appointmentDateLabel(upcoming.date) }}
+                  · {{ upcoming.startTime }}–{{ upcoming.endTime }}
+                  · {{ upcoming.location.name }}
+                </p>
+              </div>
+              <p class="status">Zakazano</p>
+            </div>
+          </section>
+        }
+
+        <section class="history" aria-labelledby="history-heading">
+          <p class="eyebrow">Istorija pregleda</p>
+          <h2 id="history-heading">Prethodni pregledi</h2>
+
+          @if (detail.history.length === 0) {
+            <p class="state">Još nema završenih pregleda u VitaMed-u.</p>
+          } @else {
+            <div class="history-filter" role="tablist" aria-label="Filter istorije pregleda">
+              <button
+                type="button"
+                role="tab"
+                [class.is-active]="historyFilter === 'all'"
+                [attr.aria-selected]="historyFilter === 'all'"
+                (click)="setHistoryFilter('all')"
+              >
+                Svi pregledi
+              </button>
+              <button
+                type="button"
+                role="tab"
+                [class.is-active]="historyFilter === 'own'"
+                [attr.aria-selected]="historyFilter === 'own'"
+                (click)="setHistoryFilter('own')"
+              >
+                Moji pregledi
+              </button>
+            </div>
+
+            @if (showOwnHistoryEmpty) {
+              <div class="state-block">
+                <p class="state-title">Nema vaših prethodnih pregleda</p>
+                <p>Za ovog pacijenta još nemate završenih pregleda.</p>
+              </div>
+            } @else {
+              <ul class="history-list">
+                @for (item of visibleHistory; track item.id) {
+                  <li class="history-row">
+                    <div class="history-top">
+                      <p class="history-date">{{ appointmentDateLabel(item.date) }}</p>
+                      <p class="status is-done">Završeno</p>
+                    </div>
+                    <div class="history-body">
+                      <div>
+                        <p class="history-service">{{ item.service.name }}</p>
+                        <p class="history-doctor">{{ doctorLabel(item.doctor.firstName, item.doctor.lastName) }}</p>
+                        <p class="history-meta">
+                          {{ item.startTime }}–{{ item.endTime }} · {{ item.location.name }}
+                        </p>
+                      </div>
+                      <svg class="row-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                        @for (node of chevronIcon; track $index) {
+                          @if (node[0] === 'polyline') {
+                            <polyline [attr.points]="$any(node[1]).points"></polyline>
+                          } @else if (node[0] === 'path') {
+                            <path [attr.d]="$any(node[1]).d"></path>
+                          }
+                        }
+                      </svg>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        </section>
+      }
+    </div>
+  </main>
+</div>

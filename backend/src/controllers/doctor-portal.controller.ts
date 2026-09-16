@@ -39,6 +39,36 @@ export class DoctorPortalController {
         }
     }
 
+    async listPatients(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const patients = await this.portalService.listPatients(doctorId);
+            res.status(200).json(patients);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati pacijente.');
+        }
+    }
+
+    async getPatient(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const detail = await this.portalService.getPatient(doctorId, req.params.patientId);
+            res.status(200).json(detail);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati pacijenta.');
+        }
+    }
+
     private handleError(res: Response, error: unknown, fallback: string): void {
         if (error instanceof DoctorPortalError) {
             res.status(error.statusCode).json({ message: error.message });

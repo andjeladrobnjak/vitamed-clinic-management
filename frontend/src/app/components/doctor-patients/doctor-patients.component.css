@@ -1,0 +1,230 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.patients-page {
+  --petrol: #17343a;
+  --ivory: #f5f3ee;
+  --burgundy: #7a3f46;
+  --stone: #d9d6cf;
+  --muted: #5c6564;
+  --sans: "Source Sans 3", "Segoe UI", sans-serif;
+  min-height: 100vh;
+  background: var(--ivory);
+  color: var(--petrol);
+  font-family: var(--sans);
+}
+
+.patients-page *,
+.patients-page *::before,
+.patients-page *::after {
+  box-sizing: border-box;
+}
+
+.container {
+  width: min(1180px, calc(100% - 2.75rem));
+  margin-inline: auto;
+}
+
+.patients-main {
+  padding: 2.4rem 0 4.2rem;
+}
+
+.intro {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.45rem;
+  color: var(--burgundy);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.search {
+  position: relative;
+  display: block;
+  max-width: 34rem;
+  margin-bottom: 1.35rem;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem;
+  display: flex;
+  color: #8a9391;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.search input {
+  width: 100%;
+  padding: 0.55rem 0.9rem 0.55rem 2.35rem;
+  border: 1px solid rgba(217, 214, 207, 0.85);
+  border-radius: 4px;
+  background: #faf8f4;
+  color: var(--petrol);
+  font: inherit;
+  font-size: 0.92rem;
+  outline: none;
+  appearance: none;
+}
+
+.search input::-webkit-search-decoration,
+.search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.search input::placeholder {
+  color: var(--muted);
+}
+
+.search input:focus {
+  border-color: var(--burgundy);
+  box-shadow: 0 0 0 3px rgba(122, 63, 70, 0.1);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.state,
+.state-block {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.state.is-error {
+  color: #8d555b;
+}
+
+.state-title {
+  margin: 0 0 0.3rem;
+  color: var(--petrol);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.state-block p {
+  margin: 0;
+}
+
+.patient-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  background: #faf8f4;
+  overflow: hidden;
+}
+
+.patient-row {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 1.2rem;
+  gap: 0.95rem;
+  align-items: center;
+  padding: 0.95rem 1.15rem;
+  border-top: 1px solid rgba(217, 214, 207, 0.85);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.patient-list li:first-child .patient-row {
+  border-top: 0;
+}
+
+.patient-row:hover,
+.patient-row:focus-visible {
+  background: rgba(23, 52, 58, 0.035);
+}
+
+.patient-row:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: -2px;
+}
+
+.initials {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: #ece8e1;
+  color: var(--petrol);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.patient-copy {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.patient-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.patient-meta {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.row-chevron {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: #8a9391;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.2s ease;
+}
+
+.patient-row:hover .row-chevron,
+.patient-row:focus-visible .row-chevron {
+  transform: translateX(3px);
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(1180px, calc(100% - 1.6rem));
+  }
+}

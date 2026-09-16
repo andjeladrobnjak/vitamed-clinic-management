@@ -1,0 +1,73 @@
+<div class="patients-page">
+  <app-doctor-portal-header />
+
+  <main class="patients-main">
+    <div class="container">
+      <section class="intro">
+        <p class="eyebrow">Pacijenti</p>
+        <h1>Moji pacijenti</h1>
+        <p class="lead">Pregled pacijenata koji su imali ili imaju zakazan pregled kod Vas.</p>
+      </section>
+
+      <label class="search">
+        <span class="visually-hidden">Pretraga pacijenata</span>
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            @for (node of searchIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              }
+            }
+          </svg>
+        </span>
+        <input
+          type="search"
+          [value]="searchQuery"
+          placeholder="Pretražite pacijente po imenu ili prezimenu..."
+          (input)="onSearchInput($event)"
+        />
+      </label>
+
+      @if (isLoading) {
+        <p class="state">Učitavanje pacijenata...</p>
+      } @else if (loadError) {
+        <p class="state is-error">{{ loadError }}</p>
+      } @else if (showEmptyDirectory) {
+        <div class="state-block">
+          <p class="state-title">Još nema pacijenata</p>
+          <p>Pacijenti će se pojaviti ovde nakon što budu imali zakazan pregled kod vas.</p>
+        </div>
+      } @else if (showEmptySearch) {
+        <div class="state-block">
+          <p class="state-title">Nema pronađenih pacijenata</p>
+          <p>Pokušajte sa drugim imenom ili prezimenom.</p>
+        </div>
+      } @else {
+        <ul class="patient-list">
+          @for (patient of filteredPatients; track patient.id) {
+            <li>
+              <a class="patient-row" [routerLink]="['/lekar/pacijenti', patient.id]">
+                <span class="initials" aria-hidden="true">{{ initials(patient) }}</span>
+                <span class="patient-copy">
+                  <span class="patient-name">{{ fullName(patient) }}</span>
+                  <span class="patient-meta">{{ birthDateLabel(patient) }}</span>
+                </span>
+                <svg class="row-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                  @for (node of chevronIcon; track $index) {
+                    @if (node[0] === 'polyline') {
+                      <polyline [attr.points]="$any(node[1]).points"></polyline>
+                    } @else if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    }
+                  }
+                </svg>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </main>
+</div>

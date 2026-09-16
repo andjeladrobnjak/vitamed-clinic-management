@@ -3,9 +3,11 @@ import pool from '../db/connection';
 import {
     clinicClock,
     compareIsoDates,
+    minutesToTimeLabel,
     parsePositiveId,
     timeToMinutes
 } from '../availability/availability.logic';
+import { dateOfBirthFromJmbg } from '../patients/date-of-birth';
 
 export class DoctorPortalError extends Error {
     constructor(
@@ -40,6 +42,50 @@ export interface DoctorDashboard {
         nextAppointment: DoctorDashboardAppointment | null;
         appointments: DoctorDashboardAppointment[];
     };
+}
+
+export interface DoctorPortalPatientListItem {
+    id: number;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+}
+
+export interface DoctorPortalPatientProfile {
+    id: number;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+    phone: string;
+    email: string;
+}
+
+export interface DoctorPortalPatientUpcoming {
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: 'confirmed';
+    service: { name: string };
+    location: { name: string };
+}
+
+export interface DoctorPortalPatientHistoryItem {
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: 'completed';
+    isOwnAppointment: boolean;
+    service: { name: string };
+    doctor: { firstName: string; lastName: string };
+    location: { name: string };
+}
+
+export interface DoctorPortalPatientDetail {
+    patient: DoctorPortalPatientProfile;
+    upcomingAppointment: DoctorPortalPatientUpcoming | null;
+    history: DoctorPortalPatientHistoryItem[];
 }
 
 export interface CompletedAppointmentReport {
@@ -256,6 +302,180 @@ export class DoctorPortalService {
         } finally {
             connection.release();
         }
+    }
+
+    async listPatients(doctorId: number): Promise<{ patients: DoctorPortalPatientListItem[] }> {
+        const [rows] = await pool.query<(RowDataPacket & {
+            id: number;
+            firstName: string;
+            lastName: string;
+            jmbg: string;
+        })[]>(
+            `SELECT
+                p.id,
+                p.first_name AS firstName,
+                p.last_name AS lastName,
+                p.jmbg
+             FROM patients p
+             INNER JOIN appointments a ON a.patient_id = p.id
+             WHERE a.doctor_id = ?
+             GROUP BY p.id, p.first_name, p.last_name, p.jmbg
+             ORDER BY p.last_name ASC, p.first_name ASC, p.id ASC`,
+            [doctorId]
+        );
+
+        return {
+            patients: rows.map((row) => ({
+                id: Number(row.id),
+                firstName: String(row.firstName),
+                lastName: String(row.lastName),
+                dateOfBirth: dateOfBirthFromJmbg(row.jmbg)
+            }))
+        };
+    }
+
+    async getPatient(doctorId: number, patientIdInput: unknown): Promise<DoctorPortalPatientDetail> {
+        const patientId = parsePositiveId(patientIdInput);
+        if (!patientId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pacijenta.');
+        }
+
+        const [accessRows] = await pool.query<RowDataPacket[]>(
+            `SELECT 1 AS allowed
+             FROM appointments
+             WHERE doctor_id = ?
+               AND patient_id = ?
+             LIMIT 1`,
+            [doctorId, patientId]
+        );
+        if (!accessRows[0]) {
+            throw new DoctorPortalError(404, 'Pacijent nije pronađen.');
+        }
+
+        const [patientRows] = await pool.query<(RowDataPacket & {
+            id: number;
+            firstName: string;
+            lastName: string;
+            jmbg: string;
+            phone: string;
+            email: string;
+        })[]>(
+            `SELECT
+                id,
+                first_name AS firstName,
+                last_name AS lastName,
+                jmbg,
+                phone,
+                email
+             FROM patients
+             WHERE id = ?
+             LIMIT 1`,
+            [patientId]
+        );
+        const patient = patientRows[0];
+        if (!patient) {
+            throw new DoctorPortalError(404, 'Pacijent nije pronađen.');
+        }
+
+        const clock = clinicClock();
+        const currentTime = minutesToTimeLabel(clock.minutes);
+        const [upcomingRows] = await pool.query<(RowDataPacket & {
+            id: number;
+            appointmentDate: string;
+            startTime: string;
+            endTime: string;
+            serviceName: string;
+            locationName: string;
+        })[]>(
+            `SELECT
+                a.id,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
+                s.name AS serviceName,
+                l.name AS locationName
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN locations l ON l.id = a.location_id
+             WHERE a.patient_id = ?
+               AND a.doctor_id = ?
+               AND a.status = 'confirmed'
+               AND (
+                    a.appointment_date > ?
+                    OR (a.appointment_date = ? AND TIME_FORMAT(a.start_time, '%H:%i') > ?)
+               )
+             ORDER BY a.appointment_date ASC, a.start_time ASC, a.id ASC
+             LIMIT 1`,
+            [patientId, doctorId, clock.date, clock.date, currentTime]
+        );
+
+        const [historyRows] = await pool.query<(RowDataPacket & {
+            id: number;
+            appointmentDate: string;
+            startTime: string;
+            endTime: string;
+            doctorId: number;
+            serviceName: string;
+            doctorFirstName: string;
+            doctorLastName: string;
+            locationName: string;
+        })[]>(
+            `SELECT
+                a.id,
+                DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(a.end_time, '%H:%i') AS endTime,
+                a.doctor_id AS doctorId,
+                s.name AS serviceName,
+                d.first_name AS doctorFirstName,
+                d.last_name AS doctorLastName,
+                l.name AS locationName
+             FROM appointments a
+             INNER JOIN services s ON s.id = a.service_id
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             INNER JOIN locations l ON l.id = a.location_id
+             WHERE a.patient_id = ?
+               AND a.status = 'completed'
+             ORDER BY a.appointment_date DESC, a.start_time DESC, a.id DESC`,
+            [patientId]
+        );
+
+        const upcoming = upcomingRows[0];
+        return {
+            patient: {
+                id: Number(patient.id),
+                firstName: String(patient.firstName),
+                lastName: String(patient.lastName),
+                dateOfBirth: dateOfBirthFromJmbg(patient.jmbg),
+                phone: String(patient.phone),
+                email: String(patient.email)
+            },
+            upcomingAppointment: upcoming
+                ? {
+                    id: Number(upcoming.id),
+                    date: String(upcoming.appointmentDate),
+                    startTime: String(upcoming.startTime),
+                    endTime: String(upcoming.endTime),
+                    status: 'confirmed',
+                    service: { name: String(upcoming.serviceName) },
+                    location: { name: String(upcoming.locationName) }
+                }
+                : null,
+            history: historyRows.map((row) => ({
+                id: Number(row.id),
+                date: String(row.appointmentDate),
+                startTime: String(row.startTime),
+                endTime: String(row.endTime),
+                status: 'completed' as const,
+                isOwnAppointment: Number(row.doctorId) === doctorId,
+                service: { name: String(row.serviceName) },
+                doctor: {
+                    firstName: String(row.doctorFirstName),
+                    lastName: String(row.doctorLastName)
+                },
+                location: { name: String(row.locationName) }
+            }))
+        };
     }
 
     private hasAppointmentStarted(appointmentDate: string, startTime: string): boolean {

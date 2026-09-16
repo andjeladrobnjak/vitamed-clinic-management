@@ -52,6 +52,44 @@ export interface CompletedAppointment {
   };
 }
 
+export interface DoctorPortalPatientListItem {
+  id: number;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string | null;
+}
+
+export interface DoctorPortalPatientDetail {
+  patient: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string | null;
+    phone: string;
+    email: string;
+  };
+  upcomingAppointment: {
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: 'confirmed';
+    service: { name: string };
+    location: { name: string };
+  } | null;
+  history: Array<{
+    id: number;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: 'completed';
+    isOwnAppointment: boolean;
+    service: { name: string };
+    doctor: { firstName: string; lastName: string };
+    location: { name: string };
+  }>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,5 +109,13 @@ export class DoctorPortalService {
       `${this.portalUrl}/appointments/${appointmentId}/complete`,
       report
     );
+  }
+
+  getPatients(): Observable<{ patients: DoctorPortalPatientListItem[] }> {
+    return this.http.get<{ patients: DoctorPortalPatientListItem[] }>(`${this.portalUrl}/patients`);
+  }
+
+  getPatient(patientId: number): Observable<DoctorPortalPatientDetail> {
+    return this.http.get<DoctorPortalPatientDetail>(`${this.portalUrl}/patients/${patientId}`);
   }
 }

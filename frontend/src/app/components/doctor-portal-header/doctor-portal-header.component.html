@@ -14,7 +14,7 @@
     <nav class="portal-nav" aria-label="Navigacija portala za lekare">
       <a routerLink="/lekar/portal" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Početna</a>
       <a routerLink="/lekar/raspored" routerLinkActive="is-active">Raspored</a>
-      <a class="is-pending" href="#" (click)="$event.preventDefault()">Pacijenti</a>
+      <a routerLink="/lekar/pacijenti" routerLinkActive="is-active">Pacijenti</a>
       <a class="is-pending" href="#" (click)="$event.preventDefault()">Ocene i komentari</a>
     </nav>
 

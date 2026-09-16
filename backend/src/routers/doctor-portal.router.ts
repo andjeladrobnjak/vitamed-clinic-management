@@ -15,4 +15,12 @@ doctorPortalRouter.post(
     (req, res) => doctorPortalController.completeAppointment(req, res)
 );
 
+doctorPortalRouter.get('/patients', authenticateDoctor, (req, res) =>
+    doctorPortalController.listPatients(req, res)
+);
+
+doctorPortalRouter.get('/patients/:patientId', authenticateDoctor, (req, res) =>
+    doctorPortalController.getPatient(req, res)
+);
+
 export default doctorPortalRouter;
