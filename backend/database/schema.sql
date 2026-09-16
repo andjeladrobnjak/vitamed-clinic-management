@@ -276,6 +276,29 @@ CREATE TABLE IF NOT EXISTS doctor_reviews (
 );
 
 -- =====================================================
+-- APPOINTMENT_REPORTS
+-- Medical report written when a doctor completes an appointment.
+-- One report per appointment. Not seed data.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS appointment_reports (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id BIGINT NOT NULL UNIQUE,
+    anamnesis TEXT NOT NULL,
+    findings TEXT NOT NULL,
+    diagnosis TEXT NOT NULL,
+    therapy_recommendations TEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_appointment_reports_appointment
+        FOREIGN KEY (appointment_id)
+        REFERENCES appointments(id)
+        ON DELETE RESTRICT
+);
+
+-- =====================================================
 -- DOCTOR_ACCOUNTS
 -- Login credentials for the doctor portal.
 -- One optional account per doctor. Not public catalog data.

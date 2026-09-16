@@ -27,14 +27,49 @@ export interface DoctorDashboard {
   };
 }
 
+export interface CompleteAppointmentReportInput {
+  anamnesis: string;
+  findings: string;
+  diagnosis: string;
+  therapyRecommendations?: string;
+}
+
+export interface CompletedAppointment {
+  message: string;
+  appointment: {
+    id: number;
+    status: 'completed';
+    startTime: string;
+    endTime: string;
+  };
+  report: {
+    id: number;
+    appointmentId: number;
+    anamnesis: string;
+    findings: string;
+    diagnosis: string;
+    therapyRecommendations: string | null;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DoctorPortalService {
   private readonly http = inject(HttpClient);
-  private readonly dashboardUrl = 'http://localhost:3000/api/doctor-portal/dashboard';
+  private readonly portalUrl = 'http://localhost:3000/api/doctor-portal';
 
   getDashboard(): Observable<DoctorDashboard> {
-    return this.http.get<DoctorDashboard>(this.dashboardUrl);
+    return this.http.get<DoctorDashboard>(`${this.portalUrl}/dashboard`);
+  }
+
+  completeAppointment(
+    appointmentId: number,
+    report: CompleteAppointmentReportInput
+  ): Observable<CompletedAppointment> {
+    return this.http.post<CompletedAppointment>(
+      `${this.portalUrl}/appointments/${appointmentId}/complete`,
+      report
+    );
   }
 }

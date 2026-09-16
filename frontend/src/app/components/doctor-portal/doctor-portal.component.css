@@ -145,7 +145,7 @@
 
 .schedule-row {
   display: grid;
-  grid-template-columns: 5.2rem minmax(0, 1.4fr) minmax(0, 1fr) 6.4rem;
+  grid-template-columns: 5.2rem minmax(0, 1.4fr) minmax(0, 1fr) 8.6rem;
   gap: 1rem 1.4rem;
   align-items: center;
   padding: 1rem 1.2rem;
@@ -154,6 +154,11 @@
 
 .schedule-row:first-child {
   border-top: 0;
+}
+
+.schedule-row.is-active {
+  background: rgba(23, 52, 58, 0.04);
+  box-shadow: inset 3px 0 0 var(--petrol);
 }
 
 .schedule-row.is-next {
@@ -203,6 +208,35 @@
   color: var(--petrol-soft);
 }
 
+.row-complete {
+  justify-self: end;
+  margin: 0;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid var(--petrol);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--petrol);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.row-complete:hover,
+.row-complete:focus-visible {
+  background: var(--petrol);
+  color: var(--ivory);
+}
+
+.row-complete:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 2px;
+}
+
 @media (max-width: 980px) {
   .summary {
     width: 100%;
@@ -213,11 +247,13 @@
   }
 
   .row-location,
-  .row-status {
+  .row-status,
+  .row-complete {
     grid-column: 2;
   }
 
-  .row-status {
+  .row-status,
+  .row-complete {
     justify-self: start;
   }
 }

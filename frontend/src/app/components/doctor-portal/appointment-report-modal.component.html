@@ -1,0 +1,102 @@
+<div class="report-overlay" (click)="onOverlayClick($event)">
+  <div
+    #dialog
+    class="report-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="report-title"
+  >
+    <button
+      #closeButton
+      class="report-close"
+      type="button"
+      [disabled]="isSaving()"
+      (click)="dismissed.emit()"
+      aria-label="Zatvori"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of closeIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'line') {
+            <line
+              [attr.x1]="$any(node[1]).x1"
+              [attr.y1]="$any(node[1]).y1"
+              [attr.x2]="$any(node[1]).x2"
+              [attr.y2]="$any(node[1]).y2"
+            ></line>
+          }
+        }
+      </svg>
+    </button>
+
+    <p class="report-kicker">Završetak pregleda</p>
+    <h2 id="report-title">Izveštaj sa pregleda</h2>
+    <p class="report-patient">{{ patientLine }}</p>
+    <p class="report-when">{{ scheduleLine }}</p>
+
+    <form class="report-form" (ngSubmit)="submit()" [formGroup]="reportForm" novalidate>
+      <label class="report-field">
+        <span>Anamneza i tegobe</span>
+        <textarea
+          formControlName="anamnesis"
+          rows="5"
+          [attr.aria-invalid]="!!fieldError('anamnesis')"
+        ></textarea>
+        @if (fieldError('anamnesis')) {
+          <span class="field-error">{{ fieldError('anamnesis') }}</span>
+        }
+      </label>
+
+      <label class="report-field">
+        <span>Nalaz</span>
+        <textarea
+          formControlName="findings"
+          rows="5"
+          [attr.aria-invalid]="!!fieldError('findings')"
+        ></textarea>
+        @if (fieldError('findings')) {
+          <span class="field-error">{{ fieldError('findings') }}</span>
+        }
+      </label>
+
+      <label class="report-field">
+        <span>Dijagnoza</span>
+        <textarea
+          formControlName="diagnosis"
+          rows="4"
+          [attr.aria-invalid]="!!fieldError('diagnosis')"
+        ></textarea>
+        @if (fieldError('diagnosis')) {
+          <span class="field-error">{{ fieldError('diagnosis') }}</span>
+        }
+      </label>
+
+      <label class="report-field">
+        <span>Terapija i preporuke <em>(opciono)</em></span>
+        <textarea
+          formControlName="therapyRecommendations"
+          rows="4"
+        ></textarea>
+      </label>
+
+      @if (errorMessage()) {
+        <p class="report-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <div class="report-actions">
+        <button
+          class="btn btn-secondary"
+          type="button"
+          [disabled]="isSaving()"
+          (click)="dismissed.emit()"
+        >
+          Otkaži
+        </button>
+        <button class="btn btn-primary" type="submit" [disabled]="isSaving()">
+          {{ isSaving() ? 'Čuvanje…' : 'Sačuvaj izveštaj i završi pregled' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

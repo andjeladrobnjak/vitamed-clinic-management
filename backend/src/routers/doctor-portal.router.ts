@@ -9,4 +9,10 @@ doctorPortalRouter.get('/dashboard', authenticateDoctor, (req, res) =>
     doctorPortalController.dashboard(req, res)
 );
 
+doctorPortalRouter.post(
+    '/appointments/:appointmentId/complete',
+    authenticateDoctor,
+    (req, res) => doctorPortalController.completeAppointment(req, res)
+);
+
 export default doctorPortalRouter;

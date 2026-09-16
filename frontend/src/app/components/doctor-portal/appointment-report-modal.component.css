@@ -1,0 +1,226 @@
+:host {
+  --petrol: #17343a;
+  --petrol-soft: #23454c;
+  --ivory: #f5f3ee;
+  --paper: #faf8f4;
+  --burgundy: #7a3f46;
+  --stone: #d9d6cf;
+  --muted: #5c6564;
+  --sans: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(23, 52, 58, 0.46);
+}
+
+.report-dialog {
+  position: relative;
+  width: min(46rem, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow: auto;
+  padding: 2rem 2rem 1.7rem;
+  background: var(--paper);
+  color: var(--petrol);
+  font-family: var(--sans);
+  border: 1px solid #e7e2d8;
+  border-radius: 6px;
+  box-shadow: 0 18px 48px rgba(23, 52, 58, 0.16);
+}
+
+.report-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.report-close svg {
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.report-close:hover:not(:disabled),
+.report-close:focus-visible {
+  color: var(--petrol);
+}
+
+.report-close:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 2px;
+}
+
+.report-kicker {
+  margin: 0 0 0.4rem;
+  color: var(--burgundy);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.report-dialog h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.report-patient {
+  margin: 0 0 0.2rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.report-when {
+  margin: 0 0 1.35rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.report-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.report-field {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.report-field > span:first-child {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.report-field em {
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--muted);
+}
+
+.report-field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 6.4rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  background: #fffdf9;
+  color: var(--petrol);
+  font-family: inherit;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  outline: none;
+}
+
+.report-field textarea:focus {
+  border-color: #3d5a5f;
+  box-shadow: 0 0 0 3px rgba(23, 52, 58, 0.07);
+}
+
+.report-field textarea[aria-invalid="true"] {
+  border-color: #b07a7f;
+}
+
+.field-error,
+.report-error {
+  color: var(--burgundy);
+  font-size: 0.84rem;
+}
+
+.report-error {
+  margin: 0;
+  font-size: 0.94rem;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.35rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.78rem 1.15rem;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, opacity 0.2s ease;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--petrol);
+  border-color: var(--petrol);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #ece8e1;
+}
+
+.btn-primary {
+  background: var(--burgundy);
+  color: var(--ivory);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #69363d;
+}
+
+@media (max-width: 640px) {
+  .report-dialog {
+    padding: 1.65rem 1.15rem 1.3rem;
+  }
+
+  .report-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

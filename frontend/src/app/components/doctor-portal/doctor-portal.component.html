@@ -56,16 +56,30 @@
         } @else {
           <ul class="schedule-list">
             @for (appointment of dashboard.today.appointments; track appointment.id) {
-              <li class="schedule-row" [class.is-next]="isNext(appointment)">
+              <li
+                class="schedule-row"
+                [class.is-active]="isActive(appointment)"
+                [class.is-next]="isNext(appointment)"
+              >
                 <p class="row-time">{{ appointment.startTime }}</p>
                 <div class="row-patient">
                   <p class="row-name">{{ patientName(appointment) }}</p>
                   <p class="row-service">{{ appointment.service.name }}</p>
                 </div>
                 <p class="row-location">{{ appointment.location.name }}</p>
-                <p class="row-status" [attr.data-status]="statusKey(appointment)">
-                  {{ statusLabel(appointment) }}
-                </p>
+                @if (isActive(appointment)) {
+                  <button
+                    class="row-complete"
+                    type="button"
+                    (click)="openCompletion(appointment)"
+                  >
+                    Završi pregled
+                  </button>
+                } @else {
+                  <p class="row-status" [attr.data-status]="statusKey(appointment)">
+                    {{ statusLabel(appointment) }}
+                  </p>
+                }
               </li>
             }
           </ul>
@@ -74,3 +88,16 @@
     </div>
   </main>
 </div>
+
+@if (selectedAppointment; as appointment) {
+  @if (dashboard; as currentDashboard) {
+    <app-appointment-report-modal
+      [appointment]="appointment"
+      [appointmentDate]="currentDashboard.today.date"
+      [isSaving]="isCompleting"
+      [errorMessage]="completeError"
+      (dismissed)="closeCompletion()"
+      (submitted)="submitCompletion($event)"
+    />
+  }
+}
