@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { DoctorAuthService } from '../services/doctor-auth.service';
+import { AdminAuthService } from '../services/admin-auth.service';
 
 const backendOrigin = 'http://localhost:3000';
 
@@ -14,8 +15,19 @@ function isDoctorBackendUrl(url: string): boolean {
   );
 }
 
+function isAdminBackendUrl(url: string): boolean {
+  return (
+    url.startsWith(`${backendOrigin}/api/admin-auth`) ||
+    url.startsWith(`${backendOrigin}/api/admin-portal`)
+  );
+}
+
 function isDoctorLoginUrl(url: string): boolean {
   return url.startsWith(`${backendOrigin}/api/doctor-auth/login`);
+}
+
+function isAdminLoginUrl(url: string): boolean {
+  return url.startsWith(`${backendOrigin}/api/admin-auth/login`);
 }
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -25,10 +37,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const patientAuth = inject(AuthService);
   const doctorAuth = inject(DoctorAuthService);
+  const adminAuth = inject(AdminAuthService);
   const router = inject(Router);
-  const token = isDoctorBackendUrl(req.url)
-    ? doctorAuth.getToken()
-    : patientAuth.getToken();
+  const token = isAdminBackendUrl(req.url)
+    ? adminAuth.getToken()
+    : isDoctorBackendUrl(req.url)
+      ? doctorAuth.getToken()
+      : patientAuth.getToken();
 
   const authorizedReq = token
     ? req.clone({
@@ -50,6 +65,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           void router.navigate(['/lekar/prijava']);
         }
       }
+
+      if (
+        error.status === 401 &&
+        isAdminBackendUrl(req.url) &&
+        !isAdminLoginUrl(req.url)
+      ) {
+        adminAuth.logout();
+        if (!router.url.startsWith('/admin/prijava')) {
+          void router.navigate(['/admin/prijava']);
+        }
+      }
+
       return throwError(() => error);
     })
   );

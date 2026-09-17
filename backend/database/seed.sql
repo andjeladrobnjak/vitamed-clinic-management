@@ -1968,4 +1968,13 @@ JOIN locations l ON l.name = 'VitaMed Vračar'
 JOIN doctor_locations dl ON dl.doctor_id = d.id AND dl.location_id = l.id
 WHERE d.first_name = 'Viktor' AND d.last_name = 'Stanković';
 
+-- =====================================================
+-- ADMIN ACCOUNTS
+-- INSERT IGNORE skips existing unique emails
+-- Test password is stored only as bcrypt hash
+-- =====================================================
+
+INSERT IGNORE INTO admin_accounts (email, password_hash, is_active) VALUES
+    ('admin@vitamed.rs', '$2b$10$eI1qQiQuu5WdiexCvPAfI.wVPJtL1gw/EkLpKQAHR.EkaLGQcWYkm', TRUE);
+
 SET SQL_SAFE_UPDATES = 1;

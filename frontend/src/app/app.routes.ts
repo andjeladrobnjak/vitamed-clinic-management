@@ -15,7 +15,13 @@ import { LocationsComponent } from './components/locations/locations.component';
 import { AppointmentComponent } from './components/appointment/appointment.component';
 import { patientAuthGuard } from './guards/patient-auth.guard';
 import { doctorAuthGuard } from './guards/doctor-auth.guard';
+import { adminAuthGuard } from './guards/admin-auth.guard';
 import { DoctorLoginComponent } from './components/doctor-login/doctor-login.component';
+import { AdminLoginComponent } from './components/admin-login/admin-login.component';
+import { AdminShellComponent } from './components/admin-shell/admin-shell.component';
+import { AdminPortalComponent } from './components/admin-portal/admin-portal.component';
+import { AdminSectionComponent } from './components/admin-section/admin-section.component';
+import { AdminStatisticsComponent } from './components/admin-statistics/admin-statistics.component';
 import { DoctorPortalComponent } from './components/doctor-portal/doctor-portal.component';
 import { DoctorScheduleComponent } from './components/doctor-schedule/doctor-schedule.component';
 import { DoctorPatientsComponent } from './components/doctor-patients/doctor-patients.component';
@@ -84,5 +90,56 @@ export const routes: Routes = [
     path: 'lekar/pacijenti/:patientId',
     component: DoctorPatientDetailComponent,
     canActivate: [doctorAuthGuard]
+  },
+  { path: 'admin/prijava', component: AdminLoginComponent },
+  {
+    path: 'admin',
+    component: AdminShellComponent,
+    canActivate: [adminAuthGuard],
+    children: [
+      { path: 'portal', component: AdminPortalComponent },
+      {
+        path: 'doctors',
+        component: AdminSectionComponent,
+        data: {
+          heading: 'Lekari',
+          lead: 'Upravljanje lekarima i njihovim nalogima biće dostupno u narednoj fazi.'
+        }
+      },
+      {
+        path: 'services',
+        component: AdminSectionComponent,
+        data: {
+          heading: 'Usluge',
+          lead: 'Upravljanje uslugama i pregledima biće dostupno u narednoj fazi.'
+        }
+      },
+      {
+        path: 'locations',
+        component: AdminSectionComponent,
+        data: {
+          heading: 'Lokacije',
+          lead: 'Upravljanje lokacijama klinike biće dostupno u narednoj fazi.'
+        }
+      },
+      {
+        path: 'appointments',
+        component: AdminSectionComponent,
+        data: {
+          heading: 'Termini',
+          lead: 'Pregled i upravljanje svim terminima biće dostupno u narednoj fazi.'
+        }
+      },
+      {
+        path: 'patients',
+        component: AdminSectionComponent,
+        data: {
+          heading: 'Pacijenti',
+          lead: 'Pregled registrovanih pacijenata biće dostupan u narednoj fazi.'
+        }
+      },
+      { path: 'statistics', component: AdminStatisticsComponent },
+      { path: '', pathMatch: 'full', redirectTo: 'portal' }
+    ]
   },
 ];

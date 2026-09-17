@@ -5,6 +5,15 @@ export interface AuthenticatedRequest extends Request {
     patientId?: number;
     doctorId?: number;
     doctorAccountId?: number;
+    adminId?: number;
+}
+
+interface TokenPayload extends jwt.JwtPayload {
+    patientId?: unknown;
+    doctorId?: unknown;
+    accountId?: unknown;
+    adminId?: unknown;
+    role?: unknown;
 }
 
 interface TokenPayload extends jwt.JwtPayload {
@@ -33,7 +42,7 @@ export function authenticatePatient(req: Request, res: Response, next: NextFunct
     try {
         const payload = jwt.verify(token, jwtSecret) as TokenPayload;
 
-        if (isDoctorSessionPayload(payload)) {
+        if (isDoctorSessionPayload(payload) || isAdminSessionPayload(payload)) {
             res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
             return;
         }
@@ -78,7 +87,7 @@ export function authenticateDoctor(req: Request, res: Response, next: NextFuncti
             return;
         }
 
-        if (hasPresentClaim(payload.patientId)) {
+        if (hasPresentClaim(payload.patientId) || isAdminSessionPayload(payload)) {
             res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
             return;
         }
@@ -93,6 +102,50 @@ export function authenticateDoctor(req: Request, res: Response, next: NextFuncti
 
         (req as AuthenticatedRequest).doctorId = doctorId;
         (req as AuthenticatedRequest).doctorAccountId = accountId;
+        next();
+    } catch {
+        res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+    }
+}
+
+export function authenticateAdmin(req: Request, res: Response, next: NextFunction): void {
+    const token = readBearerToken(req, res);
+    if (token === null) {
+        return;
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+        res.status(500).json({
+            message: 'Došlo je do greške na serveru. Pokušajte ponovo.'
+        });
+        return;
+    }
+
+    try {
+        const payload = jwt.verify(token, jwtSecret) as TokenPayload;
+
+        if (payload.role !== 'admin') {
+            res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+            return;
+        }
+
+        if (
+            hasPresentClaim(payload.patientId) ||
+            hasPresentClaim(payload.doctorId) ||
+            hasPresentClaim(payload.accountId)
+        ) {
+            res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+            return;
+        }
+
+        const adminId = Number(payload.adminId);
+        if (!isPositiveId(adminId)) {
+            res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+            return;
+        }
+
+        (req as AuthenticatedRequest).adminId = adminId;
         next();
     } catch {
         res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
@@ -125,6 +178,14 @@ function readBearerToken(req: Request, res: Response): string | null {
     }
 
     return token;
+}
+
+function isAdminSessionPayload(payload: TokenPayload): boolean {
+    if (payload.role === 'admin') {
+        return true;
+    }
+
+    return hasPresentClaim(payload.adminId);
 }
 
 function isDoctorSessionPayload(payload: TokenPayload): boolean {

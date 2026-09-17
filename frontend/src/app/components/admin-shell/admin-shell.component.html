@@ -1,0 +1,63 @@
+<div class="admin-page">
+  <header class="portal-header">
+    <div class="container header-inner">
+      <a class="brand" routerLink="/admin/portal" aria-label="VitaMed, administratorski portal">
+        <span class="logo">
+          <span class="logo-mark">
+            <span class="logo-vita">Vita</span><span class="logo-med">Med</span>
+          </span>
+          <span class="logo-tagline"><span>Privatna</span><span>Klinika</span></span>
+        </span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="portal-label">Administracija</span>
+      </a>
+
+      <nav class="portal-nav" aria-label="Administratorska navigacija">
+        <a routerLink="/admin/portal" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Pregled</a>
+        <a routerLink="/admin/doctors" routerLinkActive="is-active">Lekari</a>
+        <a routerLink="/admin/services" routerLinkActive="is-active">Usluge</a>
+        <a routerLink="/admin/locations" routerLinkActive="is-active">Lokacije</a>
+        <a routerLink="/admin/appointments" routerLinkActive="is-active">Termini</a>
+        <a routerLink="/admin/patients" routerLinkActive="is-active">Pacijenti</a>
+        <a routerLink="/admin/statistics" routerLinkActive="is-active">Statistika</a>
+      </nav>
+
+      <div class="account-menu">
+        <button
+          class="account-toggle"
+          type="button"
+          (click)="toggleAccountMenu($event)"
+          [attr.aria-expanded]="accountMenuOpen"
+          aria-label="Nalog administratora"
+          aria-haspopup="true"
+        >
+          <svg class="account-icon" viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of userIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              }
+            }
+          </svg>
+        </button>
+
+        @if (accountMenuOpen) {
+          <div class="account-panel" (click)="$event.stopPropagation()">
+            @if (admin(); as current) {
+              <p class="account-email">{{ current.email }}</p>
+            }
+            <span class="account-divider"></span>
+            <button class="account-logout" type="button" (click)="logout()">Odjava</button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="container">
+      <router-outlet />
+    </div>
+  </main>
+</div>

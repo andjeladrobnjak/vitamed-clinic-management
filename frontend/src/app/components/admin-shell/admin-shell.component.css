@@ -1,0 +1,276 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap");
+
+:host {
+  display: block;
+  min-height: 100vh;
+  --petrol: #17343a;
+  --ivory: #f5f3ee;
+  --burgundy: #7a3f46;
+  --stone: #d9d6cf;
+  --muted: #5c6564;
+  --sans: "Source Sans 3", "Segoe UI", sans-serif;
+  font-family: var(--sans);
+}
+
+.admin-page {
+  min-height: 100vh;
+  background: var(--ivory);
+  color: var(--petrol);
+}
+
+.admin-page *,
+.admin-page *::before,
+.admin-page *::after {
+  box-sizing: border-box;
+}
+
+.portal-header {
+  background: #fff;
+  border-bottom: 1px solid var(--stone);
+}
+
+.container {
+  width: min(1180px, calc(100% - 2.75rem));
+  margin-inline: auto;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  min-height: 5.4rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  flex-shrink: 0;
+  color: var(--petrol);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.22rem;
+  width: fit-content;
+}
+
+.logo-mark {
+  display: flex;
+  align-items: baseline;
+}
+
+.logo-vita,
+.logo-med {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 2.05rem;
+  letter-spacing: 0.01em;
+}
+
+.logo-vita {
+  font-weight: 300;
+}
+
+.logo-med {
+  font-weight: 400;
+  font-style: italic;
+  margin-left: -0.04em;
+}
+
+.logo-tagline {
+  display: flex;
+  justify-content: center;
+  gap: 0.5em;
+  width: 100%;
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1;
+}
+
+.brand-divider {
+  display: block;
+  width: 1px;
+  height: 2.35rem;
+  background: var(--stone);
+}
+
+.portal-label {
+  max-width: 7.2rem;
+  color: var(--burgundy);
+  font-size: 0.52rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.portal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.35rem;
+  flex: 1;
+}
+
+.portal-nav a {
+  position: relative;
+  padding: 0.35rem 0;
+  color: var(--petrol);
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.portal-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--burgundy);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s ease;
+}
+
+.portal-nav a:hover::after,
+.portal-nav a.is-active::after {
+  transform: scaleX(1);
+}
+
+.account-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.account-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border: 0;
+  background: transparent;
+  color: var(--petrol);
+  cursor: pointer;
+}
+
+.account-toggle:hover,
+.account-toggle:focus-visible,
+.account-toggle[aria-expanded="true"] {
+  color: var(--burgundy);
+}
+
+.account-toggle:focus-visible {
+  outline: 1px solid var(--petrol);
+  outline-offset: 3px;
+}
+
+.account-icon {
+  display: block;
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-panel {
+  position: absolute;
+  top: calc(100% + 0.7rem);
+  right: 0;
+  z-index: 30;
+  min-width: 13.5rem;
+  padding: 0.28rem 0;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--stone);
+  border-radius: 2px;
+  box-shadow: 0 14px 32px rgba(23, 52, 58, 0.12);
+}
+
+.account-email {
+  margin: 0;
+  padding: 0.46rem 0.95rem 0.32rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.account-divider {
+  display: block;
+  height: 1px;
+  margin: 0.18rem 0.9rem;
+  background: var(--stone);
+}
+
+.account-panel button {
+  display: block;
+  width: 100%;
+  padding: 0.46rem 0.95rem;
+  border: 0;
+  background: transparent;
+  color: var(--petrol);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-panel button:hover {
+  background: rgba(23, 52, 58, 0.04);
+}
+
+.admin-main {
+  padding: 2.4rem 0 4.2rem;
+}
+
+@media (max-width: 1100px) {
+  .header-inner {
+    flex-wrap: wrap;
+    min-height: 0;
+    padding: 0.85rem 0 1rem;
+  }
+
+  .portal-nav {
+    order: 3;
+    justify-content: flex-start;
+    width: 100%;
+    gap: 1.2rem;
+    overflow-x: auto;
+  }
+
+  .account-menu {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: min(1180px, calc(100% - 1.6rem));
+  }
+
+  .portal-label {
+    display: none;
+  }
+
+  .brand-divider {
+    display: none;
+  }
+}

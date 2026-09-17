@@ -1,0 +1,228 @@
+<section class="page">
+  <header class="intro">
+    <p class="eyebrow">Administracija</p>
+    <h1>Administratorski portal</h1>
+    <p class="lead">Pregled i upravljanje sistemom VitaMed</p>
+  </header>
+
+  @if (isLoading) {
+    <p class="state">Učitavanje pregleda...</p>
+  } @else if (loadError) {
+    <p class="state is-error">{{ loadError }}</p>
+  }
+
+  <section class="stats" aria-label="Ključni podaci">
+    <article class="stat-card">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          @for (node of stethoscopeIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'circle') {
+              <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+            } @else if (node[0] === 'polyline') {
+              <polyline [attr.points]="$any(node[1]).points"></polyline>
+            } @else if (node[0] === 'rect') {
+              <rect
+                [attr.x]="$any(node[1]).x"
+                [attr.y]="$any(node[1]).y"
+                [attr.width]="$any(node[1]).width"
+                [attr.height]="$any(node[1]).height"
+                [attr.rx]="$any(node[1]).rx"
+              ></rect>
+            } @else if (node[0] === 'line') {
+              <line
+                [attr.x1]="$any(node[1]).x1"
+                [attr.y1]="$any(node[1]).y1"
+                [attr.x2]="$any(node[1]).x2"
+                [attr.y2]="$any(node[1]).y2"
+              ></line>
+            }
+          }
+        </svg>
+      </span>
+      <div class="stat-copy">
+        <p class="stat-label">Lekari</p>
+        <p class="stat-value">{{ countValue('doctors') }}</p>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          @for (node of usersIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'circle') {
+              <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+            } @else if (node[0] === 'polyline') {
+              <polyline [attr.points]="$any(node[1]).points"></polyline>
+            } @else if (node[0] === 'rect') {
+              <rect
+                [attr.x]="$any(node[1]).x"
+                [attr.y]="$any(node[1]).y"
+                [attr.width]="$any(node[1]).width"
+                [attr.height]="$any(node[1]).height"
+                [attr.rx]="$any(node[1]).rx"
+              ></rect>
+            } @else if (node[0] === 'line') {
+              <line
+                [attr.x1]="$any(node[1]).x1"
+                [attr.y1]="$any(node[1]).y1"
+                [attr.x2]="$any(node[1]).x2"
+                [attr.y2]="$any(node[1]).y2"
+              ></line>
+            }
+          }
+        </svg>
+      </span>
+      <div class="stat-copy">
+        <p class="stat-label">Registrovani pacijenti</p>
+        <p class="stat-value">{{ countValue('patients') }}</p>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          @for (node of calendarDaysIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'circle') {
+              <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+            } @else if (node[0] === 'polyline') {
+              <polyline [attr.points]="$any(node[1]).points"></polyline>
+            } @else if (node[0] === 'rect') {
+              <rect
+                [attr.x]="$any(node[1]).x"
+                [attr.y]="$any(node[1]).y"
+                [attr.width]="$any(node[1]).width"
+                [attr.height]="$any(node[1]).height"
+                [attr.rx]="$any(node[1]).rx"
+              ></rect>
+            } @else if (node[0] === 'line') {
+              <line
+                [attr.x1]="$any(node[1]).x1"
+                [attr.y1]="$any(node[1]).y1"
+                [attr.x2]="$any(node[1]).x2"
+                [attr.y2]="$any(node[1]).y2"
+              ></line>
+            }
+          }
+        </svg>
+      </span>
+      <div class="stat-copy">
+        <p class="stat-label">Današnji termini</p>
+        <p class="stat-value">{{ countValue('todayAppointments') }}</p>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          @for (node of calendarClockIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'circle') {
+              <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+            } @else if (node[0] === 'polyline') {
+              <polyline [attr.points]="$any(node[1]).points"></polyline>
+            } @else if (node[0] === 'rect') {
+              <rect
+                [attr.x]="$any(node[1]).x"
+                [attr.y]="$any(node[1]).y"
+                [attr.width]="$any(node[1]).width"
+                [attr.height]="$any(node[1]).height"
+                [attr.rx]="$any(node[1]).rx"
+              ></rect>
+            } @else if (node[0] === 'line') {
+              <line
+                [attr.x1]="$any(node[1]).x1"
+                [attr.y1]="$any(node[1]).y1"
+                [attr.x2]="$any(node[1]).x2"
+                [attr.y2]="$any(node[1]).y2"
+              ></line>
+            }
+          }
+        </svg>
+      </span>
+      <div class="stat-copy">
+        <p class="stat-label">Predstojeći termini</p>
+        <p class="stat-value">{{ countValue('upcomingAppointments') }}</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="panel" aria-labelledby="today-heading">
+    <div class="panel-head">
+      <h2 id="today-heading">Današnji termini</h2>
+      @if (!isLoading && !loadError && todayTotal > 0) {
+        <label class="status-filter">
+          <span class="visually-hidden">Status</span>
+          <select [value]="statusFilter" (change)="onStatusFilterChange($event)">
+            <option value="">Svi statusi</option>
+            <option value="confirmed">Zakazano</option>
+            <option value="completed">Završeno</option>
+            <option value="cancelled">Otkazano</option>
+            <option value="no_show">Nije se pojavio</option>
+          </select>
+        </label>
+      }
+    </div>
+
+    @if (isLoading) {
+      <p class="empty">Učitavanje termina...</p>
+    } @else if (loadError) {
+      <p class="empty">Termini trenutno nisu dostupni.</p>
+    } @else if (todayTotal === 0) {
+      <p class="empty">Danas nema zakazanih pregleda.</p>
+    } @else if (filteredTotal === 0) {
+      <p class="empty">Nema termina sa izabranim statusom.</p>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Vreme</th>
+              <th>Pacijent</th>
+              <th>Lekar</th>
+              <th>Usluga</th>
+              <th>Lokacija</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (appointment of pagedAppointments; track appointment.id) {
+              <tr>
+                <td>{{ appointment.startTime }}</td>
+                <td>{{ appointment.patientName }}</td>
+                <td>{{ appointment.doctorName }}</td>
+                <td>{{ appointment.serviceName }}</td>
+                <td>{{ appointment.locationName }}</td>
+                <td>
+                  <span class="status-badge {{ statusClass(appointment.status) }}">
+                    {{ statusLabel(appointment.status) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-foot">
+        <p class="table-range">Prikazano {{ rangeStart }}-{{ rangeEnd }} od {{ filteredTotal }}</p>
+        @if (showPagination) {
+          <nav class="pager" aria-label="Stranice današnjih termina">
+            <button type="button" (click)="goToPage(page - 1)" [disabled]="page === 1">‹</button>
+            @for (pageNumber of pageNumbers; track pageNumber) {
+              <button
+                type="button"
+                [class.is-current]="pageNumber === page"
+                (click)="goToPage(pageNumber)"
+              >{{ pageNumber }}</button>
+            }
+            <button type="button" (click)="goToPage(page + 1)" [disabled]="page === totalPages">›</button>
+          </nav>
+        }
+      </div>
+    }
+  </section>
+</section>

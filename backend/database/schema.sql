@@ -81,6 +81,26 @@ CREATE TABLE IF NOT EXISTS doctor_accounts (
 
 
 -- =====================================================
+-- ADMIN ACCOUNTS
+-- Login credentials for the administrator portal.
+-- Not public catalog data. No public registration.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS admin_accounts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_admin_accounts_email
+        UNIQUE (email)
+);
+
+
+-- =====================================================
 -- SERVICES
 -- =====================================================
 
