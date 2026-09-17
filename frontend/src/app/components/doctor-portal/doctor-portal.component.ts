@@ -85,7 +85,7 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
   }
 
   get nextTimeLabel(): string {
-    return this.nextAppointment?.startTime ?? '—';
+    return this.nextAppointment?.startTime ?? '…';
   }
 
   get nextCountdownLabel(): string {

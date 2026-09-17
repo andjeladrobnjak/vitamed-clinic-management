@@ -28,12 +28,12 @@
       <section class="summary" aria-label="Pregled dana">
         <article class="summary-card">
           <p class="summary-label">Preostali pregledi</p>
-          <p class="summary-value">{{ isLoading ? '—' : remainingAppointmentCount }}</p>
+          <p class="summary-value">{{ isLoading ? '…' : remainingAppointmentCount }}</p>
           <p class="summary-note">do kraja dana</p>
         </article>
         <article class="summary-card">
           <p class="summary-label">Sledeći termin</p>
-          <p class="summary-value">{{ isLoading ? '—' : nextTimeLabel }}</p>
+          <p class="summary-value">{{ isLoading ? '…' : nextTimeLabel }}</p>
           <p class="summary-note">{{ isLoading ? 'učitavanje' : nextCountdownLabel }}</p>
         </article>
       </section>
