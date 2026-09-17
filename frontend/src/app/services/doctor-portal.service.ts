@@ -218,4 +218,26 @@ export class DoctorPortalService {
       }
     });
   }
+
+  cancelAppointment(appointmentId: number): Observable<{
+    message: string;
+    cancelled: boolean;
+    emailSent: boolean;
+    appointment: {
+      id: number;
+      status: 'cancelled';
+      cancelledBy: 'doctor';
+    };
+  }> {
+    return this.http.patch<{
+      message: string;
+      cancelled: boolean;
+      emailSent: boolean;
+      appointment: {
+        id: number;
+        status: 'cancelled';
+        cancelledBy: 'doctor';
+      };
+    }>(`${this.portalUrl}/appointments/${appointmentId}/cancel`, {});
+  }
 }

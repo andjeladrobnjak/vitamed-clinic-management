@@ -79,6 +79,15 @@
                         <p class="appt-name is-static">{{ patientName(appointment) }}</p>
                       }
                       <p class="appt-service">{{ appointment.service.name }}</p>
+                      @if (canCancelAppointment(appointment)) {
+                        <button
+                          class="cancel-appt"
+                          type="button"
+                          (click)="openCancel(appointment, $event)"
+                        >
+                          Otkaži pregled
+                        </button>
+                      }
                     </li>
                   }
                 </ul>
@@ -90,3 +99,13 @@
     </div>
   </main>
 </div>
+
+@if (pendingCancel && cancelSummary) {
+  <app-doctor-cancel-appointment-modal
+    [summary]="cancelSummary"
+    [isCancelling]="isCancelling"
+    [errorMessage]="cancelError"
+    (dismissed)="closeCancel()"
+    (confirmed)="confirmCancel()"
+  />
+}

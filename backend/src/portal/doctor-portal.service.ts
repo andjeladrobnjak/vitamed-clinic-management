@@ -4,6 +4,7 @@ import {
     addCalendarDays,
     clinicClock,
     compareIsoDates,
+    isAtLeastHoursAhead,
     minutesToTimeLabel,
     parsePositiveId,
     timeToMinutes,
@@ -153,6 +154,26 @@ export interface DoctorPortalMonthSchedule {
     to: string;
     shifts: DoctorPortalScheduleShift[];
     days: DoctorPortalScheduleDay[];
+}
+
+export interface DoctorCancelledAppointment {
+    message: string;
+    appointment: {
+        id: number;
+        status: 'cancelled';
+        cancelledBy: 'doctor';
+        appointmentDate: string;
+        startTime: string;
+        patientEmail: string;
+        patientFirstName: string;
+        serviceName: string;
+        doctorFirstName: string;
+        doctorLastName: string;
+        locationName: string;
+        locationAddress: string;
+        locationCity: string;
+        locationPhone: string;
+    };
 }
 
 export interface DoctorPortalPatientDetail {
@@ -872,6 +893,128 @@ export class DoctorPortalService {
             })),
             days: [...daysByDate.values()]
         };
+    }
+
+    async cancelAppointment(
+        doctorId: number,
+        appointmentIdInput: unknown
+    ): Promise<DoctorCancelledAppointment> {
+        const appointmentId = parsePositiveId(appointmentIdInput);
+        if (!appointmentId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pregleda.');
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const [rows] = await connection.query<(RowDataPacket & {
+                id: number;
+                doctorId: number;
+                status: string;
+                appointmentDate: string;
+                startTime: string;
+                patientEmail: string;
+                patientFirstName: string;
+                serviceName: string;
+                doctorFirstName: string;
+                doctorLastName: string;
+                locationName: string;
+                locationAddress: string;
+                locationCity: string;
+                locationPhone: string;
+            })[]>(
+                `SELECT
+                    a.id,
+                    a.doctor_id AS doctorId,
+                    a.status,
+                    DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                    TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                    a.patient_email AS patientEmail,
+                    a.patient_first_name AS patientFirstName,
+                    s.name AS serviceName,
+                    d.first_name AS doctorFirstName,
+                    d.last_name AS doctorLastName,
+                    l.name AS locationName,
+                    l.address AS locationAddress,
+                    l.city AS locationCity,
+                    l.phone AS locationPhone
+                 FROM appointments a
+                 INNER JOIN services s ON s.id = a.service_id
+                 INNER JOIN doctors d ON d.id = a.doctor_id
+                 INNER JOIN locations l ON l.id = a.location_id
+                 WHERE a.id = ?
+                 LIMIT 1
+                 FOR UPDATE`,
+                [appointmentId]
+            );
+
+            const appointment = rows[0];
+            if (!appointment || Number(appointment.doctorId) !== doctorId) {
+                throw new DoctorPortalError(404, 'Pregled nije pronađen.');
+            }
+
+            const status = String(appointment.status);
+            if (status === 'cancelled') {
+                throw new DoctorPortalError(409, 'Ovaj pregled je već otkazan.');
+            }
+            if (status === 'completed') {
+                throw new DoctorPortalError(409, 'Završen pregled nije moguće otkazati.');
+            }
+            if (status !== 'confirmed') {
+                throw new DoctorPortalError(409, 'Ovaj pregled nije moguće otkazati.');
+            }
+
+            const appointmentDate = String(appointment.appointmentDate);
+            const startTime = String(appointment.startTime);
+            if (!isAtLeastHoursAhead(appointmentDate, startTime, 24)) {
+                throw new DoctorPortalError(
+                    409,
+                    'Pregled je moguće otkazati najkasnije 24 sata pre početka.'
+                );
+            }
+
+            const [updateResult] = await connection.query<ResultSetHeader>(
+                `UPDATE appointments
+                 SET status = 'cancelled',
+                     cancelled_by = 'doctor'
+                 WHERE id = ?
+                   AND doctor_id = ?
+                   AND status = 'confirmed'`,
+                [appointmentId, doctorId]
+            );
+
+            if (updateResult.affectedRows !== 1) {
+                throw new DoctorPortalError(409, 'Ovaj pregled nije moguće otkazati.');
+            }
+
+            await connection.commit();
+
+            return {
+                message: 'Pregled je uspešno otkazan.',
+                appointment: {
+                    id: Number(appointment.id),
+                    status: 'cancelled',
+                    cancelledBy: 'doctor',
+                    appointmentDate,
+                    startTime,
+                    patientEmail: String(appointment.patientEmail),
+                    patientFirstName: String(appointment.patientFirstName),
+                    serviceName: String(appointment.serviceName),
+                    doctorFirstName: String(appointment.doctorFirstName),
+                    doctorLastName: String(appointment.doctorLastName),
+                    locationName: String(appointment.locationName),
+                    locationAddress: String(appointment.locationAddress),
+                    locationCity: String(appointment.locationCity),
+                    locationPhone: String(appointment.locationPhone)
+                }
+            };
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
     }
 
     private async assertPatientAccess(doctorId: number, patientId: number): Promise<void> {

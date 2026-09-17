@@ -10,6 +10,10 @@ import {
   DoctorPortalService
 } from '../../services/doctor-portal.service';
 import { DoctorPortalHeaderComponent } from '../doctor-portal-header/doctor-portal-header.component';
+import {
+  DoctorCancelAppointmentModalComponent,
+  DoctorCancelAppointmentSummary
+} from './doctor-cancel-appointment-modal.component';
 import { formatSerbianDate } from '../../utils/format-serbian-date';
 
 interface CalendarCell {
@@ -24,7 +28,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-doctor-schedule',
   standalone: true,
-  imports: [DoctorPortalHeaderComponent, RouterLink],
+  imports: [DoctorPortalHeaderComponent, RouterLink, DoctorCancelAppointmentModalComponent],
   templateUrl: './doctor-schedule.component.html',
   styleUrl: './doctor-schedule.component.css'
 })
@@ -38,6 +42,9 @@ export class DoctorScheduleComponent implements OnInit {
   selectedDate: string | null = null;
   isLoading = true;
   loadError = '';
+  pendingCancel: DoctorPortalScheduleAppointment | null = null;
+  isCancelling = false;
+  cancelError = '';
 
   private readonly portalService = inject(DoctorPortalService);
   private readonly doctorAuth = inject(DoctorAuthService);
@@ -77,6 +84,17 @@ export class DoctorScheduleComponent implements OnInit {
     return this.formatPanelDate(this.selectedCell.date);
   }
 
+  get cancelSummary(): DoctorCancelAppointmentSummary | null {
+    if (!this.pendingCancel || !this.selectedDate) {
+      return null;
+    }
+    return {
+      patientName: this.patientName(this.pendingCancel),
+      dateLabel: formatSerbianDate(this.selectedDate),
+      startTime: this.pendingCancel.startTime
+    };
+  }
+
   previousMonth(): void {
     if (this.month === 1) {
       this.month = 12;
@@ -85,6 +103,7 @@ export class DoctorScheduleComponent implements OnInit {
       this.month -= 1;
     }
     this.selectedDate = null;
+    this.pendingCancel = null;
     this.loadMonth();
   }
 
@@ -96,6 +115,7 @@ export class DoctorScheduleComponent implements OnInit {
       this.month += 1;
     }
     this.selectedDate = null;
+    this.pendingCancel = null;
     this.loadMonth();
   }
 
@@ -107,6 +127,10 @@ export class DoctorScheduleComponent implements OnInit {
   }
 
   closePanel(): void {
+    if (this.isCancelling) {
+      return;
+    }
+    this.pendingCancel = null;
     this.selectedDate = null;
   }
 
@@ -122,11 +146,66 @@ export class DoctorScheduleComponent implements OnInit {
     return appointment.patient.id !== null;
   }
 
-  private loadMonth(): void {
-    this.isLoading = true;
-    this.loadError = '';
-    this.schedule = null;
-    this.cells = [];
+  canCancelAppointment(appointment: DoctorPortalScheduleAppointment): boolean {
+    if (appointment.status !== 'confirmed' || !this.selectedDate) {
+      return false;
+    }
+    return this.startsAtLeastHoursAhead(this.selectedDate, appointment.startTime, 24);
+  }
+
+  openCancel(appointment: DoctorPortalScheduleAppointment, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.canCancelAppointment(appointment) || this.isCancelling) {
+      return;
+    }
+    this.cancelError = '';
+    this.pendingCancel = appointment;
+  }
+
+  closeCancel(): void {
+    if (this.isCancelling) {
+      return;
+    }
+    this.pendingCancel = null;
+    this.cancelError = '';
+  }
+
+  confirmCancel(): void {
+    if (!this.pendingCancel || this.isCancelling) {
+      return;
+    }
+
+    this.isCancelling = true;
+    this.cancelError = '';
+    const appointmentId = this.pendingCancel.id;
+
+    this.portalService.cancelAppointment(appointmentId).subscribe({
+      next: () => {
+        this.isCancelling = false;
+        this.pendingCancel = null;
+        this.cancelError = '';
+        this.loadMonth(true);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isCancelling = false;
+        if (error.status === 401) {
+          this.doctorAuth.logout();
+          void this.router.navigate(['/lekar/prijava']);
+          return;
+        }
+        this.cancelError = error.error?.message || 'Pregled trenutno nije moguće otkazati.';
+      }
+    });
+  }
+
+  private loadMonth(silent = false): void {
+    if (!silent) {
+      this.isLoading = true;
+      this.loadError = '';
+      this.schedule = null;
+      this.cells = [];
+    }
 
     this.portalService.getMonthSchedule(this.year, this.month).subscribe({
       next: (schedule) => {
@@ -186,9 +265,38 @@ export class DoctorScheduleComponent implements OnInit {
   }
 
   private clinicToday(): string {
-    return new Intl.DateTimeFormat('en-CA', {
+    return this.clinicClock().date;
+  }
+
+  private startsAtLeastHoursAhead(isoDate: string, startTime: string, hours: number): boolean {
+    const clock = this.clinicClock();
+    const [hoursPart, minutesPart] = startTime.split(':').map(Number);
+    const startMinutes = hoursPart * 60 + minutesPart;
+    const dayDiff = this.calendarDayDiff(clock.date, isoDate);
+    return dayDiff * 24 * 60 + startMinutes - clock.minutes >= hours * 60;
+  }
+
+  private clinicClock(): { date: string; minutes: number } {
+    const date = new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Europe/Belgrade'
     }).format(new Date());
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Belgrade',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(new Date());
+    const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
+    const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
+    return { date, minutes: hour * 60 + minute };
+  }
+
+  private calendarDayDiff(fromIsoDate: string, toIsoDate: string): number {
+    const [fromYear, fromMonth, fromDay] = fromIsoDate.split('-').map(Number);
+    const [toYear, toMonth, toDay] = toIsoDate.split('-').map(Number);
+    const fromUtc = Date.UTC(fromYear, fromMonth - 1, fromDay);
+    const toUtc = Date.UTC(toYear, toMonth - 1, toDay);
+    return Math.round((toUtc - fromUtc) / 86_400_000);
   }
 
   private isoWeekday(isoDate: string): number {

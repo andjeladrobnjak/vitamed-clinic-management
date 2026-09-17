@@ -5,6 +5,10 @@ import {
     AppointmentConfirmationContent,
     buildAppointmentConfirmationEmail
 } from './appointment-confirmation.template';
+import {
+    ClinicCancellationContent,
+    buildClinicCancellationEmail
+} from './appointment-cancellation.template';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -165,6 +169,47 @@ export class MailService {
             }
             return true;
         } catch (error) {
+            logMailError(error);
+            return false;
+        }
+    }
+
+    async sendClinicCancellation(to: string, content: ClinicCancellationContent): Promise<boolean> {
+        const recipient = String(to ?? '').trim();
+        console.log(`[MAIL] Sending clinic cancellation notice to: ${recipient || '(missing recipient)'}`);
+
+        const config = readSmtpConfig();
+        logConfigPresence(config);
+
+        if (!recipient) {
+            console.error('[MAIL] Cancellation email not sent: recipient is missing.');
+            return false;
+        }
+
+        if (!config) {
+            console.error('[MAIL] Cancellation email not sent: SMTP is not configured.');
+            return false;
+        }
+
+        const message = buildClinicCancellationEmail(content);
+
+        try {
+            const transporter = this.createTransporter(config);
+            const info = await transporter.sendMail({
+                from: config.from,
+                to: recipient,
+                subject: message.subject,
+                text: message.text,
+                html: message.html
+            });
+
+            console.log('[MAIL] Cancellation email sent successfully');
+            if (info.messageId) {
+                console.log(`[MAIL] messageId: ${info.messageId}`);
+            }
+            return true;
+        } catch (error) {
+            console.error('[MAIL] Failed to send cancellation email');
             logMailError(error);
             return false;
         }

@@ -211,4 +211,30 @@ export function eachDateInclusive(from: string, to: string): string[] {
     return dates;
 }
 
+export function calendarDayDiff(fromIsoDate: string, toIsoDate: string): number {
+    const [fromYear, fromMonth, fromDay] = fromIsoDate.split('-').map(Number);
+    const [toYear, toMonth, toDay] = toIsoDate.split('-').map(Number);
+    const fromUtc = Date.UTC(fromYear, fromMonth - 1, fromDay);
+    const toUtc = Date.UTC(toYear, toMonth - 1, toDay);
+    return Math.round((toUtc - fromUtc) / 86_400_000);
+}
+
+export function minutesUntilClinicDateTime(
+    appointmentDate: string,
+    startTime: string,
+    now = new Date()
+): number {
+    const clock = clinicClock(now);
+    return calendarDayDiff(clock.date, appointmentDate) * 24 * 60 + timeToMinutes(startTime) - clock.minutes;
+}
+
+export function isAtLeastHoursAhead(
+    appointmentDate: string,
+    startTime: string,
+    hours: number,
+    now = new Date()
+): boolean {
+    return minutesUntilClinicDateTime(appointmentDate, startTime, now) >= hours * 60;
+}
+
 export { BLOCKING_APPOINTMENT_STATUSES };

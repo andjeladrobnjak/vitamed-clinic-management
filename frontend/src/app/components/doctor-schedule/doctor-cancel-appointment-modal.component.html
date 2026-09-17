@@ -1,0 +1,43 @@
+<div class="cancel-overlay" (click)="onOverlayClick($event)">
+  <div
+    #dialog
+    class="cancel-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="doctor-cancel-title"
+    aria-describedby="doctor-cancel-description"
+  >
+    <p class="cancel-kicker">Raspored</p>
+    <h2 id="doctor-cancel-title">Otkazivanje pregleda</h2>
+
+    <p id="doctor-cancel-description" class="cancel-lead">
+      Da li ste sigurni da želite da otkažete pregled pacijenta {{ summary().patientName }}
+      zakazan za {{ summary().dateLabel }} u {{ summary().startTime }}?
+    </p>
+    <p class="cancel-note">Pacijent će biti obavešten o otkazivanju.</p>
+
+    @if (errorMessage()) {
+      <p class="cancel-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="cancel-actions">
+      <button
+        #cancelButton
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="isCancelling()"
+        (click)="dismissed.emit()"
+      >
+        Odustani
+      </button>
+      <button
+        class="btn btn-primary"
+        type="button"
+        [disabled]="isCancelling()"
+        (click)="confirmed.emit()"
+      >
+        {{ isCancelling() ? 'Otkazivanje…' : 'Otkaži pregled' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -39,4 +39,10 @@ doctorPortalRouter.get('/schedule', authenticateDoctor, (req, res) =>
     doctorPortalController.getMonthSchedule(req, res)
 );
 
+doctorPortalRouter.patch(
+    '/appointments/:appointmentId/cancel',
+    authenticateDoctor,
+    (req, res) => doctorPortalController.cancelAppointment(req, res)
+);
+
 export default doctorPortalRouter;

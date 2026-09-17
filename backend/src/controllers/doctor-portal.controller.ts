@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { MailService } from '../mail/mail.service';
 import { DoctorPortalError, DoctorPortalService } from '../portal/doctor-portal.service';
 
 export class DoctorPortalController {
-    constructor(private readonly portalService = new DoctorPortalService()) {}
+    constructor(
+        private readonly portalService = new DoctorPortalService(),
+        private readonly mailService = new MailService()
+    ) {}
 
     async dashboard(req: Request, res: Response): Promise<void> {
         const doctorId = (req as AuthenticatedRequest).doctorId;
@@ -125,6 +129,51 @@ export class DoctorPortalController {
         } catch (error) {
             this.handleError(res, error, 'Trenutno nije moguće učitati raspored.');
         }
+    }
+
+    async cancelAppointment(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const result = await this.portalService.cancelAppointment(doctorId, req.params.appointmentId);
+            const appointment = result.appointment;
+            const emailSent = await this.mailService.sendClinicCancellation(appointment.patientEmail, {
+                patientFirstName: appointment.patientFirstName,
+                serviceName: appointment.serviceName,
+                doctorName: `dr ${appointment.doctorFirstName} ${appointment.doctorLastName}`,
+                locationName: appointment.locationName,
+                locationAddress: `${appointment.locationAddress}, ${appointment.locationCity}`,
+                appointmentDateLabel: this.formatSerbianDate(appointment.appointmentDate),
+                startTime: appointment.startTime
+            });
+
+            res.status(200).json({
+                message: result.message,
+                cancelled: true,
+                emailSent,
+                appointment: {
+                    id: appointment.id,
+                    status: appointment.status,
+                    cancelledBy: appointment.cancelledBy
+                }
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Pregled trenutno nije moguće otkazati.');
+        }
+    }
+
+    private formatSerbianDate(isoDate: string): string {
+        const [year, month, day] = isoDate.split('-').map(Number);
+        return new Intl.DateTimeFormat('sr-Latn-RS', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC'
+        }).format(new Date(Date.UTC(year, month - 1, day)));
     }
 
     private handleError(res: Response, error: unknown, fallback: string): void {

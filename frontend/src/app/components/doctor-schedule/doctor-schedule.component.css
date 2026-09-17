@@ -304,6 +304,31 @@ a.appt-name:focus-visible {
   font-size: 0.86rem;
 }
 
+.cancel-appt {
+  display: inline-block;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--burgundy);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.cancel-appt:hover,
+.cancel-appt:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.cancel-appt:focus-visible {
+  outline: 2px solid var(--petrol);
+  outline-offset: 3px;
+}
+
 @media (max-width: 980px) {
   .schedule-layout.has-panel {
     grid-template-columns: 1fr;
