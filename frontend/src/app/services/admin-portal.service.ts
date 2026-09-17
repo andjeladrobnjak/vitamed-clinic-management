@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ClinicService } from './clinic-service.service';
 
 export interface AdminDashboardAppointment {
   id: number;
@@ -60,6 +61,48 @@ export interface AdminDoctorUpdatePayload {
   schedules: AdminDoctorSchedule[];
 }
 
+export interface AdminClinicServicePayload {
+  name: string;
+  specialtyId?: number;
+  price: number;
+  durationMinutes: number;
+  description: string | null;
+}
+
+export interface AdminAppointment {
+  id: number;
+  appointmentDate: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  patientFirstName: string;
+  patientLastName: string;
+  patientJmbg: string;
+  patientEmail: string;
+  patientPhone: string;
+  doctor: { id: number; firstName: string; lastName: string };
+  service: { id: number; name: string };
+  location: { id: number; name: string };
+  cancellable: boolean;
+}
+
+export interface AdminAppointmentList {
+  items: AdminAppointment[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface AdminAppointmentListParams {
+  search: string;
+  date: string;
+  status: string;
+  doctorId: number | null;
+  page: number;
+  pageSize: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -87,5 +130,44 @@ export class AdminPortalService {
 
   createDoctor(payload: AdminDoctorUpdatePayload): Observable<AdminDoctorDetail> {
     return this.http.post<AdminDoctorDetail>(`${this.portalUrl}/doctors`, payload);
+  }
+
+  createService(payload: AdminClinicServicePayload): Observable<ClinicService> {
+    return this.http.post<ClinicService>(`${this.portalUrl}/services`, payload);
+  }
+
+  updateService(id: number, payload: AdminClinicServicePayload): Observable<ClinicService> {
+    return this.http.put<ClinicService>(`${this.portalUrl}/services/${id}`, payload);
+  }
+
+  getAppointments(params: AdminAppointmentListParams): Observable<AdminAppointmentList> {
+    return this.http.get<AdminAppointmentList>(`${this.portalUrl}/appointments`, { params: this.toParams(params) });
+  }
+
+  cancelAppointment(id: number): Observable<{ message: string; appointment: AdminAppointment }> {
+    return this.http.patch<{ message: string; appointment: AdminAppointment }>(
+      `${this.portalUrl}/appointments/${id}/cancel`,
+      {}
+    );
+  }
+
+  private toParams(params: AdminAppointmentListParams): Record<string, string> {
+    const query: Record<string, string> = {
+      page: String(params.page),
+      pageSize: String(params.pageSize)
+    };
+    if (params.search) {
+      query['search'] = params.search;
+    }
+    if (params.date) {
+      query['date'] = params.date;
+    }
+    if (params.status) {
+      query['status'] = params.status;
+    }
+    if (params.doctorId) {
+      query['doctorId'] = String(params.doctorId);
+    }
+    return query;
   }
 }

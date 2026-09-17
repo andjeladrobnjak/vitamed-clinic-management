@@ -237,4 +237,13 @@ export function isAtLeastHoursAhead(
     return minutesUntilClinicDateTime(appointmentDate, startTime, now) >= hours * 60;
 }
 
+export function isMoreThanHoursAhead(
+    appointmentDate: string,
+    startTime: string,
+    hours: number,
+    now = new Date()
+): boolean {
+    return minutesUntilClinicDateTime(appointmentDate, startTime, now) > hours * 60;
+}
+
 export { BLOCKING_APPOINTMENT_STATUSES };

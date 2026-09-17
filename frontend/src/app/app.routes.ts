@@ -23,6 +23,8 @@ import { AdminPortalComponent } from './components/admin-portal/admin-portal.com
 import { AdminDoctorsComponent } from './components/admin-doctors/admin-doctors.component';
 import { AdminDoctorDetailComponent } from './components/admin-doctor-detail/admin-doctor-detail.component';
 import { AdminDoctorNewComponent } from './components/admin-doctor-new/admin-doctor-new.component';
+import { AdminServicesComponent } from './components/admin-services/admin-services.component';
+import { AdminAppointmentsComponent } from './components/admin-appointments/admin-appointments.component';
 import { AdminSectionComponent } from './components/admin-section/admin-section.component';
 import { AdminStatisticsComponent } from './components/admin-statistics/admin-statistics.component';
 import { DoctorPortalComponent } from './components/doctor-portal/doctor-portal.component';
@@ -111,11 +113,7 @@ export const routes: Routes = [
       },
       {
         path: 'services',
-        component: AdminSectionComponent,
-        data: {
-          heading: 'Usluge',
-          lead: 'Upravljanje uslugama i pregledima biće dostupno u narednoj fazi.'
-        }
+        component: AdminServicesComponent
       },
       {
         path: 'locations',
@@ -127,11 +125,7 @@ export const routes: Routes = [
       },
       {
         path: 'appointments',
-        component: AdminSectionComponent,
-        data: {
-          heading: 'Termini',
-          lead: 'Pregled i upravljanje svim terminima biće dostupno u narednoj fazi.'
-        }
+        component: AdminAppointmentsComponent
       },
       {
         path: 'patients',

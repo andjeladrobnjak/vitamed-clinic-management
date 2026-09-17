@@ -1,0 +1,277 @@
+<section class="page">
+  <header class="intro">
+    <div>
+      <p class="eyebrow">Usluge</p>
+      <h1>Usluge</h1>
+      <p class="lead">Upravljajte uslugama i cenama klinike.</p>
+    </div>
+    <button #addButton class="btn btn-primary" type="button" (click)="openCreate()">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of plusIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'line') {
+            <line
+              [attr.x1]="$any(node[1]).x1"
+              [attr.y1]="$any(node[1]).y1"
+              [attr.x2]="$any(node[1]).x2"
+              [attr.y2]="$any(node[1]).y2"
+            ></line>
+          }
+        }
+      </svg>
+      Dodaj novu uslugu
+    </button>
+  </header>
+
+  <div class="toolbar">
+    <label class="search">
+      <span class="visually-hidden">Pretraga usluga</span>
+      <span class="search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          @for (node of searchIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'circle') {
+              <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+            }
+          }
+        </svg>
+      </span>
+      <input
+        type="search"
+        [value]="searchQuery"
+        placeholder="Pretražite usluge..."
+        (input)="onSearchInput($event)"
+      >
+    </label>
+
+    <label class="specialty-filter">
+      <span class="visually-hidden">Specijalizacija</span>
+      <select [value]="selectedSpecialtyId" (change)="onSpecialtyChange($event)">
+        <option value="">Sve specijalizacije</option>
+        @for (specialty of specialties; track specialty.id) {
+          <option [value]="specialty.id">{{ specialty.name }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert" role="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of successIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'circle') {
+            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+          }
+        }
+      </svg>
+      <p>{{ successMessage }}</p>
+    </div>
+  }
+
+  @if (!isLoading && !loadError) {
+    <p class="result-count">{{ serviceCountLabel(filteredTotal) }}</p>
+  }
+
+  @if (isLoading) {
+    <p class="state">Učitavanje usluga...</p>
+  } @else if (loadError) {
+    <p class="state is-error">{{ loadError }}</p>
+  } @else if (filteredTotal === 0) {
+    <p class="empty">{{ emptyMessage() }}</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Naziv usluge</th>
+            <th>Specijalizacija</th>
+            <th>Trajanje</th>
+            <th>Cena</th>
+            <th>Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (service of pagedServices; track service.id) {
+            <tr>
+              <td class="name">{{ service.name }}</td>
+              <td>{{ service.specialty.name }}</td>
+              <td>{{ formatDuration(service.durationMinutes) }}</td>
+              <td>{{ formatPrice(service.price) }}</td>
+              <td>
+                <button class="btn-edit" type="button" (click)="openEdit(service, $event)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    @for (node of pencilIcon; track $index) {
+                      @if (node[0] === 'path') {
+                        <path [attr.d]="$any(node[1]).d"></path>
+                      }
+                    }
+                  </svg>
+                  Izmeni
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-foot">
+      <p class="table-range">{{ rangeLabel() }}</p>
+      @if (showPagination) {
+        <nav class="pager" aria-label="Stranice usluga">
+          <button type="button" (click)="goToPage(page - 1)" [disabled]="page === 1">‹</button>
+          @for (pageNumber of pageNumbers; track pageNumber) {
+            <button
+              type="button"
+              [class.is-current]="pageNumber === page"
+              (click)="goToPage(pageNumber)"
+            >{{ pageNumber }}</button>
+          }
+          <button type="button" (click)="goToPage(page + 1)" [disabled]="page === totalPages">›</button>
+        </nav>
+      }
+    </div>
+  }
+</section>
+
+@if (modalOpen) {
+  <div class="overlay" (click)="requestClose()">
+    <div
+      class="dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'service-modal-title'"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="eyebrow">Usluge</p>
+      <h2 id="service-modal-title">{{ isCreate ? 'Nova usluga' : 'Izmena usluge' }}</h2>
+
+      @if (modalError) {
+        <div class="alert is-error" role="alert">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of alertIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+          <p>{{ modalError }}</p>
+        </div>
+      }
+
+      <form class="form" (ngSubmit)="submit()">
+        <label class="field">
+          <span>Naziv usluge</span>
+          <input
+            #nameInput
+            type="text"
+            name="name"
+            [(ngModel)]="formName"
+            [class.invalid]="nameError"
+            maxlength="150"
+          >
+          @if (nameError) {
+            <p class="hint-error">{{ nameError }}</p>
+          }
+        </label>
+
+        @if (isCreate) {
+          <label class="field">
+            <span>Specijalizacija</span>
+            <select
+              name="specialtyId"
+              [(ngModel)]="formSpecialtyId"
+              [class.invalid]="specialtyError"
+            >
+              <option [ngValue]="0">Izaberite specijalizaciju</option>
+              @for (specialty of specialties; track specialty.id) {
+                <option [ngValue]="specialty.id">{{ specialty.name }}</option>
+              }
+            </select>
+            @if (specialtyError) {
+              <p class="hint-error">{{ specialtyError }}</p>
+            }
+          </label>
+        } @else {
+          <label class="field">
+            <span>Specijalizacija</span>
+            <input type="text" [value]="formSpecialtyName" disabled>
+            <p class="hint">Specijalizacija postojeće usluge se ne može menjati.</p>
+          </label>
+        }
+
+        <div class="row">
+          <label class="field">
+            <span>Cena (RSD)</span>
+            <input
+              type="number"
+              name="price"
+              [(ngModel)]="formPrice"
+              min="1"
+              step="1"
+              [class.invalid]="priceError"
+            >
+            @if (priceError) {
+              <p class="hint-error">{{ priceError }}</p>
+            }
+          </label>
+          <label class="field">
+            <span>Trajanje (min)</span>
+            <input
+              type="number"
+              name="duration"
+              [(ngModel)]="formDuration"
+              min="1"
+              step="1"
+              [class.invalid]="durationError"
+            >
+            @if (durationError) {
+              <p class="hint-error">{{ durationError }}</p>
+            }
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Opis</span>
+          <textarea name="description" rows="4" [(ngModel)]="formDescription"></textarea>
+        </label>
+
+        <div class="dialog-actions">
+          <button class="btn-secondary" type="button" (click)="requestClose()" [disabled]="isSaving">Otkaži</button>
+          <button
+            class="btn-confirm"
+            type="submit"
+            [disabled]="isSaving || (!isCreate && !canSaveEdit)"
+          >{{ primaryActionLabel() }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (discardOpen) {
+  <div class="overlay is-top" (click)="keepEditing()">
+    <div class="dialog is-small" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <p class="eyebrow">Usluge</p>
+      <h2>Nesačuvane izmene</h2>
+      <p class="lead">Imate nesačuvane izmene. Da li želite da zatvorite obrazac?</p>
+      <div class="dialog-actions">
+        <button class="btn-secondary" type="button" (click)="keepEditing()">Odustani</button>
+        <button class="btn-confirm" type="button" (click)="confirmDiscard()">Nastavi</button>
+      </div>
+    </div>
+  </div>
+}

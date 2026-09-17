@@ -1,0 +1,95 @@
+.overlay {
+  --petrol: #17343a;
+  --burgundy: #7a3f46;
+  --stone: #d9d6cf;
+  --muted: #5c6564;
+  --ivory: #f5f3ee;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(23, 52, 58, 0.46);
+}
+
+.overlay *,
+.overlay { box-sizing: border-box; }
+
+.overlay.is-top { z-index: 50; }
+
+.dialog {
+  width: min(32rem, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1.35rem 1.25rem;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.dialog.is-small { width: min(28rem, 100%); }
+.dialog h2 { margin: 0 0 0.95rem; font-size: 1.15rem; }
+
+.block { margin-bottom: 1rem; }
+.block h3 {
+  margin: 0 0 0.45rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+dl { margin: 0; display: grid; gap: 0.42rem; }
+dl div { display: grid; grid-template-columns: 7.4rem minmax(0, 1fr); gap: 0.6rem; align-items: start; }
+dt { color: var(--muted); font-size: 0.82rem; }
+dd { margin: 0; font-size: 0.88rem; overflow-wrap: anywhere; }
+
+.confirm-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0 0 0.9rem;
+  color: var(--petrol);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.confirm-lead svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  stroke-width: 1.8;
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+  margin-top: 0.35rem;
+}
+
+.dialog-actions:has(> :nth-child(2)) {
+  grid-template-columns: 1fr 1fr;
+}
+
+.btn-secondary, .btn-danger {
+  padding: 0.62rem 0.8rem;
+  border-radius: 2px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.btn-secondary { background: var(--ivory); color: var(--petrol); border: 1px solid var(--petrol); }
+.btn-danger { border: 0; background: var(--burgundy); color: var(--ivory); }
+.btn-secondary:disabled, .btn-danger:disabled { opacity: 0.42; cursor: default; }
+
+.overlay .alert { margin-bottom: 0.85rem; }
+
+@media (max-width: 860px) {
+  dl div, .dialog-actions { grid-template-columns: 1fr; }
+}

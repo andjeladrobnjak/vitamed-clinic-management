@@ -42,5 +42,17 @@ adminPortalRouter.post(
 adminPortalRouter.put('/doctors/:id', authenticateAdmin, (req, res) =>
     adminPortalController.updateDoctor(req, res)
 );
+adminPortalRouter.post('/services', authenticateAdmin, (req, res) =>
+    adminPortalController.createService(req, res)
+);
+adminPortalRouter.put('/services/:id', authenticateAdmin, (req, res) =>
+    adminPortalController.updateService(req, res)
+);
+adminPortalRouter.get('/appointments', authenticateAdmin, (req, res) =>
+    adminPortalController.listAppointments(req, res)
+);
+adminPortalRouter.patch('/appointments/:id/cancel', authenticateAdmin, (req, res) =>
+    adminPortalController.cancelAppointment(req, res)
+);
 
 export default adminPortalRouter;

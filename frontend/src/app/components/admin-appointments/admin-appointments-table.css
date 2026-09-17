@@ -1,0 +1,91 @@
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.table-wrap.is-refreshing { opacity: 0.72; }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+th, td {
+  padding: 0.68rem 0.75rem;
+  text-align: left;
+  border-top: 1px solid rgba(217, 214, 207, 0.9);
+  white-space: nowrap;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-top: 0;
+  background: var(--paper);
+}
+
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: #f7f4ef; }
+.name { font-weight: 600; color: var(--petrol); }
+
+.when { display: grid; gap: 0.08rem; }
+.when span:last-child { color: var(--muted); font-size: 0.82rem; }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.16rem 0.48rem;
+  border-radius: 3px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.status-badge.is-confirmed { background: rgba(23, 52, 58, 0.08); color: #17343a; }
+.status-badge.is-completed { background: rgba(78, 128, 98, 0.14); color: #3d634e; }
+.status-badge.is-cancelled { background: rgba(122, 63, 70, 0.12); color: #7a3f46; }
+.status-badge.is-no-show { background: rgba(92, 101, 100, 0.12); color: #5c6564; }
+
+.btn-cancel {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--burgundy);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.table-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.05rem 0.2rem;
+}
+
+.pager { display: flex; align-items: center; gap: 0.2rem; flex-wrap: wrap; }
+
+.pager button {
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--petrol);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.pager button:hover:not(:disabled) { background: rgba(23, 52, 58, 0.06); }
+.pager button.is-current { background: rgba(23, 52, 58, 0.08); font-weight: 600; }
+.pager button:disabled { color: #b0b5b4; cursor: default; }
+
+@media (max-width: 960px) {
+  .table-foot { flex-direction: column; align-items: flex-start; }
+}

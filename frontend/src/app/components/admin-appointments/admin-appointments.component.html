@@ -1,0 +1,277 @@
+<section class="page">
+  <header class="intro">
+    <p class="eyebrow">Termini</p>
+    <h1>Pregled termina</h1>
+    <p class="lead">Pregledajte i upravljajte zakazanim pregledima klinike.</p>
+  </header>
+
+  <div class="toolbar">
+    <label class="search">
+      <span class="visually-hidden">Pretraga pacijenta</span>
+      <span class="search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          @for (node of searchIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'circle') {
+              <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+            }
+          }
+        </svg>
+      </span>
+      <input
+        type="search"
+        [value]="searchQuery"
+        placeholder="Pretražite pacijenta..."
+        (input)="onSearchInput($event)"
+      >
+    </label>
+
+    <label class="date-filter" [class.has-value]="!!selectedDate">
+      <span class="visually-hidden">Datum pregleda</span>
+      @if (!selectedDate) {
+        <span class="date-placeholder" aria-hidden="true">Datum pregleda</span>
+      }
+      <input
+        type="date"
+        [value]="selectedDate"
+        (change)="onDateChange($event)"
+        aria-label="Datum pregleda"
+      >
+      @if (selectedDate) {
+        <button class="clear-date" type="button" (click)="clearDate()" aria-label="Obrišite datum">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of closeIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+        </button>
+      }
+    </label>
+
+    <label class="select-filter">
+      <span class="visually-hidden">Status</span>
+      <select [value]="selectedStatus" (change)="onStatusChange($event)">
+        <option value="">Svi statusi</option>
+        <option value="confirmed">Zakazano</option>
+        <option value="completed">Završeno</option>
+        <option value="cancelled">Otkazano</option>
+        <option value="no_show">Nije se pojavio</option>
+      </select>
+    </label>
+
+    <label class="select-filter">
+      <span class="visually-hidden">Lekar</span>
+      <select [value]="selectedDoctorId" (change)="onDoctorChange($event)">
+        <option value="">Svi lekari</option>
+        @for (doctor of doctors; track doctor.id) {
+          <option [value]="doctor.id">{{ doctorOptionLabel(doctor) }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (successMessage) {
+    <div class="alert" role="status">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of successIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'circle') {
+            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+          }
+        }
+      </svg>
+      <p>{{ successMessage }}</p>
+    </div>
+  }
+
+  @if (!isLoading && !loadError && totalItems > 0) {
+    <p class="result-count">{{ rangeLabel() }}</p>
+  }
+
+  @if (isLoading) {
+    <p class="state">Učitavanje termina...</p>
+  } @else if (loadError) {
+    <p class="state is-error">{{ loadError }}</p>
+    <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+  } @else if (totalItems === 0) {
+    <p class="empty">{{ emptyMessage() }}</p>
+  } @else {
+    <div class="table-wrap" [class.is-refreshing]="isRefreshing">
+      <table>
+        <thead>
+          <tr>
+            <th>Datum i vreme</th>
+            <th>Pacijent</th>
+            <th>Lekar</th>
+            <th>Usluga</th>
+            <th>Lokacija</th>
+            <th>Status</th>
+            <th>Akcija</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (appointment of appointments; track appointment.id) {
+            <tr (click)="openDetails(appointment)">
+              <td>
+                <span class="when">
+                  <span>{{ formatDate(appointment.appointmentDate) }}</span>
+                  <span>{{ appointment.startTime }}</span>
+                </span>
+              </td>
+              <td class="name">{{ patientName(appointment) }}</td>
+              <td>{{ doctorName(appointment) }}</td>
+              <td>{{ appointment.service.name }}</td>
+              <td>{{ appointment.location.name }}</td>
+              <td>
+                <span class="status-badge {{ statusClass(appointment.status) }}">
+                  {{ statusLabel(appointment.status) }}
+                </span>
+              </td>
+              <td>
+                @if (appointment.cancellable) {
+                  <button class="btn-cancel" type="button" (click)="openCancel(appointment, $event)">Otkaži</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-foot">
+      <p class="table-range">{{ rangeLabel() }}</p>
+      @if (showPagination) {
+        <nav class="pager" aria-label="Stranice termina">
+          <button type="button" (click)="goToPage(page - 1)" [disabled]="page === 1">‹</button>
+          @for (pageNumber of pageNumbers; track pageNumber) {
+            <button
+              type="button"
+              [class.is-current]="pageNumber === page"
+              (click)="goToPage(pageNumber)"
+            >{{ pageNumber }}</button>
+          }
+          <button type="button" (click)="goToPage(page + 1)" [disabled]="page === totalPages">›</button>
+        </nav>
+      }
+    </div>
+  }
+</section>
+
+@if (detailsOpen && selected) {
+  <div class="overlay" (click)="closeDetails()">
+    <div
+      class="dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="appointment-details-title"
+      (click)="$event.stopPropagation()"
+    >
+      <p class="eyebrow">Termini</p>
+      <h2 id="appointment-details-title">Detalji termina</h2>
+
+      <section class="block">
+        <h3>Termin</h3>
+        <dl>
+          <div><dt>Datum</dt><dd>{{ formatDate(selected.appointmentDate) }}</dd></div>
+          <div><dt>Vreme</dt><dd>{{ selected.startTime }} do {{ selected.endTime }}</dd></div>
+          <div>
+            <dt>Status</dt>
+            <dd>
+              <span class="status-badge {{ statusClass(selected.status) }}">{{ statusLabel(selected.status) }}</span>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="block">
+        <h3>Pacijent</h3>
+        <dl>
+          <div><dt>Ime i prezime</dt><dd>{{ patientName(selected) }}</dd></div>
+          <div><dt>JMBG</dt><dd>{{ selected.patientJmbg }}</dd></div>
+          <div><dt>Email</dt><dd>{{ selected.patientEmail }}</dd></div>
+          <div><dt>Telefon</dt><dd>{{ selected.patientPhone }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="block">
+        <h3>Pregled</h3>
+        <dl>
+          <div><dt>Usluga</dt><dd>{{ selected.service.name }}</dd></div>
+          <div><dt>Lekar</dt><dd>{{ doctorName(selected) }}</dd></div>
+          <div><dt>Lokacija</dt><dd>{{ selected.location.name }}</dd></div>
+        </dl>
+      </section>
+
+      <div class="dialog-actions">
+        <button #closeDetailsButton class="btn-secondary" type="button" (click)="closeDetails()">Zatvori</button>
+        @if (selected.cancellable) {
+          <button class="btn-danger" type="button" (click)="openCancel(selected)">Otkaži termin</button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (confirmOpen && selected) {
+  <div class="overlay is-top" (click)="closeConfirm()">
+    <div class="dialog is-small" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <p class="eyebrow">Termini</p>
+      <h2>Otkažite termin?</h2>
+      <p class="confirm-lead">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          @for (node of warningIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'line') {
+              <line
+                [attr.x1]="$any(node[1]).x1"
+                [attr.y1]="$any(node[1]).y1"
+                [attr.x2]="$any(node[1]).x2"
+                [attr.y2]="$any(node[1]).y2"
+              ></line>
+            }
+          }
+        </svg>
+        <span>{{ confirmMessage() }}</span>
+      </p>
+      @if (cancelError) {
+        <div class="alert is-error" role="alert">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of alertIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+          <p>{{ cancelError }}</p>
+        </div>
+      }
+      <div class="dialog-actions">
+        <button class="btn-secondary" type="button" (click)="closeConfirm()" [disabled]="isCancelling">Odustani</button>
+        <button class="btn-danger" type="button" (click)="confirmCancel()" [disabled]="isCancelling">
+          {{ isCancelling ? 'Otkazivanje...' : 'Otkaži termin' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
