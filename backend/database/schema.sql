@@ -247,7 +247,7 @@ CREATE TABLE IF NOT EXISTS appointments (
         CHECK (start_time < end_time),
 
     CONSTRAINT chk_appointments_status
-        CHECK (status IN ('confirmed', 'cancelled', 'completed')),
+        CHECK (status IN ('confirmed', 'cancelled', 'completed', 'no_show')),
 
     INDEX idx_appointments_doctor_date (doctor_id, appointment_date)
 );

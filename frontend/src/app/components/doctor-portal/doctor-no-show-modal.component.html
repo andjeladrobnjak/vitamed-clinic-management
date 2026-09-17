@@ -1,0 +1,41 @@
+<div class="no-show-overlay" (click)="onOverlayClick($event)">
+  <div
+    #dialog
+    class="no-show-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="doctor-no-show-title"
+    aria-describedby="doctor-no-show-description"
+  >
+    <p class="no-show-kicker">Pregled</p>
+    <h2 id="doctor-no-show-title">Pacijent se nije pojavio?</h2>
+
+    <p id="doctor-no-show-description" class="no-show-lead">
+      Potvrdite da pacijent nije došao na zakazani pregled.
+    </p>
+
+    @if (errorMessage()) {
+      <p class="no-show-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="no-show-actions">
+      <button
+        #cancelButton
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="isSaving()"
+        (click)="dismissed.emit()"
+      >
+        Odustani
+      </button>
+      <button
+        class="btn btn-primary"
+        type="button"
+        [disabled]="isSaving()"
+        (click)="confirmed.emit()"
+      >
+        {{ isSaving() ? 'Čuvanje…' : 'Potvrdi' }}
+      </button>
+    </div>
+  </div>
+</div>

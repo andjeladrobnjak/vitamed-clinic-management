@@ -18,6 +18,27 @@ export class DoctorAuthController {
         }
     }
 
+    async refresh(req: Request, res: Response): Promise<void> {
+        try {
+            const accountId = (req as AuthenticatedRequest).doctorAccountId;
+            const doctorId = (req as AuthenticatedRequest).doctorId;
+
+            if (!accountId || !doctorId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            const result = await this.authService.refresh(accountId, doctorId);
+            res.status(200).json({
+                message: 'Sesija je produžena.',
+                token: result.token,
+                doctor: result.doctor
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće produžiti sesiju.');
+        }
+    }
+
     async me(req: Request, res: Response): Promise<void> {
         try {
             const accountId = (req as AuthenticatedRequest).doctorAccountId;

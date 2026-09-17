@@ -131,6 +131,24 @@ export class DoctorPortalController {
         }
     }
 
+    async markAppointmentNoShow(req: Request, res: Response): Promise<void> {
+        const doctorId = (req as AuthenticatedRequest).doctorId;
+        if (!doctorId) {
+            res.status(401).json({ message: 'Niste prijavljeni.' });
+            return;
+        }
+
+        try {
+            const result = await this.portalService.markAppointmentNoShow(
+                doctorId,
+                req.params.appointmentId
+            );
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće označiti nepojavljivanje.');
+        }
+    }
+
     async cancelAppointment(req: Request, res: Response): Promise<void> {
         const doctorId = (req as AuthenticatedRequest).doctorId;
         if (!doctorId) {

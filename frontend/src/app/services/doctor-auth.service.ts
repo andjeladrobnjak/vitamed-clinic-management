@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, finalize, map, shareReplay, tap } from 'rxjs/operators';
+import { DOCTOR_SESSION } from './doctor-session.constants';
 
 const TOKEN_KEY = 'vitamed_doctor_token';
 const doctorAuthUrl = 'http://localhost:3000/api/doctor-auth';
@@ -42,6 +43,7 @@ export class DoctorAuthService {
   private readonly currentDoctor = signal<AuthDoctor | null>(null);
   private sessionGeneration = 0;
   private inFlightRestore$: Observable<boolean> | null = null;
+  private inFlightRefresh$: Observable<{ token: string }> | null = null;
 
   readonly isAuthenticated = this.authenticated.asReadonly();
   readonly doctor = this.currentDoctor.asReadonly();
@@ -121,6 +123,45 @@ export class DoctorAuthService {
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  tokenRemainingMs(): number {
+    const payload = this.readTokenPayload(this.getToken() ?? '');
+    if (!payload?.exp) {
+      return 0;
+    }
+    return payload.exp * 1000 - Date.now();
+  }
+
+  replaceToken(token: string): void {
+    localStorage.setItem(TOKEN_KEY, token);
+    this.authenticated.set(true);
+  }
+
+  refreshToken(): Observable<{ token: string } | null> {
+    if (!this.hasValidStoredToken()) {
+      return of(null);
+    }
+
+    if (this.tokenRemainingMs() > DOCTOR_SESSION.refreshWhenRemainingMs) {
+      return of(null);
+    }
+
+    if (!this.inFlightRefresh$) {
+      this.inFlightRefresh$ = this.http.post<{ token: string }>(`${doctorAuthUrl}/refresh`, {}).pipe(
+        tap((response) => {
+          if (response.token) {
+            this.replaceToken(response.token);
+          }
+        }),
+        finalize(() => {
+          this.inFlightRefresh$ = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+
+    return this.inFlightRefresh$;
+  }
+
   isLoggedIn(): boolean {
     if (!this.hasValidStoredToken()) {
       if (this.authenticated() || this.currentDoctor()) {
@@ -143,6 +184,7 @@ export class DoctorAuthService {
   private beginNewSession(): void {
     this.sessionGeneration += 1;
     this.inFlightRestore$ = null;
+    this.inFlightRefresh$ = null;
   }
 
   private clearSession(): void {

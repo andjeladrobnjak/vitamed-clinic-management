@@ -67,6 +67,14 @@ export class DoctorAuthService {
         };
     }
 
+    async refresh(accountId: number, doctorId: number): Promise<{ token: string; doctor: DoctorAuthSession }> {
+        const doctor = await this.getMe(accountId, doctorId);
+        return {
+            token: this.signDoctorToken(accountId, doctorId),
+            doctor
+        };
+    }
+
     async getMe(accountId: number, doctorId: number): Promise<DoctorAuthSession> {
         const [rows] = await pool.query<(RowDataPacket & {
             accountId: number;

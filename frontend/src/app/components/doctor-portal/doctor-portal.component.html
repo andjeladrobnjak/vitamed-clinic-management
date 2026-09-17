@@ -27,9 +27,9 @@
 
       <section class="summary" aria-label="Pregled dana">
         <article class="summary-card">
-          <p class="summary-label">Današnji pregledi</p>
-          <p class="summary-value">{{ isLoading ? '—' : appointmentCount }}</p>
-          <p class="summary-note">zakazanih termina</p>
+          <p class="summary-label">Preostali pregledi</p>
+          <p class="summary-value">{{ isLoading ? '—' : remainingAppointmentCount }}</p>
+          <p class="summary-note">do kraja dana</p>
         </article>
         <article class="summary-card">
           <p class="summary-label">Sledeći termin</p>
@@ -58,8 +58,9 @@
             @for (appointment of dashboard.today.appointments; track appointment.id) {
               <li
                 class="schedule-row"
-                [class.is-active]="isActive(appointment)"
-                [class.is-next]="isNext(appointment)"
+                [class.is-current]="isCurrent(appointment)"
+                [class.is-completed]="appointment.status === 'completed'"
+                [class.is-no-show]="appointment.status === 'no_show'"
               >
                 <p class="row-time">{{ appointment.startTime }}</p>
                 <div class="row-patient">
@@ -67,15 +68,7 @@
                   <p class="row-service">{{ appointment.service.name }}</p>
                 </div>
                 <p class="row-location">{{ appointment.location.name }}</p>
-                @if (isActive(appointment)) {
-                  <button
-                    class="row-complete"
-                    type="button"
-                    (click)="openCompletion(appointment)"
-                  >
-                    Otvori izveštaj
-                  </button>
-                } @else if (appointment.status === 'completed') {
+                @if (appointment.status === 'completed') {
                   <div class="row-aside">
                     <p class="row-status" data-status="completed">Završeno</p>
                     @if (canViewReport(appointment)) {
@@ -87,10 +80,29 @@
                       </a>
                     }
                   </div>
+                } @else if (appointment.status === 'no_show') {
+                  <p class="row-status" data-status="no-show">Nije se pojavio</p>
+                } @else if (canComplete(appointment)) {
+                  <div class="row-actions">
+                    <button
+                      class="row-complete"
+                      type="button"
+                      (click)="openCompletion(appointment)"
+                    >
+                      Otvori izveštaj
+                    </button>
+                    @if (canMarkNoShow(appointment)) {
+                      <button
+                        class="row-no-show"
+                        type="button"
+                        (click)="openNoShow(appointment)"
+                      >
+                        Označi nedolazak
+                      </button>
+                    }
+                  </div>
                 } @else {
-                  <p class="row-status" [attr.data-status]="statusKey(appointment)">
-                    {{ statusLabel(appointment) }}
-                  </p>
+                  <p class="row-status" data-status="scheduled">Zakazano</p>
                 }
               </li>
             }
@@ -101,11 +113,22 @@
   </main>
 </div>
 
+@if (pendingNoShow) {
+  <app-doctor-no-show-modal
+    [isSaving]="isMarkingNoShow"
+    [errorMessage]="noShowError"
+    (dismissed)="closeNoShow()"
+    (confirmed)="confirmNoShow()"
+  />
+}
+
 @if (selectedAppointment; as appointment) {
   @if (dashboard; as currentDashboard) {
     <app-appointment-report-modal
       [appointment]="appointment"
       [appointmentDate]="currentDashboard.today.date"
+      [appointmentId]="appointment.id"
+      [canRestoreDraft]="appointment.status === 'confirmed'"
       [isSaving]="isCompleting"
       [errorMessage]="completeError"
       (dismissed)="closeCompletion()"

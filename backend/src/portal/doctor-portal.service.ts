@@ -32,7 +32,7 @@ export interface DoctorDashboardAppointment {
     id: number;
     startTime: string;
     endTime: string;
-    status: 'confirmed' | 'completed';
+    status: 'confirmed' | 'completed' | 'no_show';
     hasReport: boolean;
     patient: DoctorDashboardPatient;
     service: { id: number; name: string };
@@ -132,7 +132,7 @@ export interface DoctorPortalScheduleShift {
 export interface DoctorPortalScheduleAppointment {
     id: number;
     startTime: string;
-    status: 'confirmed' | 'completed';
+    status: 'confirmed' | 'completed' | 'no_show';
     patient: {
         id: number | null;
         firstName: string;
@@ -253,7 +253,7 @@ export class DoctorPortalService {
              LEFT JOIN appointment_reports r ON r.appointment_id = a.id
              WHERE a.doctor_id = ?
                AND a.appointment_date = ?
-               AND a.status IN ('confirmed', 'completed')
+               AND a.status IN ('confirmed', 'completed', 'no_show')
              ORDER BY a.start_time ASC, a.id ASC`,
             [doctorId, clock.date]
         );
@@ -323,6 +323,9 @@ export class DoctorPortalService {
             }
             if (status === 'completed') {
                 throw new DoctorPortalError(409, 'Ovaj pregled je već završen.');
+            }
+            if (status === 'no_show') {
+                throw new DoctorPortalError(409, 'Pregled na koji se pacijent nije pojavio nije moguće završiti.');
             }
             if (status !== 'confirmed') {
                 throw new DoctorPortalError(409, 'Ovaj pregled nije moguće završiti.');
@@ -852,7 +855,7 @@ export class DoctorPortalService {
              INNER JOIN services s ON s.id = a.service_id
              WHERE a.doctor_id = ?
                AND a.appointment_date BETWEEN ? AND ?
-               AND a.status IN ('confirmed', 'completed')
+               AND a.status IN ('confirmed', 'completed', 'no_show')
              ORDER BY a.appointment_date ASC, a.start_time ASC, a.id ASC`,
             [doctorId, from, to]
         );
@@ -868,7 +871,7 @@ export class DoctorPortalService {
             day.appointments.push({
                 id: Number(row.id),
                 startTime: String(row.startTime),
-                status: String(row.status) === 'completed' ? 'completed' : 'confirmed',
+                status: this.mapVisibleStatus(String(row.status)),
                 patient: {
                     id: row.patientId === null ? null : Number(row.patientId),
                     firstName: String(row.patientFirstName),
@@ -961,6 +964,9 @@ export class DoctorPortalService {
             if (status === 'completed') {
                 throw new DoctorPortalError(409, 'Završen pregled nije moguće otkazati.');
             }
+            if (status === 'no_show') {
+                throw new DoctorPortalError(409, 'Pregled na koji se pacijent nije pojavio nije moguće otkazati.');
+            }
             if (status !== 'confirmed') {
                 throw new DoctorPortalError(409, 'Ovaj pregled nije moguće otkazati.');
             }
@@ -1007,6 +1013,107 @@ export class DoctorPortalService {
                     locationAddress: String(appointment.locationAddress),
                     locationCity: String(appointment.locationCity),
                     locationPhone: String(appointment.locationPhone)
+                }
+            };
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+    }
+
+    async markAppointmentNoShow(
+        doctorId: number,
+        appointmentIdInput: unknown
+    ): Promise<{
+        message: string;
+        appointment: {
+            id: number;
+            status: 'no_show';
+            startTime: string;
+            endTime: string;
+        };
+    }> {
+        const appointmentId = parsePositiveId(appointmentIdInput);
+        if (!appointmentId) {
+            throw new DoctorPortalError(400, 'Neispravan identifikator pregleda.');
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const [rows] = await connection.query<(RowDataPacket & {
+                id: number;
+                doctorId: number;
+                status: string;
+                appointmentDate: string;
+                startTime: string;
+                endTime: string;
+            })[]>(
+                `SELECT
+                    a.id,
+                    a.doctor_id AS doctorId,
+                    a.status,
+                    DATE_FORMAT(a.appointment_date, '%Y-%m-%d') AS appointmentDate,
+                    TIME_FORMAT(a.start_time, '%H:%i') AS startTime,
+                    TIME_FORMAT(a.end_time, '%H:%i') AS endTime
+                 FROM appointments a
+                 WHERE a.id = ?
+                 LIMIT 1
+                 FOR UPDATE`,
+                [appointmentId]
+            );
+
+            const appointment = rows[0];
+            if (!appointment || Number(appointment.doctorId) !== doctorId) {
+                throw new DoctorPortalError(404, 'Pregled nije pronađen.');
+            }
+
+            const status = String(appointment.status);
+            if (status === 'cancelled') {
+                throw new DoctorPortalError(409, 'Otkazani pregled nije moguće označiti kao nepojavljivanje.');
+            }
+            if (status === 'completed') {
+                throw new DoctorPortalError(409, 'Završen pregled nije moguće označiti kao nepojavljivanje.');
+            }
+            if (status === 'no_show') {
+                throw new DoctorPortalError(409, 'Ovaj pregled je već označen kao nepojavljivanje.');
+            }
+            if (status !== 'confirmed') {
+                throw new DoctorPortalError(409, 'Ovaj pregled nije moguće označiti kao nepojavljivanje.');
+            }
+
+            if (!this.hasAppointmentStarted(String(appointment.appointmentDate), String(appointment.startTime))) {
+                throw new DoctorPortalError(
+                    409,
+                    'Nije moguće označiti da se pacijent nije pojavio pre početka termina.'
+                );
+            }
+
+            const [updateResult] = await connection.query<ResultSetHeader>(
+                `UPDATE appointments
+                 SET status = 'no_show'
+                 WHERE id = ?
+                   AND doctor_id = ?
+                   AND status = 'confirmed'`,
+                [appointmentId, doctorId]
+            );
+
+            if (updateResult.affectedRows !== 1) {
+                throw new DoctorPortalError(409, 'Ovaj pregled nije moguće označiti kao nepojavljivanje.');
+            }
+
+            await connection.commit();
+
+            return {
+                message: 'Pregled je označen kao nepojavljivanje.',
+                appointment: {
+                    id: Number(appointment.id),
+                    status: 'no_show',
+                    startTime: String(appointment.startTime),
+                    endTime: String(appointment.endTime)
                 }
             };
         } catch (error) {
@@ -1088,14 +1195,22 @@ export class DoctorPortalService {
         return typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'ER_DUP_ENTRY';
     }
 
-    private mapAppointment(row: DashboardAppointmentRow): DoctorDashboardAppointment {
-        const status = String(row.status) === 'completed' ? 'completed' : 'confirmed';
+    private mapVisibleStatus(status: string): 'confirmed' | 'completed' | 'no_show' {
+        if (status === 'completed') {
+            return 'completed';
+        }
+        if (status === 'no_show') {
+            return 'no_show';
+        }
+        return 'confirmed';
+    }
 
+    private mapAppointment(row: DashboardAppointmentRow): DoctorDashboardAppointment {
         return {
             id: Number(row.id),
             startTime: String(row.startTime),
             endTime: String(row.endTime),
-            status,
+            status: this.mapVisibleStatus(String(row.status)),
             hasReport: row.reportId !== null && Number(row.reportId) > 0,
             patient: {
                 id: row.patientId === null ? null : Number(row.patientId),

@@ -10,11 +10,18 @@ import {
 } from '../../services/doctor-portal.service';
 import { DoctorPortalHeaderComponent } from '../doctor-portal-header/doctor-portal-header.component';
 import { AppointmentReportModalComponent } from './appointment-report-modal.component';
+import { DoctorNoShowModalComponent } from './doctor-no-show-modal.component';
+import { ReportDraftService } from '../../services/report-draft.service';
 
 @Component({
   selector: 'app-doctor-portal',
   standalone: true,
-  imports: [DoctorPortalHeaderComponent, AppointmentReportModalComponent, RouterLink],
+  imports: [
+    DoctorPortalHeaderComponent,
+    AppointmentReportModalComponent,
+    DoctorNoShowModalComponent,
+    RouterLink
+  ],
   templateUrl: './doctor-portal.component.html',
   styleUrl: './doctor-portal.component.css'
 })
@@ -23,13 +30,17 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
   isLoading = true;
   loadError = '';
   selectedAppointment: DoctorDashboardAppointment | null = null;
+  pendingNoShow: DoctorDashboardAppointment | null = null;
   isCompleting = false;
+  isMarkingNoShow = false;
   completeError = '';
+  noShowError = '';
 
   private readonly doctorAuth = inject(DoctorAuthService);
   private readonly portalService = inject(DoctorPortalService);
+  private readonly drafts = inject(ReportDraftService);
   private readonly router = inject(Router);
-  private clockTimer: ReturnType<typeof setInterval> | null = null;
+  private clockTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly doctor = this.doctorAuth.doctor;
   readonly displayName = this.doctorAuth.displayName;
@@ -37,16 +48,11 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDashboard();
-    this.clockTimer = setInterval(() => {
-      this.nowTick.set(Date.now());
-    }, 1000);
+    this.armClock();
   }
 
   ngOnDestroy(): void {
-    if (this.clockTimer !== null) {
-      clearInterval(this.clockTimer);
-      this.clockTimer = null;
-    }
+    this.clearClock();
   }
 
   get todayLabel(): string {
@@ -65,12 +71,17 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   }
 
-  get appointmentCount(): number {
-    return this.dashboard?.today.appointmentCount ?? 0;
+  get remainingAppointmentCount(): number {
+    return (this.dashboard?.today.appointments ?? []).filter(
+      (appointment) => appointment.status === 'confirmed'
+    ).length;
   }
 
   get nextAppointment(): DoctorDashboardAppointment | null {
-    return this.scheduleWorkflow.next;
+    this.nowTick();
+    return (this.dashboard?.today.appointments ?? []).find(
+      (appointment) => appointment.status === 'confirmed' && !this.hasStarted(appointment)
+    ) ?? null;
   }
 
   get nextTimeLabel(): string {
@@ -85,59 +96,23 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
     return this.formatCountdown(next.startTime);
   }
 
-  get scheduleWorkflow(): {
-    active: DoctorDashboardAppointment | null;
-    next: DoctorDashboardAppointment | null;
-  } {
-    this.nowTick();
-    const confirmed = (this.dashboard?.today.appointments ?? []).filter(
-      (appointment) => appointment.status === 'confirmed'
-    );
-    const active = confirmed.find((appointment) => this.hasStarted(appointment)) ?? null;
-    if (active) {
-      const activeIndex = confirmed.findIndex((appointment) => appointment.id === active.id);
-      return {
-        active,
-        next: confirmed[activeIndex + 1] ?? null
-      };
-    }
-
-    return {
-      active: null,
-      next: confirmed.find((appointment) => !this.hasStarted(appointment)) ?? null
-    };
-  }
-
   patientName(appointment: DoctorDashboardAppointment): string {
     return `${appointment.patient.firstName} ${appointment.patient.lastName}`.trim();
   }
 
-  isActive(appointment: DoctorDashboardAppointment): boolean {
-    return this.scheduleWorkflow.active?.id === appointment.id;
+  isCurrent(appointment: DoctorDashboardAppointment): boolean {
+    if (appointment.status !== 'confirmed') {
+      return false;
+    }
+    return this.hasStarted(appointment) && !this.hasEnded(appointment);
   }
 
-  isNext(appointment: DoctorDashboardAppointment): boolean {
-    return this.scheduleWorkflow.next?.id === appointment.id;
+  canComplete(appointment: DoctorDashboardAppointment): boolean {
+    return appointment.status === 'confirmed' && this.hasStarted(appointment);
   }
 
-  statusLabel(appointment: DoctorDashboardAppointment): string {
-    if (appointment.status === 'completed') {
-      return 'Završeno';
-    }
-    if (this.isNext(appointment)) {
-      return 'Sledeći';
-    }
-    return 'Zakazano';
-  }
-
-  statusKey(appointment: DoctorDashboardAppointment): 'completed' | 'next' | 'scheduled' {
-    if (appointment.status === 'completed') {
-      return 'completed';
-    }
-    if (this.isNext(appointment)) {
-      return 'next';
-    }
-    return 'scheduled';
+  canMarkNoShow(appointment: DoctorDashboardAppointment): boolean {
+    return appointment.status === 'confirmed' && this.hasStarted(appointment);
   }
 
   canViewReport(appointment: DoctorDashboardAppointment): boolean {
@@ -148,7 +123,7 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
   }
 
   openCompletion(appointment: DoctorDashboardAppointment): void {
-    if (!this.isActive(appointment) || this.isCompleting) {
+    if (!this.canComplete(appointment) || this.isCompleting || this.isMarkingNoShow) {
       return;
     }
     this.completeError = '';
@@ -174,6 +149,7 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
 
     this.portalService.completeAppointment(appointment.id, report).subscribe({
       next: () => {
+        this.drafts.clear(appointment.id);
         this.isCompleting = false;
         this.selectedAppointment = null;
         this.completeError = '';
@@ -191,26 +167,81 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
     });
   }
 
+  openNoShow(appointment: DoctorDashboardAppointment): void {
+    if (!this.canMarkNoShow(appointment) || this.isMarkingNoShow || this.isCompleting) {
+      return;
+    }
+    this.noShowError = '';
+    this.pendingNoShow = appointment;
+  }
+
+  closeNoShow(): void {
+    if (this.isMarkingNoShow) {
+      return;
+    }
+    this.pendingNoShow = null;
+    this.noShowError = '';
+  }
+
+  confirmNoShow(): void {
+    if (!this.pendingNoShow || this.isMarkingNoShow) {
+      return;
+    }
+
+    this.isMarkingNoShow = true;
+    this.noShowError = '';
+
+    this.portalService.markAppointmentNoShow(this.pendingNoShow.id).subscribe({
+      next: () => {
+        this.isMarkingNoShow = false;
+        this.pendingNoShow = null;
+        this.noShowError = '';
+        this.refreshDashboard();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isMarkingNoShow = false;
+        if (error.status === 401) {
+          this.doctorAuth.logout();
+          void this.router.navigate(['/lekar/prijava']);
+          return;
+        }
+        this.noShowError = error.error?.message || 'Trenutno nije moguće označiti nepojavljivanje.';
+      }
+    });
+  }
+
+  private armClock(): void {
+    this.nowTick.set(Date.now());
+    this.clearClock();
+    const msUntilNextMinute = 60_000 - (Date.now() % 60_000) + 50;
+    this.clockTimer = setTimeout(() => this.armClock(), msUntilNextMinute);
+  }
+
+  private clearClock(): void {
+    if (this.clockTimer !== null) {
+      clearTimeout(this.clockTimer);
+      this.clockTimer = null;
+    }
+  }
+
   private hasStarted(appointment: DoctorDashboardAppointment): boolean {
+    const clock = this.clinicClock();
     const date = this.dashboard?.today.date;
     if (!date) {
       return false;
     }
+    const dayDiff = this.calendarDayDiff(clock.date, date);
+    return dayDiff * 24 * 60 + this.timeToMinutes(appointment.startTime) - clock.minutes <= 0;
+  }
 
-    const [year, month, day] = date.split('-').map(Number);
-    const [hours, minutes] = appointment.startTime.split(':').map(Number);
-    if (
-      !Number.isInteger(year) ||
-      !Number.isInteger(month) ||
-      !Number.isInteger(day) ||
-      !Number.isInteger(hours) ||
-      !Number.isInteger(minutes)
-    ) {
+  private hasEnded(appointment: DoctorDashboardAppointment): boolean {
+    const clock = this.clinicClock();
+    const date = this.dashboard?.today.date;
+    if (!date) {
       return false;
     }
-
-    const start = new Date(year, month - 1, day, hours, minutes, 0, 0);
-    return this.nowTick() >= start.getTime();
+    const dayDiff = this.calendarDayDiff(clock.date, date);
+    return dayDiff * 24 * 60 + this.timeToMinutes(appointment.endTime) - clock.minutes <= 0;
   }
 
   private loadDashboard(): void {
@@ -255,14 +286,14 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
   }
 
   private formatCountdown(startTime: string): string {
-    const [hours, minutes] = startTime.split(':').map(Number);
-    if (!Number.isInteger(hours) || !Number.isInteger(minutes)) {
+    const clock = this.clinicClock();
+    const date = this.dashboard?.today.date;
+    if (!date) {
       return '';
     }
-
-    const start = new Date();
-    start.setHours(hours, minutes, 0, 0);
-    const diffMinutes = Math.round((start.getTime() - Date.now()) / 60000);
+    const diffMinutes = this.calendarDayDiff(clock.date, date) * 24 * 60
+      + this.timeToMinutes(startTime)
+      - clock.minutes;
 
     if (diffMinutes <= 0) {
       return 'uskoro';
@@ -277,5 +308,34 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
       return `za ${hoursLeft} h`;
     }
     return `za ${hoursLeft} h ${minutesLeft} min`;
+  }
+
+  private clinicClock(): { date: string; minutes: number } {
+    this.nowTick();
+    const date = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Belgrade'
+    }).format(new Date());
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Belgrade',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(new Date());
+    const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
+    const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
+    return { date, minutes: hour * 60 + minute };
+  }
+
+  private timeToMinutes(value: string): number {
+    const [hours, minutes] = value.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+
+  private calendarDayDiff(fromIsoDate: string, toIsoDate: string): number {
+    const [fromYear, fromMonth, fromDay] = fromIsoDate.split('-').map(Number);
+    const [toYear, toMonth, toDay] = toIsoDate.split('-').map(Number);
+    const fromUtc = Date.UTC(fromYear, fromMonth - 1, fromDay);
+    const toUtc = Date.UTC(toYear, toMonth - 1, toDay);
+    return Math.round((toUtc - fromUtc) / 86_400_000);
   }
 }

@@ -12,7 +12,7 @@ export interface DoctorDashboardAppointment {
   id: number;
   startTime: string;
   endTime: string;
-  status: 'confirmed' | 'completed';
+  status: 'confirmed' | 'completed' | 'no_show';
   hasReport: boolean;
   patient: DoctorDashboardPatient;
   service: { id: number; name: string };
@@ -137,7 +137,7 @@ export interface DoctorPortalScheduleShift {
 export interface DoctorPortalScheduleAppointment {
   id: number;
   startTime: string;
-  status: 'confirmed' | 'completed';
+  status: 'confirmed' | 'completed' | 'no_show';
   patient: {
     id: number | null;
     firstName: string;
@@ -208,6 +208,26 @@ export class DoctorPortalService {
       `${this.portalUrl}/patients/${patientId}/appointments/${appointmentId}/report`,
       report
     );
+  }
+
+  markAppointmentNoShow(appointmentId: number): Observable<{
+    message: string;
+    appointment: {
+      id: number;
+      status: 'no_show';
+      startTime: string;
+      endTime: string;
+    };
+  }> {
+    return this.http.patch<{
+      message: string;
+      appointment: {
+        id: number;
+        status: 'no_show';
+        startTime: string;
+        endTime: string;
+      };
+    }>(`${this.portalUrl}/appointments/${appointmentId}/no-show`, {});
   }
 
   getMonthSchedule(year: number, month: number): Observable<DoctorPortalMonthSchedule> {

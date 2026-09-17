@@ -40,6 +40,12 @@ doctorPortalRouter.get('/schedule', authenticateDoctor, (req, res) =>
 );
 
 doctorPortalRouter.patch(
+    '/appointments/:appointmentId/no-show',
+    authenticateDoctor,
+    (req, res) => doctorPortalController.markAppointmentNoShow(req, res)
+);
+
+doctorPortalRouter.patch(
     '/appointments/:appointmentId/cancel',
     authenticateDoctor,
     (req, res) => doctorPortalController.cancelAppointment(req, res)

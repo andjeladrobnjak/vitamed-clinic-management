@@ -12,6 +12,9 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { LucideX } from '@lucide/angular';
+import { Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { ReportDraftService } from '../../services/report-draft.service';
 
 function requiredTrimmed(message: string) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -46,6 +49,8 @@ export interface ReportModalValues {
 export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy {
   readonly appointment = input.required<ReportModalAppointment>();
   readonly appointmentDate = input.required<string>();
+  readonly appointmentId = input(0);
+  readonly canRestoreDraft = input(false);
   readonly isSaving = input(false);
   readonly errorMessage = input('');
   readonly mode = input<'complete' | 'edit'>('complete');
@@ -62,12 +67,15 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
   readonly closeIcon = LucideX.icon.node;
   submittedAttempt = false;
   discardConfirmOpen = false;
+  draftRestored = false;
 
   private readonly fb = inject(FormBuilder);
+  private readonly drafts = inject(ReportDraftService);
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
   private previousOverflow = '';
   private previousFocus: HTMLElement | null = null;
+  private draftSub: Subscription | null = null;
   private originalValues: ReportModalValues = {
     anamnesis: '',
     findings: '',
@@ -170,6 +178,8 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
   }
 
   ngAfterViewInit(): void {
+    this.restoreDraft();
+    this.startDraftAutosave();
     this.previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -177,6 +187,8 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
   }
 
   ngOnDestroy(): void {
+    this.draftSub?.unsubscribe();
+    this.draftSub = null;
     document.body.style.overflow = this.previousOverflow;
     this.previousFocus?.focus();
   }
@@ -246,6 +258,7 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
     if (this.isSaving()) {
       return;
     }
+    this.drafts.clear(this.appointmentId());
     this.dismissed.emit();
   }
 
@@ -263,6 +276,41 @@ export class AppointmentReportModalComponent implements AfterViewInit, OnDestroy
       findings: value.findings?.trim() ?? '',
       diagnosis: value.diagnosis?.trim() ?? '',
       ...(therapy ? { therapyRecommendations: therapy } : {})
+    });
+  }
+
+  private restoreDraft(): void {
+    if (this.mode() !== 'complete' || !this.canRestoreDraft()) {
+      return;
+    }
+    const draft = this.drafts.load(this.appointmentId());
+    if (!draft) {
+      return;
+    }
+    this.reportForm.reset(
+      {
+        anamnesis: draft.anamnesis,
+        findings: draft.findings,
+        diagnosis: draft.diagnosis,
+        therapyRecommendations: draft.therapyRecommendations
+      },
+      { emitEvent: false }
+    );
+    this.draftRestored = true;
+  }
+
+  private startDraftAutosave(): void {
+    if (this.mode() !== 'complete') {
+      return;
+    }
+    this.draftSub = this.reportForm.valueChanges.pipe(debounceTime(600)).subscribe(() => {
+      const value = this.reportForm.getRawValue();
+      this.drafts.save(this.appointmentId(), {
+        anamnesis: value.anamnesis ?? '',
+        findings: value.findings ?? '',
+        diagnosis: value.diagnosis ?? '',
+        therapyRecommendations: value.therapyRecommendations ?? ''
+      });
     });
   }
 

@@ -34,6 +34,9 @@
     <h2 id="report-title">{{ title }}</h2>
     <p class="report-patient">{{ patientLine }}</p>
     <p class="report-when">{{ scheduleLine }}</p>
+    @if (draftRestored) {
+      <p class="report-draft-note">Nedovršeni nacrt je vraćen.</p>
+    }
 
     <form class="report-form" (ngSubmit)="submit()" [formGroup]="reportForm" novalidate>
       <label class="report-field">
