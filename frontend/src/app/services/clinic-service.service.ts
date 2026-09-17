@@ -19,7 +19,8 @@ export class ClinicServiceApi {
   private readonly http = inject(HttpClient);
   private readonly servicesUrl = 'http://localhost:3000/api/services';
 
-  getServices(): Observable<ClinicService[]> {
-    return this.http.get<ClinicService[]>(this.servicesUrl);
+  getServices(specialtyId?: number): Observable<ClinicService[]> {
+    const params = specialtyId ? { specialtyId: String(specialtyId) } : undefined;
+    return this.http.get<ClinicService[]>(this.servicesUrl, { params });
   }
 }

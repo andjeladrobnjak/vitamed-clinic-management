@@ -1,0 +1,137 @@
+<section class="page">
+  <header class="intro">
+    <p class="eyebrow">Lekari</p>
+    <h1>Upravljanje lekarima</h1>
+    <p class="lead">Pregled i upravljanje lekarima klinike VitaMed</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-main">
+      <label class="search">
+        <span class="visually-hidden">Pretraga lekara</span>
+        <span class="search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            @for (node of searchIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              }
+            }
+          </svg>
+        </span>
+        <input
+          type="search"
+          [value]="searchQuery"
+          placeholder="Pretražite po imenu ili prezimenu"
+          (input)="onSearchInput($event)"
+        >
+      </label>
+
+      <label class="specialty-filter">
+        <span class="visually-hidden">Specijalizacija</span>
+        <select [value]="selectedSpecialtyId" (change)="onSpecialtyChange($event)">
+          <option value="">Sve specijalizacije</option>
+          @for (specialty of specialties; track specialty.id) {
+            <option [value]="specialty.id">{{ specialty.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <a class="btn btn-primary" routerLink="/admin/doctors/new">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of plusIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'line') {
+            <line
+              [attr.x1]="$any(node[1]).x1"
+              [attr.y1]="$any(node[1]).y1"
+              [attr.x2]="$any(node[1]).x2"
+              [attr.y2]="$any(node[1]).y2"
+            ></line>
+          }
+        }
+      </svg>
+      Dodaj novog lekara
+    </a>
+  </div>
+
+  @if (!isLoading && !loadError) {
+    <p class="result-count">{{ doctorCountLabel(filteredTotal) }}</p>
+  }
+
+  @if (isLoading) {
+    <p class="state">Učitavanje lekara...</p>
+  } @else if (loadError) {
+    <p class="state is-error">{{ loadError }}</p>
+  } @else if (filteredTotal === 0) {
+    <p class="empty">Nema lekara koji odgovaraju izabranim kriterijumima.</p>
+  } @else {
+    <ul class="doctor-list">
+      @for (doctor of pagedDoctors; track doctor.id) {
+        <li>
+          <a class="doctor-row" [routerLink]="['/admin/doctors', doctor.id]">
+            <span class="doctor-photo">
+              @if (showPhoto(doctor)) {
+                <img
+                  [src]="mediaUrl(doctor.imageUrl)"
+                  [alt]="doctorName(doctor)"
+                  (error)="onImageError(doctor.id)"
+                >
+              } @else {
+                <span class="doctor-fallback" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    @for (node of userIcon; track $index) {
+                      @if (node[0] === 'path') {
+                        <path [attr.d]="$any(node[1]).d"></path>
+                      } @else if (node[0] === 'circle') {
+                        <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                      }
+                    }
+                  </svg>
+                </span>
+              }
+            </span>
+
+            <span class="doctor-copy">
+              <span class="doctor-name">{{ doctorName(doctor) }}</span>
+              <span class="doctor-specialty">{{ doctor.specialty.name }}</span>
+              @if (locationLabel(doctor)) {
+                <span class="doctor-locations">{{ locationLabel(doctor) }}</span>
+              }
+            </span>
+
+            <svg class="row-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of chevronIcon; track $index) {
+                @if (node[0] === 'polyline') {
+                  <polyline [attr.points]="$any(node[1]).points"></polyline>
+                } @else if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                }
+              }
+            </svg>
+          </a>
+        </li>
+      }
+    </ul>
+
+    <div class="table-foot">
+      <p class="table-range">Prikazano {{ rangeStart }}-{{ rangeEnd }} od {{ filteredTotal }}</p>
+      @if (showPagination) {
+        <nav class="pager" aria-label="Stranice lekara">
+          <button type="button" (click)="goToPage(page - 1)" [disabled]="page === 1">‹</button>
+          @for (pageNumber of pageNumbers; track pageNumber) {
+            <button
+              type="button"
+              [class.is-current]="pageNumber === page"
+              (click)="goToPage(pageNumber)"
+            >{{ pageNumber }}</button>
+          }
+          <button type="button" (click)="goToPage(page + 1)" [disabled]="page === totalPages">›</button>
+        </nav>
+      }
+    </div>
+  }
+</section>

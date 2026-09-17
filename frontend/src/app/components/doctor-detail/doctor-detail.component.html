@@ -38,7 +38,7 @@
             <div class="hero-photo">
               @if (doctor.imageUrl) {
                 <img
-                  [src]="doctor.imageUrl"
+                  [src]="mediaUrl(doctor.imageUrl)"
                   [alt]="'Dr ' + doctor.firstName + ' ' + doctor.lastName"
                 >
               } @else {

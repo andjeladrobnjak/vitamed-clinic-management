@@ -6,6 +6,7 @@ import { Doctor, DoctorService, Specialty } from '../../services/doctor.service'
 import { doctorSpecialtyLabel } from '../../utils/specialty-label';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
 import { DoctorRatingComponent } from '../doctor-rating/doctor-rating.component';
+import { resolveMediaUrl } from '../../utils/media-url';
 
 @Component({
   selector: 'app-doctors',
@@ -18,6 +19,7 @@ export class DoctorsComponent implements OnInit {
   readonly searchIcon = LucideSearch.icon.node;
   readonly userIcon = LucideUser.icon.node;
   readonly chevronDownIcon = LucideChevronDown.icon.node;
+  readonly mediaUrl = resolveMediaUrl;
 
   doctors: Doctor[] = [];
   specialties: Specialty[] = [];

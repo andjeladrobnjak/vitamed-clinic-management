@@ -1,0 +1,373 @@
+<section class="page">
+  <button class="back-link" type="button" (click)="onBack()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      @for (node of backIcon; track $index) {
+        @if (node[0] === 'path') {
+          <path [attr.d]="$any(node[1]).d"></path>
+        } @else if (node[0] === 'line') {
+          <line
+            [attr.x1]="$any(node[1]).x1"
+            [attr.x2]="$any(node[1]).x2"
+            [attr.y1]="$any(node[1]).y1"
+            [attr.y2]="$any(node[1]).y2"
+          ></line>
+        } @else if (node[0] === 'polyline') {
+          <polyline [attr.points]="$any(node[1]).points"></polyline>
+        }
+      }
+    </svg>
+    Nazad na lekare
+  </button>
+
+  @if (isLoading) {
+    <p class="state">{{ isCreate ? 'Priprema forme...' : 'Učitavanje lekara...' }}</p>
+  } @else if (notFound) {
+    <header class="intro">
+      <p class="eyebrow">Lekari</p>
+      <h1>Lekar nije pronađen</h1>
+      <p class="lead">Proverite adresu ili se vratite na pregled lekara.</p>
+    </header>
+  } @else if (loadError) {
+    <p class="state is-error">{{ loadError }}</p>
+    <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+  } @else {
+    <header class="intro profile">
+      <span class="doctor-photo">
+        @if (photoPreviewUrl() && !imageFailed) {
+          <img [src]="photoPreviewUrl()" [alt]="headerTitle()" (error)="onImageError()">
+        } @else {
+          <span class="doctor-fallback" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              @for (node of userIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'circle') {
+                  <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                }
+              }
+            </svg>
+          </span>
+        }
+      </span>
+      <div>
+        <p class="eyebrow">{{ isCreate ? 'Novi lekar' : 'Lekari' }}</p>
+        <h1>{{ headerTitle() }}</h1>
+        <p class="lead">{{ headerLead() }}</p>
+      </div>
+    </header>
+
+    <form class="edit-form" (ngSubmit)="save()" (input)="clearSaveSuccess()" (change)="clearSaveSuccess()">
+      <div class="tabs-bar">
+        <nav class="tabs" aria-label="Sekcije lekara">
+          <button type="button" [class.is-active]="activeTab === 'profile'" (click)="selectTab('profile')">Podaci o lekaru</button>
+          <button type="button" [class.is-active]="activeTab === 'places'" (click)="selectTab('places')">Usluge i lokacije</button>
+          <button type="button" [class.is-active]="activeTab === 'schedule'" (click)="selectTab('schedule')">Raspored rada</button>
+        </nav>
+        <div class="tabs-actions">
+          <button class="btn-save" type="submit" [disabled]="isSaving || (!isCreate && !hasUnsavedChanges())">
+            {{ primaryActionLabel() }}
+          </button>
+        </div>
+      </div>
+
+      @if (saveSuccess || saveError) {
+        <div
+          #saveFeedback
+          class="alert"
+          [class.is-error]="!!saveError"
+          [attr.role]="saveError ? 'alert' : 'status'"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of (saveError ? alertIcon : successIcon); track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+          <p>{{ saveError || saveSuccess }}</p>
+        </div>
+      }
+
+      @if (activeTab === 'profile') {
+        <section class="block">
+          <h2>Osnovni podaci</h2>
+          <div class="grid two">
+            <label class="field">
+              <span>Ime</span>
+              <input type="text" name="firstName" [(ngModel)]="firstName" [class.invalid]="firstNameError">
+              @if (firstNameError) {
+                <p class="hint-error">{{ firstNameError }}</p>
+              }
+            </label>
+            <label class="field">
+              <span>Prezime</span>
+              <input type="text" name="lastName" [(ngModel)]="lastName" [class.invalid]="lastNameError">
+              @if (lastNameError) {
+                <p class="hint-error">{{ lastNameError }}</p>
+              }
+            </label>
+            <label class="field">
+              <span>Specijalizacija</span>
+              <select name="specialtyId" [ngModel]="specialtyId" (ngModelChange)="onSpecialtyChange(+$event)">
+                @if (isCreate) {
+                  <option [ngValue]="0">Izaberite specijalizaciju</option>
+                }
+                @for (specialty of specialties; track specialty.id) {
+                  <option [ngValue]="specialty.id">{{ specialty.name }}</option>
+                }
+              </select>
+            </label>
+            <div class="field">
+              <span>Fotografija</span>
+              <button class="btn-photo" type="button" (click)="photoInput.click()">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  @for (node of uploadIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'polyline') {
+                      <polyline [attr.points]="$any(node[1]).points"></polyline>
+                    } @else if (node[0] === 'line') {
+                      <line
+                        [attr.x1]="$any(node[1]).x1"
+                        [attr.x2]="$any(node[1]).x2"
+                        [attr.y1]="$any(node[1]).y1"
+                        [attr.y2]="$any(node[1]).y2"
+                      ></line>
+                    } @else if (node[0] === 'rect') {
+                      <rect
+                        [attr.x]="$any(node[1]).x"
+                        [attr.y]="$any(node[1]).y"
+                        [attr.width]="$any(node[1]).width"
+                        [attr.height]="$any(node[1]).height"
+                        [attr.rx]="$any(node[1]).rx"
+                        [attr.ry]="$any(node[1]).ry"
+                      ></rect>
+                    }
+                  }
+                </svg>
+                {{ photoButtonLabel() }}
+              </button>
+              <p class="photo-hint">JPG, PNG ili WebP, do 5 MB</p>
+              <input
+                #photoInput
+                class="sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoSelected($event)"
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Biografija</h2>
+          <label class="field">
+            <textarea name="biography" rows="6" [(ngModel)]="biography" aria-label="Biografija"></textarea>
+          </label>
+        </section>
+
+        <section class="block">
+          <h2>Obrazovanje</h2>
+          <label class="field">
+            <textarea name="education" rows="4" [(ngModel)]="education" aria-label="Obrazovanje"></textarea>
+          </label>
+        </section>
+
+        <section class="block">
+          <h2>Iskustvo</h2>
+          <label class="field">
+            <textarea name="professionalExperience" rows="4" [(ngModel)]="professionalExperience" aria-label="Iskustvo"></textarea>
+          </label>
+        </section>
+      }
+
+      @if (activeTab === 'places') {
+        <div class="places">
+        <section class="block">
+          <h2>Lokacije</h2>
+          <p class="empty-note">Lekar može raditi na više lokacija.</p>
+          <div class="chips">
+            @for (location of locations; track location.id) {
+              <label class="chip" [class.is-on]="isLocationSelected(location.id)">
+                <input
+                  type="checkbox"
+                  [checked]="isLocationSelected(location.id)"
+                  (change)="toggleLocation(location.id)"
+                >
+                @if (isLocationSelected(location.id)) {
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    @for (node of checkIcon; track $index) {
+                      @if (node[0] === 'path') {
+                        <path [attr.d]="$any(node[1]).d"></path>
+                      }
+                    }
+                  </svg>
+                } @else {
+                  <span class="chip-gap" aria-hidden="true"></span>
+                }
+                <span>{{ location.name }}</span>
+              </label>
+            }
+          </div>
+        </section>
+
+        <section class="block">
+          <h2>Usluge</h2>
+          @if (!specialtyId) {
+            <p class="empty-note">Izaberite specijalizaciju lekara da biste mogli da odaberete usluge.</p>
+          } @else if (specialtyServices.length === 0) {
+            <p class="empty-note">Prikazane su samo usluge izabrane specijalizacije.</p>
+            <p class="empty-note">Nema usluga za izabranu specijalizaciju.</p>
+          } @else {
+            <p class="empty-note">Prikazane su samo usluge izabrane specijalizacije.</p>
+            <div class="chips">
+              @for (service of specialtyServices; track service.id) {
+                <label class="chip" [class.is-on]="isServiceSelected(service.id)">
+                  <input
+                    type="checkbox"
+                    [checked]="isServiceSelected(service.id)"
+                    (change)="toggleService(service.id)"
+                  >
+                  @if (isServiceSelected(service.id)) {
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      @for (node of checkIcon; track $index) {
+                        @if (node[0] === 'path') {
+                          <path [attr.d]="$any(node[1]).d"></path>
+                        }
+                      }
+                    </svg>
+                  } @else {
+                    <span class="chip-gap" aria-hidden="true"></span>
+                  }
+                  <span>{{ service.name }}</span>
+                </label>
+              }
+            </div>
+          }
+        </section>
+        </div>
+      }
+
+      @if (activeTab === 'schedule') {
+        <section class="block">
+          <h2>Raspored rada</h2>
+          <p class="empty-note">Definišite radno vreme i lokaciju lekara za svaki radni dan.</p>
+          @if (selectedLocations().length === 0) {
+            <p class="empty-note">Najpre izaberite najmanje jednu lokaciju na kojoj lekar radi.</p>
+          }
+          <div class="schedule">
+            <div class="schedule-row head" aria-hidden="true">
+              <span>Dan</span>
+              <span>Status</span>
+              <span>Od</span>
+              <span>Do</span>
+              <span>Lokacija</span>
+            </div>
+            @for (day of days; track day.dayOfWeek) {
+              <div class="schedule-row" [class.is-off]="!day.works">
+                <span class="day-name">{{ day.label }}</span>
+                <label class="status">
+                  <span class="switch">
+                    <input
+                      type="checkbox"
+                      [(ngModel)]="day.works"
+                      [name]="'works-' + day.dayOfWeek"
+                      (ngModelChange)="onWorksToggle(day)"
+                      [attr.aria-label]="day.label"
+                    >
+                    <span class="track" aria-hidden="true"></span>
+                  </span>
+                  <span class="status-text">{{ day.works ? 'Radi' : 'Ne radi' }}</span>
+                </label>
+                @if (day.works) {
+                  <div class="time">
+                    <select
+                      [ngModel]="hourOf(day.startTime)"
+                      (ngModelChange)="setHour(day, 'startTime', $event)"
+                      [name]="'sh-' + day.dayOfWeek"
+                      aria-label="Početak, sati"
+                    >
+                      @for (hour of hourOptions; track hour) {
+                        <option [ngValue]="hour">{{ hour }}</option>
+                      }
+                    </select>
+                    <span>:</span>
+                    <select
+                      [ngModel]="minuteOf(day.startTime)"
+                      (ngModelChange)="setMinute(day, 'startTime', $event)"
+                      [name]="'sm-' + day.dayOfWeek"
+                      aria-label="Početak, minuti"
+                    >
+                      @for (minute of minuteChoices(day.startTime); track minute) {
+                        <option [ngValue]="minute">{{ minute }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="time">
+                    <select
+                      [ngModel]="hourOf(day.endTime)"
+                      (ngModelChange)="setHour(day, 'endTime', $event)"
+                      [name]="'eh-' + day.dayOfWeek"
+                      aria-label="Kraj, sati"
+                    >
+                      @for (hour of hourOptions; track hour) {
+                        <option [ngValue]="hour">{{ hour }}</option>
+                      }
+                    </select>
+                    <span>:</span>
+                    <select
+                      [ngModel]="minuteOf(day.endTime)"
+                      (ngModelChange)="setMinute(day, 'endTime', $event)"
+                      [name]="'em-' + day.dayOfWeek"
+                      aria-label="Kraj, minuti"
+                    >
+                      @for (minute of minuteChoices(day.endTime); track minute) {
+                        <option [ngValue]="minute">{{ minute }}</option>
+                      }
+                    </select>
+                  </div>
+                  @if (selectedLocations().length === 0) {
+                    <span class="loc-empty">Izaberite lokaciju na kartici Usluge i lokacije.</span>
+                  } @else {
+                    <select class="loc" [(ngModel)]="day.locationId" [name]="'loc-' + day.dayOfWeek">
+                      <option [ngValue]="null">Lokacija</option>
+                      @for (location of selectedLocations(); track location.id) {
+                        <option [ngValue]="location.id">{{ location.name }}</option>
+                      }
+                    </select>
+                  }
+                } @else {
+                  <span class="idle"></span>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+    </form>
+  }
+</section>
+
+@if (confirmKind) {
+  <div class="overlay" (click)="cancelConfirm()">
+    <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <p class="eyebrow">Lekari</p>
+      <h2>{{ confirmTitle() }}</h2>
+      <p class="lead">{{ confirmMessage() }}</p>
+      <div class="dialog-actions">
+        <button class="btn-secondary" type="button" (click)="cancelConfirm()">Odustani</button>
+        <button class="btn-confirm" type="button" (click)="confirmAction()">Nastavi</button>
+      </div>
+    </div>
+  </div>
+}

@@ -120,7 +120,7 @@
                 <div class="doctor-photo">
                   @if (doctor.imageUrl) {
                     <img
-                      [src]="doctor.imageUrl"
+                      [src]="mediaUrl(doctor.imageUrl)"
                       [alt]="'Dr med. ' + doctor.firstName + ' ' + doctor.lastName"
                     >
                   } @else {

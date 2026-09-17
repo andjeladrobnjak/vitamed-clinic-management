@@ -8,6 +8,7 @@ import { specialistTitle as specialtyRoleTitle } from '../../utils/specialty-lab
 import { formatSerbianDate } from '../../utils/format-serbian-date';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
 import { DoctorRatingComponent } from '../doctor-rating/doctor-rating.component';
+import { resolveMediaUrl } from '../../utils/media-url';
 
 @Component({
   selector: 'app-doctor-detail',
@@ -22,6 +23,7 @@ export class DoctorDetailComponent implements OnDestroy {
   readonly clockIcon = LucideClock.icon.node;
   readonly graduationIcon = LucideGraduationCap.icon.node;
   readonly briefcaseIcon = LucideBriefcase.icon.node;
+  readonly mediaUrl = resolveMediaUrl;
 
   doctor: DoctorDetail | null = null;
   writtenReviews: PublicDoctorReview[] = [];

@@ -20,6 +20,9 @@ import { DoctorLoginComponent } from './components/doctor-login/doctor-login.com
 import { AdminLoginComponent } from './components/admin-login/admin-login.component';
 import { AdminShellComponent } from './components/admin-shell/admin-shell.component';
 import { AdminPortalComponent } from './components/admin-portal/admin-portal.component';
+import { AdminDoctorsComponent } from './components/admin-doctors/admin-doctors.component';
+import { AdminDoctorDetailComponent } from './components/admin-doctor-detail/admin-doctor-detail.component';
+import { AdminDoctorNewComponent } from './components/admin-doctor-new/admin-doctor-new.component';
 import { AdminSectionComponent } from './components/admin-section/admin-section.component';
 import { AdminStatisticsComponent } from './components/admin-statistics/admin-statistics.component';
 import { DoctorPortalComponent } from './components/doctor-portal/doctor-portal.component';
@@ -100,11 +103,11 @@ export const routes: Routes = [
       { path: 'portal', component: AdminPortalComponent },
       {
         path: 'doctors',
-        component: AdminSectionComponent,
-        data: {
-          heading: 'Lekari',
-          lead: 'Upravljanje lekarima i njihovim nalogima biće dostupno u narednoj fazi.'
-        }
+        children: [
+          { path: '', component: AdminDoctorsComponent },
+          { path: 'new', component: AdminDoctorNewComponent },
+          { path: ':id', component: AdminDoctorDetailComponent }
+        ]
       },
       {
         path: 'services',

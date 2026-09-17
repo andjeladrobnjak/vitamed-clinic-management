@@ -164,7 +164,7 @@
                       <button class="option-card doctor-option is-selected" type="button">
                         <span class="doctor-photo">
                           @if (selectedDoctor.imageUrl) {
-                            <img [src]="selectedDoctor.imageUrl" [alt]="doctorDisplayName(selectedDoctor)">
+                            <img [src]="mediaUrl(selectedDoctor.imageUrl)" [alt]="doctorDisplayName(selectedDoctor)">
                           } @else {
                             <span class="doctor-fallback">{{ selectedDoctor.firstName.charAt(0) }}{{ selectedDoctor.lastName.charAt(0) }}</span>
                           }
@@ -194,7 +194,7 @@
                       >
                         <span class="doctor-photo">
                           @if (doctor.imageUrl) {
-                            <img [src]="doctor.imageUrl" [alt]="doctorDisplayName(doctor)">
+                            <img [src]="mediaUrl(doctor.imageUrl)" [alt]="doctorDisplayName(doctor)">
                           } @else {
                             <span class="doctor-fallback">{{ doctor.firstName.charAt(0) }}{{ doctor.lastName.charAt(0) }}</span>
                           }

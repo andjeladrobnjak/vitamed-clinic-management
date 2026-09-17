@@ -1,5 +1,6 @@
-import express from 'express';
 import cors from 'cors';
+import express from 'express';
+import path from 'path';
 import pool from './db/connection';
 import patientRouter from './routers/patient.router';
 import doctorRouter from './routers/doctor.router';
@@ -18,6 +19,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.get('/', (req, res) => {
     res.json({ message: 'VitaMed backend radi!' });

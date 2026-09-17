@@ -7,6 +7,7 @@ import { DoctorService, SpecialtyDetail } from '../../services/doctor.service';
 import { doctorSpecialtyLabel } from '../../utils/specialty-label';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
 import { DoctorRatingComponent } from '../doctor-rating/doctor-rating.component';
+import { resolveMediaUrl } from '../../utils/media-url';
 
 @Component({
   selector: 'app-specialty-detail',
@@ -17,6 +18,7 @@ import { DoctorRatingComponent } from '../doctor-rating/doctor-rating.component'
 })
 export class SpecialtyDetailComponent implements OnInit, OnDestroy {
   readonly userIcon = LucideUser.icon.node;
+  readonly mediaUrl = resolveMediaUrl;
 
   detail: SpecialtyDetail | null = null;
   isLoading = true;

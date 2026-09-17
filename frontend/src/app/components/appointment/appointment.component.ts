@@ -13,6 +13,7 @@ import { AppointmentAvailabilityApi, CreatedAppointmentResponse } from '../../se
 import { LucideSearch } from '@lucide/angular';
 import { AppointmentAuthChoiceModalComponent } from './appointment-auth-choice-modal.component';
 import { SiteHeaderComponent } from '../site-header/site-header.component';
+import { resolveMediaUrl } from '../../utils/media-url';
 
 const SPECIALTY_ORDER = [
   'Kardiologija',
@@ -57,6 +58,7 @@ export interface BookingDoctor {
 export class AppointmentComponent implements OnDestroy {
   readonly steps = BOOKING_STEPS;
   readonly searchIcon = LucideSearch.icon.node;
+  readonly mediaUrl = resolveMediaUrl;
 
   services: ClinicService[] = [];
   locations: ClinicLocation[] = [];
