@@ -117,7 +117,6 @@
             <th>Usluga</th>
             <th>Lokacija</th>
             <th>Status</th>
-            <th>Akcija</th>
           </tr>
         </thead>
         <tbody>
@@ -137,11 +136,6 @@
                 <span class="status-badge {{ statusClass(appointment.status) }}">
                   {{ statusLabel(appointment.status) }}
                 </span>
-              </td>
-              <td>
-                @if (appointment.cancellable) {
-                  <button class="btn-cancel" type="button" (click)="openCancel(appointment, $event)">Otkaži</button>
-                }
               </td>
             </tr>
           }

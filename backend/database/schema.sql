@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS doctor_accounts (
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,
@@ -249,6 +250,44 @@ CREATE TABLE IF NOT EXISTS doctor_absences (
 
 
 -- =====================================================
+-- DOCTOR SCHEDULE EXCEPTIONS
+-- Date-specific replacement of the regular weekly shift.
+-- At most one exception (one shift) per doctor per date.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS doctor_schedule_exceptions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id BIGINT NOT NULL,
+    exception_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    location_id BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_doctor_schedule_exceptions_doctor
+        FOREIGN KEY (doctor_id)
+        REFERENCES doctors(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_doctor_schedule_exceptions_location
+        FOREIGN KEY (location_id)
+        REFERENCES locations(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT uq_doctor_schedule_exception
+        UNIQUE (doctor_id, exception_date),
+
+    CONSTRAINT chk_doctor_schedule_exception_time
+        CHECK (start_time < end_time),
+
+    INDEX idx_doctor_schedule_exceptions_date (exception_date),
+    INDEX idx_doctor_schedule_exceptions_doctor_date (doctor_id, exception_date)
+);
+
+
+-- =====================================================
 -- APPOINTMENTS
 -- Runtime bookings (authenticated patients or guests).
 -- Not seed/configuration data. Starts empty.
@@ -348,26 +387,4 @@ CREATE TABLE IF NOT EXISTS appointment_reports (
         FOREIGN KEY (appointment_id)
         REFERENCES appointments(id)
         ON DELETE RESTRICT
-);
-
--- =====================================================
--- DOCTOR_ACCOUNTS
--- Login credentials for the doctor portal.
--- One optional account per doctor. Not public catalog data.
--- =====================================================
-
-CREATE TABLE IF NOT EXISTS doctor_accounts (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    doctor_id BIGINT NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
-
-    CONSTRAINT uq_doctor_accounts_doctor_id UNIQUE (doctor_id),
-    CONSTRAINT uq_doctor_accounts_email UNIQUE (email),
-    CONSTRAINT fk_doctor_accounts_doctor
-        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE RESTRICT
 );

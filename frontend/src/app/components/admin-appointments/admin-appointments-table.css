@@ -48,17 +48,6 @@ tbody tr:hover { background: #f7f4ef; }
 .status-badge.is-cancelled { background: rgba(122, 63, 70, 0.12); color: #7a3f46; }
 .status-badge.is-no-show { background: rgba(92, 101, 100, 0.12); color: #5c6564; }
 
-.btn-cancel {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--burgundy);
-  font: inherit;
-  font-weight: 600;
-  font-size: 0.82rem;
-  cursor: pointer;
-}
-
 .table-foot {
   display: flex;
   align-items: center;

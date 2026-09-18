@@ -108,7 +108,7 @@
                       </span>
                     </div>
                   }
-                } @else if (cell.shift) {
+                } @else if (cell.effective) {
                   <button
                     type="button"
                     class="day-cell is-working"
@@ -118,8 +118,11 @@
                     (click)="selectDay(cell)"
                   >
                     <span class="day-number">{{ cell.dayNumber }}</span>
-                    <span class="day-location">{{ cell.shift.location.name }}</span>
-                    <span class="day-hours">{{ cell.shift.startTime }}–{{ cell.shift.endTime }}</span>
+                    <span class="day-location">{{ cell.effective.locationName }}</span>
+                    <span class="day-hours">{{ cell.effective.startTime }} - {{ cell.effective.endTime }}</span>
+                    @if (cell.effective.isException) {
+                      <span class="exception-label">Izmenjena smena</span>
+                    }
                     <span class="day-count">{{ appointmentCountLabel(cell.appointmentCount) }}</span>
                   </button>
                 } @else {
@@ -137,8 +140,16 @@
                 <h2>{{ selectedHeading }}</h2>
                 <button type="button" class="close-panel" (click)="closePanel()">Zatvori</button>
               </div>
-              <p class="panel-place">{{ selectedCell.shift.location.name }}</p>
-              <p class="panel-hours">{{ selectedCell.shift.startTime }}–{{ selectedCell.shift.endTime }}</p>
+              @if (selectedCell.effective) {
+                <p class="panel-place">{{ selectedCell.effective.locationName }}</p>
+                <p class="panel-hours">{{ selectedCell.effective.startTime }} - {{ selectedCell.effective.endTime }}</p>
+                @if (selectedCell.effective.isException) {
+                  <p class="panel-exception">Izmenjena smena</p>
+                }
+              } @else if (selectedCell.shift) {
+                <p class="panel-place">{{ selectedCell.shift.location.name }}</p>
+                <p class="panel-hours">{{ selectedCell.shift.startTime }} - {{ selectedCell.shift.endTime }}</p>
+              }
               @if (selectedCell.absence) {
                 <p class="panel-absence">{{ absenceLabel(selectedCell.absence.reason) }}</p>
               }

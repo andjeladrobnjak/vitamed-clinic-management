@@ -1,0 +1,230 @@
+.dialog.is-small { width: min(28rem, 100%); }
+
+.portal-access {
+  margin: 0 0 1.15rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.portal-eyebrow {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.portal-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.85rem 1.2rem;
+}
+
+.portal-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.portal-status svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.portal-status.is-pending { color: #6d5a3c; }
+.portal-status.is-active { color: var(--petrol); }
+
+.portal-email {
+  margin: 0.18rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.portal-help,
+.portal-error {
+  margin: 0.22rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.portal-error { color: #8d555b; }
+
+.portal-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.portal-create svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.portal-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--petrol);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.portal-reset svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-context {
+  margin: 0.2rem 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.account-helper {
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.password-wrap {
+  position: relative;
+  display: block;
+}
+
+.password-wrap input { padding-right: 2.4rem; }
+
+.icon-btn {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: inline-flex;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.credential-password .icon-btn {
+  position: static;
+  transform: none;
+  width: auto;
+  height: auto;
+  align-items: center;
+  gap: 0.28rem;
+  color: var(--petrol);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.copy-label {
+  line-height: 1;
+}
+
+.icon-btn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.text-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-top: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--petrol);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.text-generate svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.credential-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.85rem 0 0;
+}
+
+.credential-list div { display: grid; gap: 0.18rem; }
+.credential-list dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.credential-list dd { margin: 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+
+.credential-password {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.copy-feedback {
+  margin: 0.4rem 0 0;
+  color: var(--petrol);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .portal-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

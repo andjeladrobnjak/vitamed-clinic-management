@@ -48,6 +48,20 @@ export interface AdminDoctorDetail {
   schedules: AdminDoctorSchedule[];
 }
 
+export type AdminDoctorAccountStatus = 'missing' | 'pending' | 'active';
+
+export interface AdminDoctorAccount {
+  status: AdminDoctorAccountStatus;
+  email: string | null;
+  mustChangePassword: boolean;
+}
+
+export interface AdminDoctorAccountProvisioned {
+  message: string;
+  account: AdminDoctorAccount;
+  temporaryPassword: string;
+}
+
 export interface AdminDoctorUpdatePayload {
   firstName: string;
   lastName: string;
@@ -124,6 +138,7 @@ export interface AdminWeeklyScheduleEntry {
   startTime: string;
   endTime: string;
   absenceReason: AdminWeeklyAbsenceReason | null;
+  isException: boolean;
 }
 
 export interface AdminWeeklyScheduleDay {
@@ -137,6 +152,38 @@ export interface AdminWeeklySchedule {
   weekStart: string;
   weekEnd: string;
   days: AdminWeeklyScheduleDay[];
+}
+
+export interface AdminScheduleShift {
+  startTime: string;
+  endTime: string;
+  location: { id: number; name: string };
+}
+
+export interface AdminScheduleDayDetail {
+  doctor: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    specialtyName: string;
+  };
+  date: string;
+  weekday: number;
+  absent: boolean;
+  absenceReason: AdminWeeklyAbsenceReason | null;
+  regular: AdminScheduleShift | null;
+  exception: AdminScheduleShift | null;
+  effective: (AdminScheduleShift & { source: 'regular' | 'exception' }) | null;
+  locations: { id: number; name: string }[];
+  canEdit: boolean;
+  canRestore: boolean;
+}
+
+export interface AdminEligibleExceptionDoctor {
+  id: number;
+  firstName: string;
+  lastName: string;
+  specialtyName: string;
 }
 
 export type AdminStatisticsPeriod = 'thisMonth' | 'thisYear' | 'last12months';
@@ -214,6 +261,32 @@ export class AdminPortalService {
     return this.http.get<AdminDoctorDetail>(`${this.portalUrl}/doctors/${id}`);
   }
 
+  getDoctorAccount(id: number): Observable<AdminDoctorAccount> {
+    return this.http.get<AdminDoctorAccount>(`${this.portalUrl}/doctors/${id}/account`);
+  }
+
+  suggestDoctorAccountEmail(id: number): Observable<{ email: string }> {
+    return this.http.get<{ email: string }>(`${this.portalUrl}/doctors/${id}/account/email-suggestion`);
+  }
+
+  generateDoctorTemporaryPassword(id: number): Observable<{ password: string }> {
+    return this.http.post<{ password: string }>(`${this.portalUrl}/doctors/${id}/account/temporary-password`, {});
+  }
+
+  createDoctorAccount(
+    id: number,
+    payload: { email: string; password: string }
+  ): Observable<AdminDoctorAccountProvisioned> {
+    return this.http.post<AdminDoctorAccountProvisioned>(`${this.portalUrl}/doctors/${id}/account`, payload);
+  }
+
+  resetDoctorPassword(id: number): Observable<AdminDoctorAccountProvisioned> {
+    return this.http.post<AdminDoctorAccountProvisioned>(
+      `${this.portalUrl}/doctors/${id}/account/reset-password`,
+      {}
+    );
+  }
+
   updateDoctor(id: number, payload: AdminDoctorUpdatePayload): Observable<AdminDoctorDetail> {
     return this.http.put<AdminDoctorDetail>(`${this.portalUrl}/doctors/${id}`, payload);
   }
@@ -258,6 +331,39 @@ export class AdminPortalService {
         weekStart
       }
     });
+  }
+
+  getScheduleDay(doctorId: number, date: string): Observable<AdminScheduleDayDetail> {
+    return this.http.get<AdminScheduleDayDetail>(`${this.portalUrl}/doctors/${doctorId}/schedule-day`, {
+      params: { date }
+    });
+  }
+
+  getEligibleExceptionDoctors(
+    locationId: number,
+    date: string
+  ): Observable<{ doctors: AdminEligibleExceptionDoctor[] }> {
+    return this.http.get<{ doctors: AdminEligibleExceptionDoctor[] }>(
+      `${this.portalUrl}/schedule/eligible-doctors`,
+      { params: { locationId: String(locationId), date } }
+    );
+  }
+
+  saveScheduleException(
+    doctorId: number,
+    date: string,
+    payload: { startTime: string; endTime: string; locationId: number }
+  ): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(
+      `${this.portalUrl}/doctors/${doctorId}/schedule-exceptions/${date}`,
+      payload
+    );
+  }
+
+  deleteScheduleException(doctorId: number, date: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.portalUrl}/doctors/${doctorId}/schedule-exceptions/${date}`
+    );
   }
 
   getStatistics(period: AdminStatisticsPeriod): Observable<AdminStatistics> {

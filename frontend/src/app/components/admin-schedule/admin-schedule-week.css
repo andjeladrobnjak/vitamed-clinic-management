@@ -68,12 +68,53 @@
 
 .doctor-card {
   display: block;
+  width: 100%;
   padding: 0.55rem 0.58rem 0.5rem;
   border: 1px solid var(--stone);
   border-radius: 4px;
   background: #fff;
   color: inherit;
-  text-decoration: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.exception-label {
+  margin: 0.16rem 0 0;
+  color: #7a3f46;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.add-exception {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-top: 0.55rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #7a8382;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-exception svg {
+  width: 0.78rem;
+  height: 0.78rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.add-exception:hover,
+.add-exception:focus-visible {
+  color: var(--petrol);
 }
 
 .doctor-card:hover,

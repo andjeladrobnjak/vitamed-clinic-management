@@ -147,6 +147,13 @@ export interface DoctorPortalScheduleDay {
     appointments: DoctorPortalScheduleAppointment[];
 }
 
+export interface DoctorPortalScheduleException {
+    date: string;
+    startTime: string;
+    endTime: string;
+    location: { name: string };
+}
+
 export interface DoctorPortalMonthSchedule {
     year: number;
     month: number;
@@ -155,6 +162,7 @@ export interface DoctorPortalMonthSchedule {
     shifts: DoctorPortalScheduleShift[];
     days: DoctorPortalScheduleDay[];
     absences: DoctorPortalScheduleAbsence[];
+    exceptions: DoctorPortalScheduleException[];
 }
 
 export interface DoctorPortalScheduleAbsence {
@@ -910,6 +918,25 @@ export class DoctorPortalService {
             [doctorId, to, from]
         );
 
+        const [exceptionRows] = await pool.query<(RowDataPacket & {
+            exceptionDate: string;
+            startTime: string;
+            endTime: string;
+            locationName: string;
+        })[]>(
+            `SELECT
+                DATE_FORMAT(e.exception_date, '%Y-%m-%d') AS exceptionDate,
+                TIME_FORMAT(e.start_time, '%H:%i') AS startTime,
+                TIME_FORMAT(e.end_time, '%H:%i') AS endTime,
+                l.name AS locationName
+             FROM doctor_schedule_exceptions e
+             INNER JOIN locations l ON l.id = e.location_id
+             WHERE e.doctor_id = ?
+               AND e.exception_date BETWEEN ? AND ?
+             ORDER BY e.exception_date ASC, e.id ASC`,
+            [doctorId, from, to]
+        );
+
         return {
             year,
             month,
@@ -927,6 +954,12 @@ export class DoctorPortalService {
                 startDate: String(row.startDate),
                 endDate: String(row.endDate),
                 reason: this.mapAbsenceReason(String(row.reason))
+            })),
+            exceptions: exceptionRows.map((row) => ({
+                date: String(row.exceptionDate),
+                startTime: String(row.startTime),
+                endTime: String(row.endTime),
+                location: { name: String(row.locationName) }
             }))
         };
     }

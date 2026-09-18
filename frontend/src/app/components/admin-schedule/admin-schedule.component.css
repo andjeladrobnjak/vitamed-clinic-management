@@ -135,6 +135,13 @@ h1 {
   cursor: pointer;
 }
 
+.page-success {
+  margin: 0 0 0.85rem;
+  color: var(--petrol);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 @media (max-width: 760px) {
   .location-filter { flex: 1 1 100%; }
   .week-nav { width: 100%; justify-content: space-between; }

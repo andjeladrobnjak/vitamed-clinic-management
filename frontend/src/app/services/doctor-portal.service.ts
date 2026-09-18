@@ -152,6 +152,13 @@ export interface DoctorPortalScheduleDay {
   appointments: DoctorPortalScheduleAppointment[];
 }
 
+export interface DoctorPortalScheduleException {
+  date: string;
+  startTime: string;
+  endTime: string;
+  location: { name: string };
+}
+
 export interface DoctorPortalMonthSchedule {
   year: number;
   month: number;
@@ -160,6 +167,7 @@ export interface DoctorPortalMonthSchedule {
   shifts: DoctorPortalScheduleShift[];
   days: DoctorPortalScheduleDay[];
   absences: DoctorPortalScheduleAbsence[];
+  exceptions: DoctorPortalScheduleException[];
 }
 
 export interface DoctorPortalScheduleAbsence {

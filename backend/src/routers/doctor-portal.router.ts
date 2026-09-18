@@ -1,53 +1,54 @@
 import { Router } from 'express';
 import { DoctorPortalController } from '../controllers/doctor-portal.controller';
-import { authenticateDoctor } from '../middleware/auth.middleware';
+import { authenticateDoctor, requireDoctorPortalAccess } from '../middleware/auth.middleware';
 
 const doctorPortalRouter = Router();
 const doctorPortalController = new DoctorPortalController();
+const doctorPortalAuth = [authenticateDoctor, requireDoctorPortalAccess];
 
-doctorPortalRouter.get('/dashboard', authenticateDoctor, (req, res) =>
+doctorPortalRouter.get('/dashboard', ...doctorPortalAuth, (req, res) =>
     doctorPortalController.dashboard(req, res)
 );
 
 doctorPortalRouter.post(
     '/appointments/:appointmentId/complete',
-    authenticateDoctor,
+    ...doctorPortalAuth,
     (req, res) => doctorPortalController.completeAppointment(req, res)
 );
 
-doctorPortalRouter.get('/patients', authenticateDoctor, (req, res) =>
+doctorPortalRouter.get('/patients', ...doctorPortalAuth, (req, res) =>
     doctorPortalController.listPatients(req, res)
 );
 
-doctorPortalRouter.get('/patients/:patientId', authenticateDoctor, (req, res) =>
+doctorPortalRouter.get('/patients/:patientId', ...doctorPortalAuth, (req, res) =>
     doctorPortalController.getPatient(req, res)
 );
 
 doctorPortalRouter.get(
     '/patients/:patientId/appointments/:appointmentId/report',
-    authenticateDoctor,
+    ...doctorPortalAuth,
     (req, res) => doctorPortalController.getAppointmentReport(req, res)
 );
 
 doctorPortalRouter.put(
     '/patients/:patientId/appointments/:appointmentId/report',
-    authenticateDoctor,
+    ...doctorPortalAuth,
     (req, res) => doctorPortalController.updateAppointmentReport(req, res)
 );
 
-doctorPortalRouter.get('/schedule', authenticateDoctor, (req, res) =>
+doctorPortalRouter.get('/schedule', ...doctorPortalAuth, (req, res) =>
     doctorPortalController.getMonthSchedule(req, res)
 );
 
 doctorPortalRouter.patch(
     '/appointments/:appointmentId/no-show',
-    authenticateDoctor,
+    ...doctorPortalAuth,
     (req, res) => doctorPortalController.markAppointmentNoShow(req, res)
 );
 
 doctorPortalRouter.patch(
     '/appointments/:appointmentId/cancel',
-    authenticateDoctor,
+    ...doctorPortalAuth,
     (req, res) => doctorPortalController.cancelAppointment(req, res)
 );
 

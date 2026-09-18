@@ -94,6 +94,23 @@ export class AdminDoctorAbsenceService {
             }
 
             await connection.query('SELECT id FROM doctor_schedules WHERE doctor_id = ? FOR UPDATE', [doctorId]);
+            const [exceptionRows] = await connection.query<DateRow[]>(
+                `SELECT DATE_FORMAT(exception_date, '%Y-%m-%d') AS appointmentDate
+                 FROM doctor_schedule_exceptions
+                 WHERE doctor_id = ?
+                   AND exception_date BETWEEN ? AND ?
+                 ORDER BY exception_date ASC
+                 FOR UPDATE`,
+                [doctorId, startDate, endDate]
+            );
+            if (exceptionRows.length > 0) {
+                const dates = exceptionRows.map((row) => this.formatDate(String(row.appointmentDate)).replace(/\.$/, ''));
+                throw new AdminPortalError(
+                    409,
+                    `Nije moguće evidentirati odsustvo jer za deo izabranog perioda postoje posebne smene. Prvo uklonite posebne smene. (${dates.join(', ')})`
+                );
+            }
+
             const [overlapRows] = await connection.query<IdRow[]>(
                 `SELECT id
                  FROM doctor_absences

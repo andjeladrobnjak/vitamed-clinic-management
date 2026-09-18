@@ -3,8 +3,10 @@ import { MailService } from '../mail/mail.service';
 import { AdminAppointmentService } from '../portal/admin-appointment.service';
 import { AdminClinicServiceService } from '../portal/admin-clinic-service.service';
 import { AdminDoctorAbsenceService } from '../portal/admin-doctor-absence.service';
+import { AdminDoctorAccountService } from '../portal/admin-doctor-account.service';
 import { AdminDoctorService } from '../portal/admin-doctor.service';
 import { AdminPortalError, AdminPortalService } from '../portal/admin-portal.service';
+import { AdminScheduleExceptionService } from '../portal/admin-schedule-exception.service';
 import { AdminWeeklyScheduleService } from '../portal/admin-weekly-schedule.service';
 import { AdminStatisticsService } from '../portal/admin-statistics.service';
 
@@ -15,7 +17,9 @@ export class AdminPortalController {
         private readonly clinicService = new AdminClinicServiceService(),
         private readonly appointmentService = new AdminAppointmentService(),
         private readonly absenceService = new AdminDoctorAbsenceService(),
+        private readonly doctorAccountService = new AdminDoctorAccountService(),
         private readonly weeklyScheduleService = new AdminWeeklyScheduleService(),
+        private readonly scheduleExceptionService = new AdminScheduleExceptionService(),
         private readonly statisticsService = new AdminStatisticsService(),
         private readonly mailService = new MailService()
     ) {}
@@ -97,6 +101,52 @@ export class AdminPortalController {
         }
     }
 
+    async getDoctorAccount(req: Request, res: Response): Promise<void> {
+        try {
+            const account = await this.doctorAccountService.getStatus(req.params.id);
+            res.status(200).json(account);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati nalog lekara.');
+        }
+    }
+
+    async suggestDoctorAccountEmail(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await this.doctorAccountService.suggestEmail(req.params.id);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Nalog nije mogao da bude kreiran.');
+        }
+    }
+
+    async generateDoctorTemporaryPassword(req: Request, res: Response): Promise<void> {
+        try {
+            await this.doctorAccountService.getStatus(req.params.id);
+            const result = this.doctorAccountService.generatePassword();
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Privremena lozinka nije mogla da bude generisana. Pokušajte ponovo.');
+        }
+    }
+
+    async createDoctorAccount(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await this.doctorAccountService.create(req.params.id, req.body ?? {});
+            res.status(201).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Nalog nije mogao da bude kreiran.');
+        }
+    }
+
+    async resetDoctorPassword(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await this.doctorAccountService.resetPassword(req.params.id);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Lozinka nije mogla da bude resetovana.');
+        }
+    }
+
     async createService(req: Request, res: Response): Promise<void> {
         try {
             const service = await this.clinicService.create(req.body);
@@ -130,6 +180,52 @@ export class AdminPortalController {
             res.status(200).json(schedule);
         } catch (error) {
             this.handleError(res, error, 'Trenutno nije moguće učitati raspored.');
+        }
+    }
+
+    async getScheduleDay(req: Request, res: Response): Promise<void> {
+        try {
+            const detail = await this.scheduleExceptionService.getDay(req.params.id, req.query.date);
+            res.status(200).json(detail);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati raspored za izabrani dan.');
+        }
+    }
+
+    async listEligibleExceptionDoctors(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await this.scheduleExceptionService.listEligibleDoctors(
+                req.query.locationId,
+                req.query.date
+            );
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati lekare.');
+        }
+    }
+
+    async upsertScheduleException(req: Request, res: Response): Promise<void> {
+        try {
+            const exception = await this.scheduleExceptionService.upsert(
+                req.params.id,
+                req.params.date,
+                req.body ?? {}
+            );
+            res.status(200).json({
+                message: 'Posebna smena je uspešno sačuvana.',
+                exception
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće sačuvati posebnu smenu.');
+        }
+    }
+
+    async deleteScheduleException(req: Request, res: Response): Promise<void> {
+        try {
+            await this.scheduleExceptionService.remove(req.params.id, req.params.date);
+            res.status(200).json({ message: 'Redovni raspored je vraćen za izabrani datum.' });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće vratiti redovni raspored.');
         }
     }
 

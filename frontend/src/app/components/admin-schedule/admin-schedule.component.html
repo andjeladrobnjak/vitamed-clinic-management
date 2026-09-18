@@ -5,6 +5,10 @@
     <p class="lead">Pregledajte organizaciju rada lekara po lokacijama.</p>
   </header>
 
+  @if (successMessage) {
+    <p class="page-success">{{ successMessage }}</p>
+  }
+
   @if (isLoadingLocations) {
     <p class="state">Učitavanje rasporeda...</p>
   } @else if (locationsError) {
@@ -58,11 +62,11 @@
               } @else {
                 <div class="day-list">
                   @for (entry of day.entries; track entry.doctorId) {
-                    <a
+                    <button
+                      type="button"
                       class="doctor-card"
                       [class.is-absent]="!!entry.absenceReason"
-                      [routerLink]="['/admin/doctors', entry.doctorId]"
-                      [queryParams]="{ tab: 'schedule' }"
+                      (click)="openDay(entry, day.date)"
                     >
                       <p class="doctor-name">{{ doctorLabel(entry) }}</p>
                       <p class="doctor-specialty">{{ entry.specialtyName }}</p>
@@ -96,10 +100,33 @@
                         </p>
                       } @else {
                         <p class="doctor-hours">{{ entry.startTime }} - {{ entry.endTime }}</p>
+                        @if (entry.isException) {
+                          <p class="exception-label">Izmenjena smena</p>
+                        }
                       }
-                    </a>
+                    </button>
                   }
                 </div>
+              }
+
+              @if (canAddException(day.date)) {
+                <button type="button" class="add-exception" (click)="openCreate(day.date)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    @for (node of plusIcon; track $index) {
+                      @if (node[0] === 'path') {
+                        <path [attr.d]="$any(node[1]).d"></path>
+                      } @else if (node[0] === 'line') {
+                        <line
+                          [attr.x1]="$any(node[1]).x1"
+                          [attr.y1]="$any(node[1]).y1"
+                          [attr.x2]="$any(node[1]).x2"
+                          [attr.y2]="$any(node[1]).y2"
+                        ></line>
+                      }
+                    }
+                  </svg>
+                  Posebna smena
+                </button>
               }
             </section>
           }
@@ -108,3 +135,270 @@
     }
   }
 </section>
+
+@if (detail) {
+  <div class="overlay" (click)="closeDetail()">
+    <div class="dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="day-detail-title">
+      <div class="dialog-top">
+        <div>
+          <h2 id="day-detail-title">{{ doctorName(detail.doctor.firstName, detail.doctor.lastName) }}</h2>
+          <p class="specialty">{{ detail.doctor.specialtyName }}</p>
+        </div>
+        <button type="button" class="icon-close" (click)="closeDetail()" aria-label="Zatvori">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of closeIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+        </button>
+      </div>
+
+      <p class="detail-date">{{ headingDate(detail) }}</p>
+
+      @if (isLoadingDetail) {
+        <p class="dialog-state">Učitavanje...</p>
+      } @else if (detailError) {
+        <p class="dialog-state is-error">{{ detailError }}</p>
+      } @else if (detail.absent && detail.absenceReason) {
+        <p class="source-label">Odsustvo</p>
+        <p class="shift-hours">{{ absenceLabel(detail.absenceReason) }}</p>
+      } @else if (detail.exception) {
+        <p class="source-label is-exception">Izmenjena smena</p>
+        <p class="shift-hours">{{ detail.exception.startTime }} - {{ detail.exception.endTime }}</p>
+        <p class="shift-place">{{ detail.exception.location.name }}</p>
+        @if (detail.regular) {
+          <p class="regular-context">
+            Redovni raspored:
+            {{ detail.regular.startTime }} - {{ detail.regular.endTime }}
+            · {{ detail.regular.location.name }}
+          </p>
+        } @else {
+          <p class="regular-context">Redovni raspored: ne radi.</p>
+        }
+        @if (detail.canEdit) {
+          <button type="button" class="btn-primary" (click)="openEditorFromDetail()" [disabled]="isLoadingDetail">Izmeni posebnu smenu</button>
+        }
+      } @else {
+        <p class="source-label">Redovna smena</p>
+        @if (detail.regular) {
+          <p class="shift-hours">{{ detail.regular.startTime }} - {{ detail.regular.endTime }}</p>
+          <p class="shift-place">{{ detail.regular.location.name }}</p>
+        } @else {
+          <p class="shift-hours">Ne radi</p>
+        }
+        @if (detail.canEdit) {
+          <button type="button" class="btn-primary" (click)="openEditorFromDetail()" [disabled]="isLoadingDetail">Izmeni smenu za ovaj dan</button>
+        }
+      }
+
+      <div class="secondary-actions">
+        @if (detail.canRestore) {
+          <button type="button" class="text-restore" (click)="openRestore()">
+            <span class="secondary-title">
+              Vrati redovni raspored
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of chevronIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </span>
+            <span class="secondary-help">Ukloni posebnu smenu za ovaj datum.</span>
+          </button>
+        }
+        <a class="regular-link" [routerLink]="['/admin/doctors', detail.doctor.id]" [queryParams]="{ tab: 'schedule' }">
+          <span class="secondary-title">
+            Izmeni redovni raspored
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of chevronIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'polyline') {
+                  <polyline [attr.points]="$any(node[1]).points"></polyline>
+                }
+              }
+            </svg>
+          </span>
+          <span class="secondary-help">Promeni uobičajeni nedeljni raspored lekara.</span>
+        </a>
+      </div>
+    </div>
+  </div>
+}
+
+@if (editorOpen && detail) {
+  <div class="overlay is-top" (click)="closeEditor()">
+    <div class="dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="edit-exception-title">
+      <div class="dialog-top">
+        <h2 id="edit-exception-title">Izmeni smenu za ovaj dan</h2>
+        <button type="button" class="icon-close" (click)="closeEditor()" aria-label="Zatvori">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of closeIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+        </button>
+      </div>
+      <p class="editor-kicker">{{ doctorName(detail.doctor.firstName, detail.doctor.lastName) }}</p>
+      <p class="editor-date">{{ editorDateLabel() }}</p>
+      @if (detail.regular && !detail.exception) {
+        <p class="regular-context">
+          Redovna smena:
+          {{ detail.regular.startTime }} - {{ detail.regular.endTime }}
+          · {{ detail.regular.location.name }}
+        </p>
+      }
+      <p class="helper">Izmena važi samo za izabrani datum. Redovni nedeljni raspored lekara ostaje nepromenjen.</p>
+      <ng-container *ngTemplateOutlet="exceptionForm"></ng-container>
+    </div>
+  </div>
+}
+
+@if (createOpen) {
+  <div class="overlay" (click)="closeCreate()">
+    <div class="dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="create-exception-title">
+      <div class="dialog-top">
+        <h2 id="create-exception-title">Posebna smena</h2>
+        <button type="button" class="icon-close" (click)="closeCreate()" aria-label="Zatvori">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of closeIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+        </button>
+      </div>
+      <p class="editor-date">{{ editorDateLabel() }}</p>
+      <p class="helper">Izmena važi samo za izabrani datum. Redovni nedeljni raspored lekara ostaje nepromenjen.</p>
+
+      @if (isLoadingEligible) {
+        <p class="dialog-state">Učitavanje lekara...</p>
+      } @else if (eligibleError) {
+        <p class="dialog-state is-error">{{ eligibleError }}</p>
+      } @else if (eligibleDoctors.length === 0) {
+        <p class="dialog-state">Nema lekara kojima se može dodati posebna smena za ovaj dan.</p>
+      } @else {
+        <label class="field">
+          <span>Lekar</span>
+          <select [ngModel]="createDoctorId" (ngModelChange)="onCreateDoctorChange($event)">
+            <option [ngValue]="null">Izaberite lekara</option>
+            @for (doctor of eligibleDoctors; track doctor.id) {
+              <option [ngValue]="doctor.id">{{ doctorName(doctor.firstName, doctor.lastName) }} · {{ doctor.specialtyName }}</option>
+            }
+          </select>
+        </label>
+        <ng-container *ngTemplateOutlet="exceptionForm"></ng-container>
+      }
+    </div>
+  </div>
+}
+
+@if (restoreOpen && detail) {
+  <div class="overlay is-top" (click)="closeRestore()">
+    <div class="dialog is-small" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="restore-title">
+      <h2 id="restore-title">Vrati redovni raspored</h2>
+      <p class="confirm-lead">
+        Da li želite da uklonite posebnu smenu za {{ restoreDateLabel }}? Za ovaj datum će ponovo važiti redovni raspored lekara.
+      </p>
+      @if (restoreError) {
+        <p class="dialog-state is-error">{{ restoreError }}</p>
+      }
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" (click)="closeRestore()" [disabled]="isRestoring">Odustani</button>
+        <button type="button" class="btn-danger" (click)="confirmRestore()" [disabled]="isRestoring">
+          {{ isRestoring ? 'Vraćanje...' : 'Vrati redovni raspored' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<ng-template #exceptionForm>
+  <div class="time-row">
+    <label class="field">
+      <span>Od</span>
+      <span class="time">
+        <select [(ngModel)]="startHour" name="startHour">
+          @for (hour of hourOptions; track hour) {
+            <option [ngValue]="hour">{{ hour }}</option>
+          }
+        </select>
+        <span>:</span>
+        <select [(ngModel)]="startMinute" name="startMinute">
+          @for (minute of minuteOptions; track minute) {
+            <option [ngValue]="minute">{{ minute }}</option>
+          }
+        </select>
+      </span>
+    </label>
+    <label class="field">
+      <span>Do</span>
+      <span class="time">
+        <select [(ngModel)]="endHour" name="endHour">
+          @for (hour of hourOptions; track hour) {
+            <option [ngValue]="hour">{{ hour }}</option>
+          }
+        </select>
+        <span>:</span>
+        <select [(ngModel)]="endMinute" name="endMinute">
+          @for (minute of minuteOptions; track minute) {
+            <option [ngValue]="minute">{{ minute }}</option>
+          }
+        </select>
+      </span>
+    </label>
+  </div>
+  <label class="field">
+    <span>Lokacija</span>
+    <select [(ngModel)]="editorLocationId" name="exceptionLocation">
+      @for (location of locationChoices; track location.id) {
+        <option [ngValue]="location.id">{{ location.name }}</option>
+      }
+    </select>
+  </label>
+  @if (editorError) {
+    <p class="dialog-state is-error">{{ editorError }}</p>
+  }
+  <div class="dialog-actions">
+    <button type="button" class="btn-secondary" (click)="editorOpen ? closeEditor() : closeCreate()" [disabled]="isSaving">
+      Odustani
+    </button>
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="saveException()"
+      [disabled]="isSaving || (createOpen && !createDoctorId)"
+    >
+      {{ isSaving ? 'Čuvanje...' : 'Sačuvaj' }}
+    </button>
+  </div>
+</ng-template>

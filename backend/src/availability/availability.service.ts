@@ -16,6 +16,7 @@ import {
     timeToMinutes,
     weekdayFromCalendarDate
 } from './availability.logic';
+import { bookingShiftForLocation } from '../schedule/effective-schedule';
 
 type Queryable = Pool | PoolConnection;
 
@@ -31,6 +32,13 @@ interface ScheduleRow extends RowDataPacket {
     dayOfWeek: number;
     startTime: string;
     endTime: string;
+}
+
+interface ExceptionShiftRow extends RowDataPacket {
+    exceptionDate: string;
+    startTime: string;
+    endTime: string;
+    locationId: number;
 }
 
 interface AppointmentRow extends RowDataPacket {
@@ -65,7 +73,14 @@ export class AvailabilityService {
     }> {
         const context = await this.loadContext(params, params.date, params.date, pool);
         const clock = clinicClock();
-        const shift = context.shiftsByWeekday.get(weekdayFromCalendarDate(params.date));
+        const weekday = weekdayFromCalendarDate(params.date);
+        const shift = bookingShiftForLocation({
+            weekday,
+            locationId: params.locationId,
+            absent: context.absentDates.has(params.date),
+            regular: context.shiftsByWeekday.get(weekday),
+            exception: context.exceptionsByDate.get(params.date)
+        });
         const blocking = context.appointmentsByDate.get(params.date) ?? [];
 
         return {
@@ -73,15 +88,13 @@ export class AvailabilityService {
             doctorId: params.doctorId,
             locationId: params.locationId,
             serviceId: params.serviceId,
-            availableTimes: context.absentDates.has(params.date)
-                ? []
-                : availableStartLabelsForDate({
-                    shift,
-                    durationMinutes: context.durationMinutes,
-                    blocking,
-                    date: params.date,
-                    clock
-                })
+            availableTimes: availableStartLabelsForDate({
+                shift,
+                durationMinutes: context.durationMinutes,
+                blocking,
+                date: params.date,
+                clock
+            })
         };
     }
 
@@ -104,10 +117,14 @@ export class AvailabilityService {
         const context = await this.loadContext(params, range.from, range.to, pool);
 
         const availableDates = eachDateInclusive(range.from, range.to).filter((date) => {
-            if (context.absentDates.has(date)) {
-                return false;
-            }
-            const shift = context.shiftsByWeekday.get(weekdayFromCalendarDate(date));
+            const weekday = weekdayFromCalendarDate(date);
+            const shift = bookingShiftForLocation({
+                weekday,
+                locationId: params.locationId,
+                absent: context.absentDates.has(date),
+                regular: context.shiftsByWeekday.get(weekday),
+                exception: context.exceptionsByDate.get(date)
+            });
             const times = availableStartLabelsForDate({
                 shift,
                 durationMinutes: context.durationMinutes,
@@ -151,30 +168,39 @@ export class AvailabilityService {
         }
 
         const weekday = weekdayFromCalendarDate(params.date);
-        const [lockRows] = await executor.query<RowDataPacket[]>(
+        await executor.query(
+            `SELECT id
+             FROM doctor_schedule_exceptions
+             WHERE doctor_id = ? AND exception_date = ?
+             FOR UPDATE`,
+            [params.doctorId, params.date]
+        );
+        await executor.query(
             `SELECT id
              FROM doctor_schedules
-             WHERE doctor_id = ? AND location_id = ? AND day_of_week = ?
+             WHERE doctor_id = ? AND day_of_week = ?
              FOR UPDATE`,
-            [params.doctorId, params.locationId, weekday]
+            [params.doctorId, weekday]
         );
-
-        if (!Array.isArray(lockRows) || lockRows.length === 0) {
-            throw new AvailabilityContextError(
-                409,
-                'Nažalost, izabrani termin više nije dostupan. Molimo izaberite drugi termin.'
-            );
-        }
+        await executor.query(
+            `SELECT id
+             FROM doctor_absences
+             WHERE doctor_id = ?
+               AND start_date <= ?
+               AND end_date >= ?
+             FOR UPDATE`,
+            [params.doctorId, params.date, params.date]
+        );
 
         const context = await this.loadContext(params, params.date, params.date, executor);
         const clock = clinicClock();
-        if (context.absentDates.has(params.date)) {
-            throw new AvailabilityContextError(
-                409,
-                'Nažalost, izabrani termin više nije dostupan. Molimo izaberite drugi termin.'
-            );
-        }
-        const shift = context.shiftsByWeekday.get(weekday);
+        const shift = bookingShiftForLocation({
+            weekday,
+            locationId: params.locationId,
+            absent: context.absentDates.has(params.date),
+            regular: context.shiftsByWeekday.get(weekday),
+            exception: context.exceptionsByDate.get(params.date)
+        });
         const availableTimes = availableStartLabelsForDate({
             shift,
             durationMinutes: context.durationMinutes,
@@ -207,6 +233,7 @@ export class AvailabilityService {
         shiftsByWeekday: Map<number, DoctorShift>;
         appointmentsByDate: Map<string, TimeInterval[]>;
         absentDates: Set<string>;
+        exceptionsByDate: Map<string, { locationId: number; startMinutes: number; endMinutes: number }>;
     }> {
         await this.assertEntitiesExist(params, executor);
         await this.assertDoctorRelationships(params, executor);
@@ -225,8 +252,14 @@ export class AvailabilityService {
             to ?? null,
             executor
         );
+        const exceptionsByDate = await this.getExceptions(
+            params.doctorId,
+            from ?? null,
+            to ?? null,
+            executor
+        );
 
-        return { durationMinutes, shiftsByWeekday, appointmentsByDate, absentDates };
+        return { durationMinutes, shiftsByWeekday, appointmentsByDate, absentDates, exceptionsByDate };
     }
 
     private async assertEntitiesExist(params: AvailabilityQuery, executor: Queryable): Promise<void> {
@@ -353,6 +386,40 @@ export class AvailabilityService {
             byDate.set(date, list);
         }
 
+        return byDate;
+    }
+
+    private async getExceptions(
+        doctorId: number,
+        from: string | null,
+        to: string | null,
+        executor: Queryable
+    ): Promise<Map<string, { locationId: number; startMinutes: number; endMinutes: number }>> {
+        const params: Array<number | string> = [doctorId];
+        let sql = `
+            SELECT
+                DATE_FORMAT(exception_date, '%Y-%m-%d') AS exceptionDate,
+                TIME_FORMAT(start_time, '%H:%i:%s') AS startTime,
+                TIME_FORMAT(end_time, '%H:%i:%s') AS endTime,
+                location_id AS locationId
+            FROM doctor_schedule_exceptions
+            WHERE doctor_id = ?
+        `;
+
+        if (from && to) {
+            sql += ' AND exception_date BETWEEN ? AND ?';
+            params.push(from, to);
+        }
+
+        const [rows] = await executor.query<ExceptionShiftRow[]>(sql, params);
+        const byDate = new Map<string, { locationId: number; startMinutes: number; endMinutes: number }>();
+        for (const row of rows) {
+            byDate.set(String(row.exceptionDate), {
+                locationId: Number(row.locationId),
+                startMinutes: timeToMinutes(row.startTime),
+                endMinutes: timeToMinutes(row.endTime)
+            });
+        }
         return byDate;
     }
 

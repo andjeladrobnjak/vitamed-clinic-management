@@ -283,6 +283,14 @@
   color: var(--petrol);
 }
 
+button.back-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 @media (max-width: 640px) {
   .login-shell {
     padding: 1.35rem 0.9rem 1.6rem;

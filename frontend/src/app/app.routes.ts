@@ -14,9 +14,10 @@ import { SpecialtyDetailComponent } from './components/specialty-detail/specialt
 import { LocationsComponent } from './components/locations/locations.component';
 import { AppointmentComponent } from './components/appointment/appointment.component';
 import { patientAuthGuard } from './guards/patient-auth.guard';
-import { doctorAuthGuard } from './guards/doctor-auth.guard';
+import { doctorPasswordSetupGuard, doctorPortalGuard } from './guards/doctor-auth.guard';
 import { adminAuthGuard } from './guards/admin-auth.guard';
 import { DoctorLoginComponent } from './components/doctor-login/doctor-login.component';
+import { DoctorChangePasswordComponent } from './components/doctor-change-password/doctor-change-password.component';
 import { AdminLoginComponent } from './components/admin-login/admin-login.component';
 import { AdminShellComponent } from './components/admin-shell/admin-shell.component';
 import { AdminPortalComponent } from './components/admin-portal/admin-portal.component';
@@ -73,29 +74,34 @@ export const routes: Routes = [
   },
   { path: 'lekar/prijava', component: DoctorLoginComponent },
   {
+    path: 'lekar/promena-lozinke',
+    component: DoctorChangePasswordComponent,
+    canActivate: [doctorPasswordSetupGuard]
+  },
+  {
     path: 'lekar/portal',
     component: DoctorPortalComponent,
-    canActivate: [doctorAuthGuard]
+    canActivate: [doctorPortalGuard]
   },
   {
     path: 'lekar/raspored',
     component: DoctorScheduleComponent,
-    canActivate: [doctorAuthGuard]
+    canActivate: [doctorPortalGuard]
   },
   {
     path: 'lekar/pacijenti',
     component: DoctorPatientsComponent,
-    canActivate: [doctorAuthGuard]
+    canActivate: [doctorPortalGuard]
   },
   {
     path: 'lekar/pacijenti/:patientId/pregledi/:appointmentId',
     component: DoctorAppointmentReportComponent,
-    canActivate: [doctorAuthGuard]
+    canActivate: [doctorPortalGuard]
   },
   {
     path: 'lekar/pacijenti/:patientId',
     component: DoctorPatientDetailComponent,
-    canActivate: [doctorAuthGuard]
+    canActivate: [doctorPortalGuard]
   },
   { path: 'admin/prijava', component: AdminLoginComponent },
   {

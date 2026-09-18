@@ -11,3 +11,37 @@ export const doctorAuthGuard: CanActivateFn = () => {
     map((restored) => restored || router.createUrlTree(['/lekar/prijava']))
   );
 };
+
+export const doctorPortalGuard: CanActivateFn = () => {
+  const doctorAuth = inject(DoctorAuthService);
+  const router = inject(Router);
+
+  return doctorAuth.restoreSession().pipe(
+    map((restored) => {
+      if (!restored) {
+        return router.createUrlTree(['/lekar/prijava']);
+      }
+      if (doctorAuth.mustChangePassword()) {
+        return router.createUrlTree(['/lekar/promena-lozinke']);
+      }
+      return true;
+    })
+  );
+};
+
+export const doctorPasswordSetupGuard: CanActivateFn = () => {
+  const doctorAuth = inject(DoctorAuthService);
+  const router = inject(Router);
+
+  return doctorAuth.restoreSession().pipe(
+    map((restored) => {
+      if (!restored) {
+        return router.createUrlTree(['/lekar/prijava']);
+      }
+      if (!doctorAuth.mustChangePassword()) {
+        return router.createUrlTree(['/lekar/portal']);
+      }
+      return true;
+    })
+  );
+};

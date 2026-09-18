@@ -26,9 +26,11 @@ export class DoctorLoginComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    if (this.doctorAuth.isLoggedIn()) {
-      void this.router.navigate(['/lekar/portal']);
-    }
+    this.doctorAuth.restoreSession().subscribe((restored) => {
+      if (restored) {
+        void this.router.navigate([this.doctorAuth.homePath()]);
+      }
+    });
   }
 
   togglePassword(): void {
@@ -53,7 +55,7 @@ export class DoctorLoginComponent implements OnInit {
     this.doctorAuth.login(formValue.email ?? '', formValue.password ?? '').subscribe({
       next: () => {
         this.isSubmitting = false;
-        void this.router.navigate(['/lekar/portal']);
+        void this.router.navigate([this.doctorAuth.homePath()]);
       },
       error: (error: HttpErrorResponse) => {
         this.isSubmitting = false;

@@ -8,6 +8,7 @@ import {
   DoctorPortalScheduleAbsence,
   DoctorPortalScheduleAppointment,
   DoctorPortalScheduleDay,
+  DoctorPortalScheduleException,
   DoctorPortalScheduleShift,
   DoctorPortalService
 } from '../../services/doctor-portal.service';
@@ -24,6 +25,12 @@ interface CalendarCell {
   inMonth: boolean;
   isToday: boolean;
   shift: DoctorPortalScheduleShift | null;
+  effective: {
+    startTime: string;
+    endTime: string;
+    locationName: string;
+    isException: boolean;
+  } | null;
   appointmentCount: number;
   appointments: DoctorPortalScheduleAppointment[];
   absence: DoctorPortalScheduleAbsence | null;
@@ -34,7 +41,7 @@ interface CalendarCell {
   standalone: true,
   imports: [DoctorPortalHeaderComponent, RouterLink, DoctorCancelAppointmentModalComponent],
   templateUrl: './doctor-schedule.component.html',
-  styleUrls: ['./doctor-schedule.component.css', './doctor-schedule-absences.css']
+  styleUrls: ['./doctor-schedule.component.css', './doctor-schedule-absences.css', './doctor-schedule-exceptions.css']
 })
 export class DoctorScheduleComponent implements OnInit {
   readonly weekdayLabels = ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
@@ -74,12 +81,12 @@ export class DoctorScheduleComponent implements OnInit {
     return `${label.replace(/\.$/, '').toLocaleUpperCase('sr-Latn')}.`;
   }
 
-  get selectedCell(): (CalendarCell & { shift: DoctorPortalScheduleShift }) | null {
+  get selectedCell(): CalendarCell | null {
     const cell = this.cells.find((item) => item.date === this.selectedDate);
-    if (!cell?.shift) {
+    if (!cell || !this.canSelectDay(cell)) {
       return null;
     }
-    return cell as CalendarCell & { shift: DoctorPortalScheduleShift };
+    return cell;
   }
 
   get selectedHeading(): string {
@@ -132,13 +139,10 @@ export class DoctorScheduleComponent implements OnInit {
   }
 
   canSelectDay(cell: CalendarCell): boolean {
-    if (!cell.shift) {
-      return false;
+    if (cell.absence) {
+      return cell.appointments.length > 0;
     }
-    if (cell.absence && cell.appointments.length === 0) {
-      return false;
-    }
-    return true;
+    return cell.effective !== null;
   }
 
   absenceLabel(reason: DoctorPortalScheduleAbsence['reason']): string {
@@ -264,6 +268,11 @@ export class DoctorScheduleComponent implements OnInit {
       days.set(day.date, day);
     }
 
+    const exceptions = new Map<string, DoctorPortalScheduleException>();
+    for (const exception of schedule.exceptions ?? []) {
+      exceptions.set(exception.date, exception);
+    }
+
     const monthKey = String(schedule.month).padStart(2, '0');
     const today = this.clinicToday();
     const cells: CalendarCell[] = [];
@@ -271,15 +280,27 @@ export class DoctorScheduleComponent implements OnInit {
     while (current <= schedule.to) {
       const weekday = this.isoWeekday(current);
       const day = days.get(current);
+      const regular = shifts.get(weekday) ?? null;
+      const exception = exceptions.get(current) ?? null;
+      const absence = this.absenceForDate(current, schedule.absences ?? []);
+      const working = absence ? null : exception ?? regular;
       cells.push({
         date: current,
         dayNumber: Number(current.slice(8, 10)),
         inMonth: current.slice(5, 7) === monthKey,
         isToday: current === today,
-        shift: shifts.get(weekday) ?? null,
+        shift: regular,
+        effective: working
+          ? {
+              startTime: working.startTime,
+              endTime: working.endTime,
+              locationName: working.location.name,
+              isException: Boolean(exception) && !absence
+            }
+          : null,
         appointmentCount: day?.appointmentCount ?? 0,
         appointments: day?.appointments ?? [],
-        absence: this.absenceForDate(current, schedule.absences ?? [])
+        absence
       });
       current = this.addDay(current, 1);
     }

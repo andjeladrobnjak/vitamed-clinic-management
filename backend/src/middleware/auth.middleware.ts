@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { RowDataPacket } from 'mysql2';
+import pool from '../db/connection';
 
 export interface AuthenticatedRequest extends Request {
     patientId?: number;
@@ -106,6 +108,53 @@ export function authenticateDoctor(req: Request, res: Response, next: NextFuncti
     } catch {
         res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
     }
+}
+
+export function requireDoctorPortalAccess(req: Request, res: Response, next: NextFunction): void {
+    const accountId = (req as AuthenticatedRequest).doctorAccountId;
+    const doctorId = (req as AuthenticatedRequest).doctorId;
+
+    if (!accountId || !doctorId) {
+        res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+        return;
+    }
+
+    void (async () => {
+        const [rows] = await pool.query<(RowDataPacket & {
+            isActive: number | boolean;
+            mustChangePassword: number | boolean;
+        })[]>(
+            `SELECT is_active AS isActive, must_change_password AS mustChangePassword
+             FROM doctor_accounts
+             WHERE id = ? AND doctor_id = ?
+             LIMIT 1`,
+            [accountId, doctorId]
+        );
+        const row = rows[0];
+        if (!row) {
+            res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+            return;
+        }
+
+        const isActive = row.isActive === true || row.isActive === 1;
+        if (!isActive) {
+            res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
+            return;
+        }
+
+        const mustChange = row.mustChangePassword === true || row.mustChangePassword === 1;
+        if (mustChange) {
+            res.status(403).json({
+                code: 'PASSWORD_CHANGE_REQUIRED',
+                message: 'Potrebno je da promenite lozinku pre nastavka.'
+            });
+            return;
+        }
+
+        next();
+    })().catch(() => {
+        res.status(500).json({ message: 'Došlo je do greške na serveru. Pokušajte ponovo.' });
+    });
 }
 
 export function authenticateAdmin(req: Request, res: Response, next: NextFunction): void {

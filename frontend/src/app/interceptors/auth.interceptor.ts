@@ -22,6 +22,10 @@ function isAdminBackendUrl(url: string): boolean {
   );
 }
 
+function isDoctorPortalUrl(url: string): boolean {
+  return url.startsWith(`${backendOrigin}/api/doctor-portal`);
+}
+
 function isDoctorLoginUrl(url: string): boolean {
   return url.startsWith(`${backendOrigin}/api/doctor-auth/login`);
 }
@@ -55,6 +59,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authorizedReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (
+        error.status === 403 &&
+        isDoctorPortalUrl(req.url) &&
+        error.error?.code === 'PASSWORD_CHANGE_REQUIRED'
+      ) {
+        doctorAuth.markMustChangePassword();
+        if (!router.url.startsWith('/lekar/promena-lozinke')) {
+          void router.navigate(['/lekar/promena-lozinke']);
+        }
+      }
+
       if (
         error.status === 401 &&
         isDoctorBackendUrl(req.url) &&

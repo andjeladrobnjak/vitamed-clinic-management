@@ -1,0 +1,15 @@
+.exception-label {
+  margin-top: 0.12rem;
+  color: #7a3f46;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.panel-exception {
+  margin: 0.2rem 0 0;
+  color: #7a3f46;
+  font-size: 0.78rem;
+  font-weight: 600;
+}

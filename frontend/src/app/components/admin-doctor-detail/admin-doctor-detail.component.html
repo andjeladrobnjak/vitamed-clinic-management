@@ -56,6 +56,84 @@
       </div>
     </header>
 
+    @if (!isCreate) {
+      <section class="portal-access" aria-labelledby="portal-access-title">
+        <p id="portal-access-title" class="portal-eyebrow">Pristup portalu</p>
+        @if (portalAccountError && !portalAccount) {
+          <p class="portal-error">{{ portalAccountError }}</p>
+        } @else if (!portalAccount || portalAccount.status === 'missing') {
+          <div class="portal-row">
+            <div>
+              <p class="portal-status">Nalog nije kreiran</p>
+              <p class="portal-help">Kreirajte pristupne podatke kako bi lekar mogao da koristi portal.</p>
+            </div>
+            <button class="btn-save portal-create" type="button" (click)="openCreateAccount()">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of accountPlusIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+              Kreiraj nalog
+            </button>
+          </div>
+        } @else if (portalAccount.status === 'pending') {
+          <div class="portal-row">
+            <div>
+              <p class="portal-status is-pending">Čeka aktivaciju</p>
+              <p class="portal-email">{{ portalAccount.email }}</p>
+              <p class="portal-help">Lekar još nije promenio privremenu lozinku.</p>
+            </div>
+            <button class="portal-reset" type="button" (click)="openResetPassword()">
+              Resetuj lozinku
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of chevronIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </button>
+          </div>
+        } @else {
+          <div class="portal-row">
+            <div>
+              <p class="portal-status is-active">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  @for (node of successIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'circle') {
+                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                    }
+                  }
+                </svg>
+                Aktivan nalog
+              </p>
+              <p class="portal-email">{{ portalAccount.email }}</p>
+            </div>
+            <button class="portal-reset" type="button" (click)="openResetPassword()">
+              Resetuj lozinku
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of chevronIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'polyline') {
+                    <polyline [attr.points]="$any(node[1]).points"></polyline>
+                  }
+                }
+              </svg>
+            </button>
+          </div>
+        }
+      </section>
+    }
+
     <form class="edit-form" (ngSubmit)="save()" (input)="clearSaveSuccess()" (change)="clearSaveSuccess()">
       <div class="tabs-bar">
         <nav class="tabs" aria-label="Sekcije lekara">
@@ -573,6 +651,138 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+}
+
+@if (accountModal === 'create') {
+  <div class="overlay is-top" (click)="closeAccountModal()">
+    <div class="dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="create-account-title">
+      <h2 id="create-account-title">Kreiranje naloga lekara</h2>
+      <p class="account-context">{{ headerTitle() }} · {{ headerLead() }}</p>
+      <label class="field">
+        <span>Email</span>
+        <input type="email" [(ngModel)]="accountEmail" name="accountEmail" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Privremena lozinka</span>
+        <span class="password-wrap">
+          <input
+            [type]="accountPasswordVisible ? 'text' : 'password'"
+            [(ngModel)]="accountPassword"
+            name="accountPassword"
+            autocomplete="new-password"
+          >
+          <button
+            class="icon-btn"
+            type="button"
+            (click)="accountPasswordVisible = !accountPasswordVisible"
+            [attr.aria-label]="accountPasswordVisible ? 'Sakrij lozinku' : 'Prikaži lozinku'"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of accountVisibilityIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'circle') {
+                  <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                } @else if (node[0] === 'line') {
+                  <line
+                    [attr.x1]="$any(node[1]).x1"
+                    [attr.y1]="$any(node[1]).y1"
+                    [attr.x2]="$any(node[1]).x2"
+                    [attr.y2]="$any(node[1]).y2"
+                  ></line>
+                }
+              }
+            </svg>
+          </button>
+        </span>
+      </label>
+      <button class="text-generate" type="button" (click)="generateAccountPassword()" [disabled]="isGeneratingPassword || isSavingAccount">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          @for (node of refreshIcon; track $index) {
+            @if (node[0] === 'path') {
+              <path [attr.d]="$any(node[1]).d"></path>
+            } @else if (node[0] === 'polyline') {
+              <polyline [attr.points]="$any(node[1]).points"></polyline>
+            }
+          }
+        </svg>
+        {{ isGeneratingPassword ? 'Generisanje...' : 'Generiši novu' }}
+      </button>
+      <p class="account-helper">Lekar će pri prvom prijavljivanju morati da postavi novu lozinku.</p>
+      @if (accountFormError) {
+        <p class="hint-error">{{ accountFormError }}</p>
+      }
+      <div class="dialog-actions">
+        <button class="btn-secondary" type="button" (click)="closeAccountModal()" [disabled]="isSavingAccount">Odustani</button>
+        <button class="btn-save" type="button" (click)="confirmCreateAccount()" [disabled]="isSavingAccount || !accountEmail || !accountPassword">
+          {{ isSavingAccount ? 'Kreiranje...' : 'Kreiraj nalog' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (accountModal === 'created' || accountModal === 'reset-result') {
+  <div class="overlay is-top" (click)="closeAccountModal()">
+    <div class="dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h2>{{ accountModal === 'created' ? 'Nalog je uspešno kreiran.' : 'Lozinka je uspešno resetovana.' }}</h2>
+      <dl class="credential-list">
+        <div>
+          <dt>Email</dt>
+          <dd>{{ portalAccount?.email }}</dd>
+        </div>
+        <div>
+          <dt>{{ accountModal === 'created' ? 'Privremena lozinka' : 'Nova privremena lozinka' }}</dt>
+          <dd class="credential-password">
+            <span>{{ revealedPassword }}</span>
+            <button class="icon-btn" type="button" (click)="copyTemporaryPassword()" aria-label="Kopiraj privremenu lozinku">
+              <span class="copy-label">Kopiraj</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of copyIcon; track $index) {
+                  @if (node[0] === 'rect') {
+                    <rect
+                      [attr.x]="$any(node[1]).x"
+                      [attr.y]="$any(node[1]).y"
+                      [attr.width]="$any(node[1]).width"
+                      [attr.height]="$any(node[1]).height"
+                      [attr.rx]="$any(node[1]).rx"
+                    ></rect>
+                  } @else if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  }
+                }
+              </svg>
+            </button>
+          </dd>
+        </div>
+      </dl>
+      @if (copyState) {
+        <p class="copy-feedback">{{ copyState }}</p>
+      }
+      <p class="account-helper">Sačuvajte privremenu lozinku sada. Nakon zatvaranja ovog prozora više je nećete moći videti.</p>
+      <div class="dialog-actions">
+        <button class="btn-save" type="button" (click)="closeAccountModal()">Zatvori</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (accountModal === 'reset-confirm') {
+  <div class="overlay is-top" (click)="closeAccountModal()">
+    <div class="dialog is-small" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="reset-password-title">
+      <h2 id="reset-password-title">Resetovanje lozinke</h2>
+      <p class="account-helper">Biće generisana nova privremena lozinka. Lekar će morati da je promeni pri sledećem pristupu portalu.</p>
+      @if (accountFormError) {
+        <p class="hint-error">{{ accountFormError }}</p>
+      }
+      <div class="dialog-actions">
+        <button class="btn-secondary" type="button" (click)="closeAccountModal()" [disabled]="isSavingAccount">Odustani</button>
+        <button class="btn-save" type="button" (click)="confirmResetPassword()" [disabled]="isSavingAccount">
+          {{ isSavingAccount ? 'Resetovanje...' : 'Resetuj lozinku' }}
+        </button>
+      </div>
     </div>
   </div>
 }

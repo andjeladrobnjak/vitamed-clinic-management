@@ -18,6 +18,7 @@ export interface AuthDoctor {
   lastName: string;
   email: string;
   specialty: AuthDoctorSpecialty;
+  mustChangePassword: boolean;
 }
 
 interface DoctorLoginResponse {
@@ -63,6 +64,31 @@ export class DoctorAuthService {
         this.saveSession(response.token, response.doctor);
       })
     );
+  }
+
+  changePassword(password: string, confirmPassword: string): Observable<DoctorLoginResponse> {
+    return this.http
+      .post<DoctorLoginResponse>(`${doctorAuthUrl}/change-password`, { password, confirmPassword })
+      .pipe(
+        tap((response) => {
+          this.saveSession(response.token, response.doctor);
+        })
+      );
+  }
+
+  mustChangePassword(): boolean {
+    return this.currentDoctor()?.mustChangePassword === true;
+  }
+
+  markMustChangePassword(): void {
+    const doctor = this.currentDoctor();
+    if (doctor && !doctor.mustChangePassword) {
+      this.currentDoctor.set({ ...doctor, mustChangePassword: true });
+    }
+  }
+
+  homePath(): string {
+    return this.mustChangePassword() ? '/lekar/promena-lozinke' : '/lekar/portal';
   }
 
   saveSession(token: string, doctor?: AuthDoctor | null): void {

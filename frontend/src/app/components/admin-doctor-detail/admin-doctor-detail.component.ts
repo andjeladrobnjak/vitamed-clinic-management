@@ -8,14 +8,21 @@ import {
   LucideCheck,
   LucideCircleAlert,
   LucideCircleCheck,
+  LucideCopy,
+  LucideChevronRight,
+  LucideEye,
+  LucideEyeOff,
   LucideImageUp,
   LucidePlus,
+  LucideRefreshCw,
   LucideTriangleAlert,
-  LucideUserRound
+  LucideUserRound,
+  LucideUserRoundPlus
 } from '@lucide/angular';
 import {
   AdminDoctorAbsence,
   AdminDoctorAbsenceReason,
+  AdminDoctorAccount,
   AdminDoctorDetail,
   AdminDoctorSchedule,
   AdminDoctorUpdatePayload,
@@ -53,7 +60,8 @@ const WEEKDAYS: { dayOfWeek: number; label: string }[] = [
   styleUrls: [
     './admin-doctor-detail.component.css',
     './admin-doctor-detail-editor.css',
-    './admin-doctor-detail-absences.css'
+    './admin-doctor-detail-absences.css',
+    './admin-doctor-detail-account.css'
   ]
 })
 export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
@@ -67,6 +75,12 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   readonly backIcon = LucideArrowLeft.icon.node;
   readonly plusIcon = LucidePlus.icon.node;
   readonly warningIcon = LucideTriangleAlert.icon.node;
+  readonly accountPlusIcon = LucideUserRoundPlus.icon.node;
+  readonly chevronIcon = LucideChevronRight.icon.node;
+  readonly copyIcon = LucideCopy.icon.node;
+  readonly refreshIcon = LucideRefreshCw.icon.node;
+  readonly eyeIcon = LucideEye.icon.node;
+  readonly eyeOffIcon = LucideEyeOff.icon.node;
 
   @ViewChild('saveFeedback') private saveFeedback?: ElementRef<HTMLElement>;
 
@@ -98,6 +112,17 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   absenceModalError = '';
   removeAbsenceError = '';
   pendingAbsence: AdminDoctorAbsence | null = null;
+  portalAccount: AdminDoctorAccount | null = null;
+  portalAccountError = '';
+  accountModal: 'create' | 'created' | 'reset-confirm' | 'reset-result' | null = null;
+  accountEmail = '';
+  accountPassword = '';
+  accountPasswordVisible = false;
+  accountFormError = '';
+  isGeneratingPassword = false;
+  isSavingAccount = false;
+  revealedPassword = '';
+  copyState = '';
 
   firstName = '';
   lastName = '';
@@ -147,7 +172,12 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'Escape' || this.isSavingAbsence || this.isRemovingAbsence) {
+    if (event.key !== 'Escape' || this.isSavingAbsence || this.isRemovingAbsence || this.isSavingAccount) {
+      return;
+    }
+    if (this.accountModal) {
+      event.preventDefault();
+      this.closeAccountModal();
       return;
     }
     if (this.confirmKind === 'absence-remove') {
@@ -186,6 +216,142 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       return this.specialtyName();
     }
     return this.specialtyName() || 'Unesite podatke novog lekara u sistem.';
+  }
+
+  get accountVisibilityIcon() {
+    return this.accountPasswordVisible ? this.eyeOffIcon : this.eyeIcon;
+  }
+
+  openCreateAccount(): void {
+    if (this.isCreate || this.portalAccount?.status !== 'missing') {
+      return;
+    }
+    this.accountModal = 'create';
+    this.accountFormError = '';
+    this.accountPasswordVisible = false;
+    this.accountEmail = this.suggestLocalEmail();
+    this.accountPassword = '';
+    this.portalService.suggestDoctorAccountEmail(this.doctorId).subscribe({
+      next: (result) => {
+        if (this.accountModal === 'create' && result.email) {
+          this.accountEmail = result.email;
+        }
+      },
+      error: () => undefined
+    });
+    this.generateAccountPassword();
+  }
+
+  generateAccountPassword(): void {
+    if (this.isGeneratingPassword || this.isSavingAccount) {
+      return;
+    }
+    this.isGeneratingPassword = true;
+    this.accountFormError = '';
+    this.portalService.generateDoctorTemporaryPassword(this.doctorId).subscribe({
+      next: (result) => {
+        this.isGeneratingPassword = false;
+        this.accountPassword = result.password;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isGeneratingPassword = false;
+        this.accountFormError = error.error?.message || 'Privremena lozinka nije mogla da bude generisana. Pokušajte ponovo.';
+      }
+    });
+  }
+
+  confirmCreateAccount(): void {
+    if (this.isSavingAccount || this.accountModal !== 'create') {
+      return;
+    }
+    this.isSavingAccount = true;
+    this.accountFormError = '';
+    this.portalService
+      .createDoctorAccount(this.doctorId, { email: this.accountEmail, password: this.accountPassword })
+      .subscribe({
+        next: (result) => {
+          this.isSavingAccount = false;
+          this.portalAccount = result.account;
+          this.revealedPassword = result.temporaryPassword;
+          this.copyState = '';
+          this.accountModal = 'created';
+        },
+        error: (error: HttpErrorResponse) => {
+          this.isSavingAccount = false;
+          this.accountFormError = error.error?.message || 'Nalog nije mogao da bude kreiran.';
+        }
+      });
+  }
+
+  openResetPassword(): void {
+    if (!this.portalAccount || this.portalAccount.status === 'missing') {
+      return;
+    }
+    this.accountFormError = '';
+    this.accountModal = 'reset-confirm';
+  }
+
+  confirmResetPassword(): void {
+    if (this.isSavingAccount || this.accountModal !== 'reset-confirm') {
+      return;
+    }
+    this.isSavingAccount = true;
+    this.accountFormError = '';
+    this.portalService.resetDoctorPassword(this.doctorId).subscribe({
+      next: (result) => {
+        this.isSavingAccount = false;
+        this.portalAccount = result.account;
+        this.revealedPassword = result.temporaryPassword;
+        this.copyState = '';
+        this.accountModal = 'reset-result';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isSavingAccount = false;
+        this.accountFormError = error.error?.message || 'Lozinka nije mogla da bude resetovana.';
+      }
+    });
+  }
+
+  closeAccountModal(): void {
+    if (this.isSavingAccount) {
+      return;
+    }
+    this.accountModal = null;
+    this.accountEmail = '';
+    this.accountPassword = '';
+    this.accountPasswordVisible = false;
+    this.accountFormError = '';
+    this.revealedPassword = '';
+    this.copyState = '';
+  }
+
+  async copyTemporaryPassword(): Promise<void> {
+    if (!this.revealedPassword) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(this.revealedPassword);
+      this.copyState = 'Kopirano';
+    } catch {
+      this.copyState = '';
+    }
+  }
+
+  private suggestLocalEmail(): string {
+    const first = this.slugPart(this.firstName);
+    const last = this.slugPart(this.lastName);
+    const local = [first, last].filter(Boolean).join('.') || 'lekar';
+    return `${local}@vitamed.rs`;
+  }
+
+  private slugPart(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .replace(/đ/g, 'dj')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z]/g, '');
   }
 
   photoButtonLabel(): string {
@@ -825,6 +991,9 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     this.doctorId = id;
     this.absences = [];
     this.absencesError = '';
+    this.portalAccount = null;
+    this.portalAccountError = '';
+    this.closeAccountModal();
 
     if (!Number.isInteger(id) || id <= 0) {
       this.isLoading = false;
@@ -836,9 +1005,10 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       doctor: this.portalService.getDoctor(id),
       specialties: this.doctorService.getSpecialties(),
       locations: this.locationService.getLocations(),
-      absences: this.portalService.getDoctorAbsences(id).pipe(catchError(() => of(null)))
+      absences: this.portalService.getDoctorAbsences(id).pipe(catchError(() => of(null))),
+      account: this.portalService.getDoctorAccount(id).pipe(catchError(() => of(null)))
     }).subscribe({
-      next: ({ doctor, specialties, locations, absences }) => {
+      next: ({ doctor, specialties, locations, absences, account }) => {
         this.specialties = specialties;
         this.locations = locations;
         this.applyDoctor(doctor);
@@ -849,6 +1019,13 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
         } else {
           this.absences = [];
           this.absencesError = 'Trenutno nije moguće učitati odsustva.';
+        }
+        if (account) {
+          this.portalAccount = account;
+          this.portalAccountError = '';
+        } else {
+          this.portalAccount = null;
+          this.portalAccountError = 'Trenutno nije moguće učitati nalog lekara.';
         }
         this.clinicServiceApi.getServices(doctor.specialty.id).subscribe({
           next: (services) => {

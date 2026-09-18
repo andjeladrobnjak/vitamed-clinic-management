@@ -51,6 +51,21 @@ adminPortalRouter.post('/doctors/:id/absences', authenticateAdmin, (req, res) =>
 adminPortalRouter.delete('/doctors/:id/absences/:absenceId', authenticateAdmin, (req, res) =>
     adminPortalController.deleteDoctorAbsence(req, res)
 );
+adminPortalRouter.get('/doctors/:id/account', authenticateAdmin, (req, res) =>
+    adminPortalController.getDoctorAccount(req, res)
+);
+adminPortalRouter.get('/doctors/:id/account/email-suggestion', authenticateAdmin, (req, res) =>
+    adminPortalController.suggestDoctorAccountEmail(req, res)
+);
+adminPortalRouter.post('/doctors/:id/account/temporary-password', authenticateAdmin, (req, res) =>
+    adminPortalController.generateDoctorTemporaryPassword(req, res)
+);
+adminPortalRouter.post('/doctors/:id/account', authenticateAdmin, (req, res) =>
+    adminPortalController.createDoctorAccount(req, res)
+);
+adminPortalRouter.post('/doctors/:id/account/reset-password', authenticateAdmin, (req, res) =>
+    adminPortalController.resetDoctorPassword(req, res)
+);
 adminPortalRouter.post('/services', authenticateAdmin, (req, res) =>
     adminPortalController.createService(req, res)
 );
@@ -60,8 +75,20 @@ adminPortalRouter.put('/services/:id', authenticateAdmin, (req, res) =>
 adminPortalRouter.get('/statistics', authenticateAdmin, (req, res) =>
     adminPortalController.getStatistics(req, res)
 );
+adminPortalRouter.get('/schedule/eligible-doctors', authenticateAdmin, (req, res) =>
+    adminPortalController.listEligibleExceptionDoctors(req, res)
+);
 adminPortalRouter.get('/schedule', authenticateAdmin, (req, res) =>
     adminPortalController.getWeeklySchedule(req, res)
+);
+adminPortalRouter.get('/doctors/:id/schedule-day', authenticateAdmin, (req, res) =>
+    adminPortalController.getScheduleDay(req, res)
+);
+adminPortalRouter.put('/doctors/:id/schedule-exceptions/:date', authenticateAdmin, (req, res) =>
+    adminPortalController.upsertScheduleException(req, res)
+);
+adminPortalRouter.delete('/doctors/:id/schedule-exceptions/:date', authenticateAdmin, (req, res) =>
+    adminPortalController.deleteScheduleException(req, res)
 );
 adminPortalRouter.get('/appointments', authenticateAdmin, (req, res) =>
     adminPortalController.listAppointments(req, res)

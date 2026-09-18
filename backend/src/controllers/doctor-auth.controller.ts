@@ -56,6 +56,32 @@ export class DoctorAuthController {
         }
     }
 
+    async changePassword(req: Request, res: Response): Promise<void> {
+        try {
+            const accountId = (req as AuthenticatedRequest).doctorAccountId;
+            const doctorId = (req as AuthenticatedRequest).doctorId;
+
+            if (!accountId || !doctorId) {
+                res.status(401).json({ message: 'Niste prijavljeni.' });
+                return;
+            }
+
+            const result = await this.authService.changePassword(
+                accountId,
+                doctorId,
+                req.body?.password,
+                req.body?.confirmPassword
+            );
+            res.status(200).json({
+                message: 'Lozinka je uspešno promenjena.',
+                token: result.token,
+                doctor: result.doctor
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće promeniti lozinku.');
+        }
+    }
+
     private handleError(res: Response, error: unknown, fallback: string): void {
         if (error instanceof DoctorAuthError) {
             res.status(error.statusCode).json({ message: error.message });
