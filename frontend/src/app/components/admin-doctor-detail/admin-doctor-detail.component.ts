@@ -842,6 +842,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
         this.specialties = specialties;
         this.locations = locations;
         this.applyDoctor(doctor);
+        this.applyRequestedTab();
         if (absences) {
           this.absences = absences.absences;
           this.absencesError = '';
@@ -871,6 +872,13 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
         this.loadError = error.error?.message || 'Trenutno nije moguće učitati lekara.';
       }
     });
+  }
+
+  private applyRequestedTab(): void {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'schedule' || tab === 'places' || tab === 'profile') {
+      this.activeTab = tab;
+    }
   }
 
   private revealCreatedFeedback(): void {

@@ -5,6 +5,8 @@ import { AdminClinicServiceService } from '../portal/admin-clinic-service.servic
 import { AdminDoctorAbsenceService } from '../portal/admin-doctor-absence.service';
 import { AdminDoctorService } from '../portal/admin-doctor.service';
 import { AdminPortalError, AdminPortalService } from '../portal/admin-portal.service';
+import { AdminWeeklyScheduleService } from '../portal/admin-weekly-schedule.service';
+import { AdminStatisticsService } from '../portal/admin-statistics.service';
 
 export class AdminPortalController {
     constructor(
@@ -13,6 +15,8 @@ export class AdminPortalController {
         private readonly clinicService = new AdminClinicServiceService(),
         private readonly appointmentService = new AdminAppointmentService(),
         private readonly absenceService = new AdminDoctorAbsenceService(),
+        private readonly weeklyScheduleService = new AdminWeeklyScheduleService(),
+        private readonly statisticsService = new AdminStatisticsService(),
         private readonly mailService = new MailService()
     ) {}
 
@@ -108,6 +112,24 @@ export class AdminPortalController {
             res.status(200).json(service);
         } catch (error) {
             this.handleError(res, error, 'Trenutno nije moguće sačuvati uslugu.');
+        }
+    }
+
+    async getStatistics(req: Request, res: Response): Promise<void> {
+        try {
+            const statistics = await this.statisticsService.getStatistics(req.query.period);
+            res.status(200).json(statistics);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati statistiku.');
+        }
+    }
+
+    async getWeeklySchedule(req: Request, res: Response): Promise<void> {
+        try {
+            const schedule = await this.weeklyScheduleService.getWeek(req.query as Record<string, unknown>);
+            res.status(200).json(schedule);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati raspored.');
         }
     }
 

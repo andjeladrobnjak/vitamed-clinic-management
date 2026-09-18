@@ -57,6 +57,12 @@ adminPortalRouter.post('/services', authenticateAdmin, (req, res) =>
 adminPortalRouter.put('/services/:id', authenticateAdmin, (req, res) =>
     adminPortalController.updateService(req, res)
 );
+adminPortalRouter.get('/statistics', authenticateAdmin, (req, res) =>
+    adminPortalController.getStatistics(req, res)
+);
+adminPortalRouter.get('/schedule', authenticateAdmin, (req, res) =>
+    adminPortalController.getWeeklySchedule(req, res)
+);
 adminPortalRouter.get('/appointments', authenticateAdmin, (req, res) =>
     adminPortalController.listAppointments(req, res)
 );

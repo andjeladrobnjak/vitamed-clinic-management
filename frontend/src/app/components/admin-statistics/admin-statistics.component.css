@@ -1,9 +1,15 @@
-.section {
+.page {
+  --petrol: #17343a;
   --burgundy: #7a3f46;
+  --stone: #d9d6cf;
   --muted: #5c6564;
+  --paper: #faf8f4;
 }
 
-.eyebrow {
+.page * { box-sizing: border-box; }
+.intro { margin-bottom: 1.35rem; }
+
+.eyebrow, .section-label {
   margin: 0 0 0.4rem;
   color: var(--burgundy);
   font-size: 0.7rem;
@@ -19,13 +25,131 @@ h1 {
   letter-spacing: -0.02em;
 }
 
-.lead,
-.note {
+.lead, .state, .section-lead, .chart-empty {
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
 }
 
-.note {
-  margin-top: 1.1rem;
+.section-lead { font-size: 0.86rem; }
+.state { margin-top: 0.35rem; }
+.state.is-error { color: #8d555b; }
+
+.text-retry {
+  margin-top: 0.55rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--petrol);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.popularity { margin-bottom: 1.55rem; }
+
+.insights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.insight-card {
+  padding: 0.85rem 0.95rem 0.9rem;
+  border: 1px solid var(--stone);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.insight-kicker {
+  margin: 0 0 0.7rem;
+  color: var(--petrol);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.insight-block + .insight-block {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(217, 214, 207, 0.95);
+}
+
+.insight-period {
+  margin: 0 0 0.35rem;
+  color: var(--burgundy);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.insight-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.insight-meta, .insight-count, .insight-empty {
+  margin: 0.14rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.insight-count { font-weight: 600; color: var(--petrol); }
+
+.insight-block.is-secondary {
+  opacity: 0.82;
+}
+
+.insight-block.is-secondary .insight-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.insight-block.is-secondary .insight-period {
+  color: #6d4a4e;
+}
+
+.analysis-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 0.95rem;
+}
+
+.period-control {
+  display: grid;
+  gap: 0.18rem;
+  justify-items: end;
+  flex: 0 0 auto;
+}
+
+.period-label {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.period-control select {
+  min-width: 11.5rem;
+  max-width: 14.5rem;
+  padding: 0.32rem 0.55rem;
+  border: 1px solid var(--stone);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--petrol);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 760px) {
+  .insights { grid-template-columns: 1fr; }
+  .analysis-head { flex-direction: column; }
+  .period-control { justify-items: start; width: 100%; }
+  .period-control select { width: 100%; max-width: none; }
 }

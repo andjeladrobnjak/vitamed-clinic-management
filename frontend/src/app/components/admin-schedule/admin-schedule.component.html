@@ -1,0 +1,110 @@
+<section class="page">
+  <header class="intro">
+    <p class="eyebrow">Raspored</p>
+    <h1>Nedeljni raspored lekara</h1>
+    <p class="lead">Pregledajte organizaciju rada lekara po lokacijama.</p>
+  </header>
+
+  @if (isLoadingLocations) {
+    <p class="state">Učitavanje rasporeda...</p>
+  } @else if (locationsError) {
+    <p class="state is-error">{{ locationsError }}</p>
+    <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+  } @else if (locations.length === 0) {
+    <p class="empty">Trenutno nema unetih lokacija.</p>
+  } @else {
+    <div class="toolbar">
+      <label class="location-filter">
+        <span class="filter-label">Lokacija</span>
+        <select [value]="selectedLocationId" (change)="onLocationChange($event)">
+          @for (location of locations; track location.id) {
+            <option [value]="location.id">{{ location.name }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="week-nav" aria-label="Nedelja">
+        <button type="button" class="nav-btn" (click)="previousWeek()" aria-label="Prethodna nedelja">‹</button>
+        <p class="week-range">{{ weekRangeLabel }}</p>
+        <button type="button" class="nav-btn" (click)="nextWeek()" aria-label="Sledeća nedelja">›</button>
+        <button
+          type="button"
+          class="today-btn"
+          (click)="goToToday()"
+          [disabled]="isCurrentWeek && !!schedule && !scheduleError && !isLoadingSchedule"
+        >
+          Danas
+        </button>
+      </div>
+    </div>
+
+    @if (isLoadingSchedule) {
+      <p class="state">Učitavanje rasporeda...</p>
+    } @else if (scheduleError) {
+      <p class="state is-error">{{ scheduleError }}</p>
+      <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+    } @else if (schedule) {
+      <div class="week-scroll">
+        <div class="week-grid" role="list">
+          @for (day of schedule.days; track day.date) {
+            <section class="day-col" role="listitem" [class.is-today]="isToday(day.date)">
+              <header class="day-head">
+                <p class="day-name">{{ weekdayLabels[day.dayOfWeek - 1] }}</p>
+                <p class="day-date">{{ dayDateLabel(day.date) }}</p>
+              </header>
+
+              @if (day.entries.length === 0) {
+                <p class="day-empty">Nema lekara u rasporedu.</p>
+              } @else {
+                <div class="day-list">
+                  @for (entry of day.entries; track entry.doctorId) {
+                    <a
+                      class="doctor-card"
+                      [class.is-absent]="!!entry.absenceReason"
+                      [routerLink]="['/admin/doctors', entry.doctorId]"
+                      [queryParams]="{ tab: 'schedule' }"
+                    >
+                      <p class="doctor-name">{{ doctorLabel(entry) }}</p>
+                      <p class="doctor-specialty">{{ entry.specialtyName }}</p>
+                      @if (entry.absenceReason) {
+                        <p class="absence-label">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            @for (node of calendarOffIcon; track $index) {
+                              @if (node[0] === 'path') {
+                                <path [attr.d]="$any(node[1]).d"></path>
+                              } @else if (node[0] === 'line') {
+                                <line
+                                  [attr.x1]="$any(node[1]).x1"
+                                  [attr.y1]="$any(node[1]).y1"
+                                  [attr.x2]="$any(node[1]).x2"
+                                  [attr.y2]="$any(node[1]).y2"
+                                ></line>
+                              } @else if (node[0] === 'polyline') {
+                                <polyline [attr.points]="$any(node[1]).points"></polyline>
+                              } @else if (node[0] === 'rect') {
+                                <rect
+                                  [attr.x]="$any(node[1]).x"
+                                  [attr.y]="$any(node[1]).y"
+                                  [attr.width]="$any(node[1]).width"
+                                  [attr.height]="$any(node[1]).height"
+                                  [attr.rx]="$any(node[1]).rx"
+                                ></rect>
+                              }
+                            }
+                          </svg>
+                          {{ absenceLabel(entry.absenceReason) }}
+                        </p>
+                      } @else {
+                        <p class="doctor-hours">{{ entry.startTime }} - {{ entry.endTime }}</p>
+                      }
+                    </a>
+                  }
+                </div>
+              }
+            </section>
+          }
+        </div>
+      </div>
+    }
+  }
+</section>

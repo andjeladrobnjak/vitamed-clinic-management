@@ -114,6 +114,91 @@ export interface AdminDoctorAbsence {
   createdAt: string | null;
 }
 
+export type AdminWeeklyAbsenceReason = AdminDoctorAbsenceReason;
+
+export interface AdminWeeklyScheduleEntry {
+  doctorId: number;
+  firstName: string;
+  lastName: string;
+  specialtyName: string;
+  startTime: string;
+  endTime: string;
+  absenceReason: AdminWeeklyAbsenceReason | null;
+}
+
+export interface AdminWeeklyScheduleDay {
+  date: string;
+  dayOfWeek: number;
+  entries: AdminWeeklyScheduleEntry[];
+}
+
+export interface AdminWeeklySchedule {
+  location: { id: number; name: string };
+  weekStart: string;
+  weekEnd: string;
+  days: AdminWeeklyScheduleDay[];
+}
+
+export type AdminStatisticsPeriod = 'thisMonth' | 'thisYear' | 'last12months';
+
+export interface AdminStatisticsPopularDoctor {
+  id: number;
+  firstName: string;
+  lastName: string;
+  specialtyName: string;
+  count: number;
+}
+
+export interface AdminStatisticsPopularService {
+  id: number;
+  name: string;
+  specialtyName: string;
+  count: number;
+}
+
+export interface AdminStatisticsCountPoint {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface AdminStatisticsRatePoint {
+  key: string;
+  label: string;
+  percent: number;
+  cancelled: number;
+  total: number;
+}
+
+export interface AdminStatisticsNamedCount {
+  id: number;
+  name: string;
+  count: number;
+  percent: number;
+}
+
+export interface AdminStatistics {
+  period: AdminStatisticsPeriod;
+  popularDoctors: {
+    thisMonth: AdminStatisticsPopularDoctor | null;
+    allTime: AdminStatisticsPopularDoctor | null;
+  };
+  popularServices: {
+    thisMonth: AdminStatisticsPopularService | null;
+    allTime: AdminStatisticsPopularService | null;
+  };
+  completedTrend: {
+    granularity: 'day' | 'month';
+    points: AdminStatisticsCountPoint[];
+  };
+  specialtyDemand: AdminStatisticsNamedCount[];
+  locationDemand: AdminStatisticsNamedCount[];
+  cancellationTrend: {
+    granularity: 'day' | 'month';
+    points: AdminStatisticsRatePoint[];
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -164,6 +249,21 @@ export class AdminPortalService {
 
   getDoctorAbsences(doctorId: number): Observable<{ absences: AdminDoctorAbsence[] }> {
     return this.http.get<{ absences: AdminDoctorAbsence[] }>(`${this.portalUrl}/doctors/${doctorId}/absences`);
+  }
+
+  getWeeklySchedule(locationId: number, weekStart: string): Observable<AdminWeeklySchedule> {
+    return this.http.get<AdminWeeklySchedule>(`${this.portalUrl}/schedule`, {
+      params: {
+        locationId: String(locationId),
+        weekStart
+      }
+    });
+  }
+
+  getStatistics(period: AdminStatisticsPeriod): Observable<AdminStatistics> {
+    return this.http.get<AdminStatistics>(`${this.portalUrl}/statistics`, {
+      params: { period }
+    });
   }
 
   createDoctorAbsence(

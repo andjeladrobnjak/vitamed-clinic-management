@@ -1,6 +1,141 @@
-<section class="section">
-  <p class="eyebrow">Administracija</p>
-  <h1>Statistika</h1>
-  <p class="lead">Pregled ključnih pokazatelja poslovanja i aktivnosti sistema VitaMed</p>
-  <p class="note">Grafikoni i detaljni izveštaji biće dodati u narednoj fazi.</p>
+<section class="page">
+  <header class="intro">
+    <p class="eyebrow">Statistika</p>
+    <h1>Analitika klinike</h1>
+    <p class="lead">Pratite ključne pokazatelje i trendove zakazanih pregleda.</p>
+  </header>
+
+  @if (isLoading) {
+    <p class="state">Učitavanje statistike...</p>
+  } @else if (loadError && !stats) {
+    <p class="state is-error">{{ loadError }}</p>
+    <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+  } @else if (stats) {
+    <section class="popularity" aria-label="Najtraženije">
+      <p class="section-label">Najtraženije</p>
+      <div class="insights">
+        <article class="insight-card">
+          <h2 class="insight-kicker">Najtraženiji lekar</h2>
+          <div class="insight-block">
+            <p class="insight-period">OVOG MESECA</p>
+            @if (stats.popularDoctors.thisMonth; as doctor) {
+              <p class="insight-title">{{ doctorLabel(doctor) }}</p>
+              <p class="insight-meta">{{ doctor.specialtyName }}</p>
+              <p class="insight-count">{{ countLabel(doctor.count) }}</p>
+            } @else {
+              <p class="insight-empty">Nema podataka</p>
+            }
+          </div>
+          <div class="insight-block is-secondary">
+            <p class="insight-period">UKUPNO</p>
+            @if (stats.popularDoctors.allTime; as doctor) {
+              <p class="insight-title">{{ doctorLabel(doctor) }}</p>
+              <p class="insight-meta">{{ doctor.specialtyName }}</p>
+              <p class="insight-count">{{ countLabel(doctor.count) }}</p>
+            } @else {
+              <p class="insight-empty">Nema podataka</p>
+            }
+          </div>
+        </article>
+
+        <article class="insight-card">
+          <h2 class="insight-kicker">Najtraženija usluga</h2>
+          <div class="insight-block">
+            <p class="insight-period">OVOG MESECA</p>
+            @if (stats.popularServices.thisMonth; as service) {
+              <p class="insight-title">{{ serviceLabel(service) }}</p>
+              <p class="insight-meta">{{ service.specialtyName }}</p>
+              <p class="insight-count">{{ countLabel(service.count) }}</p>
+            } @else {
+              <p class="insight-empty">Nema podataka</p>
+            }
+          </div>
+          <div class="insight-block is-secondary">
+            <p class="insight-period">UKUPNO</p>
+            @if (stats.popularServices.allTime; as service) {
+              <p class="insight-title">{{ serviceLabel(service) }}</p>
+              <p class="insight-meta">{{ service.specialtyName }}</p>
+              <p class="insight-count">{{ countLabel(service.count) }}</p>
+            } @else {
+              <p class="insight-empty">Nema podataka</p>
+            }
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="analysis" aria-label="Analiza za period">
+      <div class="analysis-head">
+        <div>
+          <p class="section-label">Analiza za period</p>
+          <p class="section-lead">Prikaz statistike prema datumu zakazanog pregleda.</p>
+        </div>
+        <label class="period-control">
+          <span class="period-label">Period</span>
+          <select [value]="selectedPeriod" (change)="onPeriodChange($event)">
+            @for (period of periods; track period.value) {
+              <option [value]="period.value">{{ period.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      @if (isRefreshingCharts) {
+        <p class="state">Učitavanje statistike...</p>
+      } @else if (loadError) {
+        <p class="state is-error">{{ loadError }}</p>
+        <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+      } @else {
+        <section class="chart-panel">
+          <h2>Kretanje broja obavljenih pregleda</h2>
+          <p class="chart-desc">{{ completedDescription }}</p>
+          @if (stats.completedTrend.points.length === 0) {
+            <p class="chart-empty">Nema podataka</p>
+          } @else {
+            <div class="chart-container chart-container-primary">
+              <app-admin-chart type="line" kind="completed" [points]="completedChart" />
+            </div>
+          }
+        </section>
+
+        <div class="chart-row">
+          <section class="chart-panel">
+            <h2>Pregledi po specijalnostima</h2>
+            <p class="chart-desc">Raspodela potražnje po specijalnostima.</p>
+            @if (stats.specialtyDemand.length === 0) {
+              <p class="chart-empty">Nema podataka</p>
+            } @else {
+              <div class="chart-container chart-container-specialty">
+                <app-admin-chart type="bar" kind="specialty" [points]="specialtyChart" />
+              </div>
+            }
+          </section>
+
+          <section class="chart-panel">
+            <h2>Pregledi po lokacijama</h2>
+            <p class="chart-desc">Raspodela potražnje po lokacijama.</p>
+            @if (!locationHasDemand(stats)) {
+              <p class="chart-empty">Nema podataka</p>
+            } @else {
+              <div class="chart-container chart-container-doughnut">
+                <app-admin-chart type="doughnut" kind="location" [points]="locationChart" />
+              </div>
+            }
+          </section>
+        </div>
+
+        <section class="chart-panel">
+          <h2>Stopa otkazivanja kroz vreme</h2>
+          <p class="chart-desc">{{ cancellationDescription }}</p>
+          @if (stats.cancellationTrend.points.length === 0) {
+            <p class="chart-empty">Nema podataka</p>
+          } @else {
+            <div class="chart-container chart-container-secondary">
+              <app-admin-chart type="line" kind="cancellation" [points]="cancellationChart" />
+            </div>
+          }
+        </section>
+      }
+    </section>
+  }
 </section>

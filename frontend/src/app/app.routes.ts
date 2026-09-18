@@ -27,6 +27,7 @@ import { AdminServicesComponent } from './components/admin-services/admin-servic
 import { AdminAppointmentsComponent } from './components/admin-appointments/admin-appointments.component';
 import { AdminSectionComponent } from './components/admin-section/admin-section.component';
 import { AdminStatisticsComponent } from './components/admin-statistics/admin-statistics.component';
+import { AdminScheduleComponent } from './components/admin-schedule/admin-schedule.component';
 import { DoctorPortalComponent } from './components/doctor-portal/doctor-portal.component';
 import { DoctorScheduleComponent } from './components/doctor-schedule/doctor-schedule.component';
 import { DoctorPatientsComponent } from './components/doctor-patients/doctor-patients.component';
@@ -128,12 +129,8 @@ export const routes: Routes = [
         component: AdminAppointmentsComponent
       },
       {
-        path: 'patients',
-        component: AdminSectionComponent,
-        data: {
-          heading: 'Pacijenti',
-          lead: 'Pregled registrovanih pacijenata biće dostupan u narednoj fazi.'
-        }
+        path: 'schedule',
+        component: AdminScheduleComponent
       },
       { path: 'statistics', component: AdminStatisticsComponent },
       { path: '', pathMatch: 'full', redirectTo: 'portal' }
