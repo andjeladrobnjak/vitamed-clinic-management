@@ -103,6 +103,17 @@ export interface AdminAppointmentListParams {
   pageSize: number;
 }
 
+export type AdminDoctorAbsenceReason = 'annual_leave' | 'sick_leave' | 'day_off' | 'other';
+
+export interface AdminDoctorAbsence {
+  id: number;
+  doctorId: number;
+  startDate: string;
+  endDate: string;
+  reason: AdminDoctorAbsenceReason;
+  createdAt: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -149,6 +160,21 @@ export class AdminPortalService {
       `${this.portalUrl}/appointments/${id}/cancel`,
       {}
     );
+  }
+
+  getDoctorAbsences(doctorId: number): Observable<{ absences: AdminDoctorAbsence[] }> {
+    return this.http.get<{ absences: AdminDoctorAbsence[] }>(`${this.portalUrl}/doctors/${doctorId}/absences`);
+  }
+
+  createDoctorAbsence(
+    doctorId: number,
+    payload: { startDate: string; endDate: string; reason: AdminDoctorAbsenceReason }
+  ): Observable<AdminDoctorAbsence> {
+    return this.http.post<AdminDoctorAbsence>(`${this.portalUrl}/doctors/${doctorId}/absences`, payload);
+  }
+
+  deleteDoctorAbsence(doctorId: number, absenceId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.portalUrl}/doctors/${doctorId}/absences/${absenceId}`);
   }
 
   private toParams(params: AdminAppointmentListParams): Record<string, string> {

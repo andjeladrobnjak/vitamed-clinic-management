@@ -259,8 +259,8 @@
 
       @if (activeTab === 'schedule') {
         <section class="block">
-          <h2>Raspored rada</h2>
-          <p class="empty-note">Definišite radno vreme i lokaciju lekara za svaki radni dan.</p>
+          <h2>Redovni raspored</h2>
+          <p class="empty-note">Definišite standardno radno vreme lekara tokom nedelje.</p>
           @if (selectedLocations().length === 0) {
             <p class="empty-note">Najpre izaberite najmanje jednu lokaciju na kojoj lekar radi.</p>
           }
@@ -352,6 +352,81 @@
             }
           </div>
         </section>
+
+        @if (!isCreate) {
+          <section class="block absences-block">
+            <div class="absences-head">
+              <div>
+                <h2>Odsustva</h2>
+                <p class="empty-note">Evidentirajte periode u kojima lekar neće biti dostupan za zakazivanje.</p>
+              </div>
+              <button class="btn-add-absence" type="button" (click)="openAbsenceModal()">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  @for (node of plusIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'line') {
+                      <line
+                        [attr.x1]="$any(node[1]).x1"
+                        [attr.y1]="$any(node[1]).y1"
+                        [attr.x2]="$any(node[1]).x2"
+                        [attr.y2]="$any(node[1]).y2"
+                      ></line>
+                    }
+                  }
+                </svg>
+                Dodaj odsustvo
+              </button>
+            </div>
+
+            @if (absenceSuccess) {
+              <div class="alert" role="status">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  @for (node of successIcon; track $index) {
+                    @if (node[0] === 'path') {
+                      <path [attr.d]="$any(node[1]).d"></path>
+                    } @else if (node[0] === 'circle') {
+                      <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                    }
+                  }
+                </svg>
+                <p>{{ absenceSuccess }}</p>
+              </div>
+            }
+
+            @if (absencesError) {
+              <p class="empty-note is-error">{{ absencesError }}</p>
+              <button class="text-retry" type="button" (click)="retryAbsences()">Pokušajte ponovo</button>
+            } @else if (absences.length === 0) {
+              <p class="empty-note">Nema evidentiranih odsustava.</p>
+            } @else {
+              <div class="absence-table">
+                <div class="absence-row head" aria-hidden="true">
+                  <span>Period</span>
+                  <span>Razlog</span>
+                  <span>Status</span>
+                  <span>Akcija</span>
+                </div>
+                @for (absence of absences; track absence.id) {
+                  <div class="absence-row" [class.is-past]="absenceStatus(absence) === 'ended'">
+                    <span>{{ absencePeriod(absence) }}</span>
+                    <span>{{ absenceReasonLabel(absence.reason) }}</span>
+                    <span>
+                      <span class="absence-status {{ absenceStatus(absence) }}">{{ absenceStatusLabel(absence) }}</span>
+                    </span>
+                    <span>
+                      @if (canRemoveAbsence(absence)) {
+                        <button class="btn-remove-absence" type="button" (click)="openRemoveAbsence(absence)">Ukloni</button>
+                      } @else {
+                        <span class="absence-idle">-</span>
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </section>
+        }
       }
 
     </form>
@@ -359,15 +434,145 @@
 </section>
 
 @if (confirmKind) {
-  <div class="overlay" (click)="cancelConfirm()">
+  <div class="overlay" [class.is-top]="confirmKind === 'absence-remove'" (click)="cancelConfirm()">
     <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <p class="eyebrow">Lekari</p>
       <h2>{{ confirmTitle() }}</h2>
-      <p class="lead">{{ confirmMessage() }}</p>
+      @if (confirmKind === 'absence-remove') {
+        <p class="confirm-lead">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of warningIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+          <span>{{ confirmMessage() }}</span>
+        </p>
+        @if (removeAbsenceError) {
+          <div class="alert is-error" role="alert">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of alertIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'circle') {
+                  <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                } @else if (node[0] === 'line') {
+                  <line
+                    [attr.x1]="$any(node[1]).x1"
+                    [attr.y1]="$any(node[1]).y1"
+                    [attr.x2]="$any(node[1]).x2"
+                    [attr.y2]="$any(node[1]).y2"
+                  ></line>
+                }
+              }
+            </svg>
+            <p>{{ removeAbsenceError }}</p>
+          </div>
+        }
+      } @else {
+        <p class="lead">{{ confirmMessage() }}</p>
+      }
       <div class="dialog-actions">
-        <button class="btn-secondary" type="button" (click)="cancelConfirm()">Odustani</button>
-        <button class="btn-confirm" type="button" (click)="confirmAction()">Nastavi</button>
+        <button class="btn-secondary" type="button" (click)="cancelConfirm()" [disabled]="isRemovingAbsence">Odustani</button>
+        @if (confirmKind === 'absence-remove') {
+          <button class="btn-danger" type="button" (click)="confirmAction()" [disabled]="isRemovingAbsence">
+            {{ isRemovingAbsence ? 'Uklanjanje...' : 'Ukloni odsustvo' }}
+          </button>
+        } @else {
+          <button class="btn-confirm" type="button" (click)="confirmAction()">Nastavi</button>
+        }
       </div>
+    </div>
+  </div>
+}
+
+@if (absenceModalOpen) {
+  <div class="overlay" (click)="closeAbsenceModal()">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="absence-modal-title" (click)="$event.stopPropagation()">
+      <p class="eyebrow">Lekari</p>
+      <h2 id="absence-modal-title">Dodaj odsustvo</h2>
+
+      @if (absenceModalError) {
+        <div class="alert is-error" role="alert">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            @for (node of alertIcon; track $index) {
+              @if (node[0] === 'path') {
+                <path [attr.d]="$any(node[1]).d"></path>
+              } @else if (node[0] === 'circle') {
+                <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+              } @else if (node[0] === 'line') {
+                <line
+                  [attr.x1]="$any(node[1]).x1"
+                  [attr.y1]="$any(node[1]).y1"
+                  [attr.x2]="$any(node[1]).x2"
+                  [attr.y2]="$any(node[1]).y2"
+                ></line>
+              }
+            }
+          </svg>
+          <p>{{ absenceModalError }}</p>
+        </div>
+      }
+
+      <form class="absence-form" (ngSubmit)="submitAbsence()">
+        <label class="field">
+          <span>Datum od *</span>
+          <input
+            type="date"
+            name="absenceStart"
+            [ngModel]="absenceFormStart"
+            (ngModelChange)="onAbsenceStartChange($event)"
+            [min]="clinicToday()"
+            [class.invalid]="absenceStartError"
+          >
+          @if (absenceStartError) {
+            <p class="hint-error">{{ absenceStartError }}</p>
+          }
+        </label>
+        <label class="field">
+          <span>Datum do *</span>
+          <input
+            type="date"
+            name="absenceEnd"
+            [(ngModel)]="absenceFormEnd"
+            [min]="absenceFormStart || clinicToday()"
+            [class.invalid]="absenceEndError"
+          >
+          @if (absenceEndError) {
+            <p class="hint-error">{{ absenceEndError }}</p>
+          }
+        </label>
+        <label class="field">
+          <span>Razlog *</span>
+          <select
+            name="absenceReason"
+            [(ngModel)]="absenceFormReason"
+            [class.invalid]="absenceReasonError"
+          >
+            <option value="">Izaberite razlog</option>
+            @for (reason of absenceReasons; track reason.value) {
+              <option [ngValue]="reason.value">{{ reason.label }}</option>
+            }
+          </select>
+          @if (absenceReasonError) {
+            <p class="hint-error">{{ absenceReasonError }}</p>
+          }
+        </label>
+        <div class="dialog-actions">
+          <button class="btn-secondary" type="button" (click)="closeAbsenceModal()" [disabled]="isSavingAbsence">Odustani</button>
+          <button class="btn-confirm" type="submit" [disabled]="isSavingAbsence">
+            {{ isSavingAbsence ? 'Dodavanje...' : 'Dodaj odsustvo' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 }

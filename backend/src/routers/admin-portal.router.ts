@@ -42,6 +42,15 @@ adminPortalRouter.post(
 adminPortalRouter.put('/doctors/:id', authenticateAdmin, (req, res) =>
     adminPortalController.updateDoctor(req, res)
 );
+adminPortalRouter.get('/doctors/:id/absences', authenticateAdmin, (req, res) =>
+    adminPortalController.listDoctorAbsences(req, res)
+);
+adminPortalRouter.post('/doctors/:id/absences', authenticateAdmin, (req, res) =>
+    adminPortalController.createDoctorAbsence(req, res)
+);
+adminPortalRouter.delete('/doctors/:id/absences/:absenceId', authenticateAdmin, (req, res) =>
+    adminPortalController.deleteDoctorAbsence(req, res)
+);
 adminPortalRouter.post('/services', authenticateAdmin, (req, res) =>
     adminPortalController.createService(req, res)
 );

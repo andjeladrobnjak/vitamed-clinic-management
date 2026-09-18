@@ -73,13 +73,15 @@ export class AvailabilityService {
             doctorId: params.doctorId,
             locationId: params.locationId,
             serviceId: params.serviceId,
-            availableTimes: availableStartLabelsForDate({
-                shift,
-                durationMinutes: context.durationMinutes,
-                blocking,
-                date: params.date,
-                clock
-            })
+            availableTimes: context.absentDates.has(params.date)
+                ? []
+                : availableStartLabelsForDate({
+                    shift,
+                    durationMinutes: context.durationMinutes,
+                    blocking,
+                    date: params.date,
+                    clock
+                })
         };
     }
 
@@ -102,6 +104,9 @@ export class AvailabilityService {
         const context = await this.loadContext(params, range.from, range.to, pool);
 
         const availableDates = eachDateInclusive(range.from, range.to).filter((date) => {
+            if (context.absentDates.has(date)) {
+                return false;
+            }
             const shift = context.shiftsByWeekday.get(weekdayFromCalendarDate(date));
             const times = availableStartLabelsForDate({
                 shift,
@@ -163,6 +168,12 @@ export class AvailabilityService {
 
         const context = await this.loadContext(params, params.date, params.date, executor);
         const clock = clinicClock();
+        if (context.absentDates.has(params.date)) {
+            throw new AvailabilityContextError(
+                409,
+                'Nažalost, izabrani termin više nije dostupan. Molimo izaberite drugi termin.'
+            );
+        }
         const shift = context.shiftsByWeekday.get(weekday);
         const availableTimes = availableStartLabelsForDate({
             shift,
@@ -195,6 +206,7 @@ export class AvailabilityService {
         durationMinutes: number;
         shiftsByWeekday: Map<number, DoctorShift>;
         appointmentsByDate: Map<string, TimeInterval[]>;
+        absentDates: Set<string>;
     }> {
         await this.assertEntitiesExist(params, executor);
         await this.assertDoctorRelationships(params, executor);
@@ -207,8 +219,14 @@ export class AvailabilityService {
             to ?? null,
             executor
         );
+        const absentDates = await this.getAbsenceDates(
+            params.doctorId,
+            from ?? null,
+            to ?? null,
+            executor
+        );
 
-        return { durationMinutes, shiftsByWeekday, appointmentsByDate };
+        return { durationMinutes, shiftsByWeekday, appointmentsByDate, absentDates };
     }
 
     private async assertEntitiesExist(params: AvailabilityQuery, executor: Queryable): Promise<void> {
@@ -336,6 +354,45 @@ export class AvailabilityService {
         }
 
         return byDate;
+    }
+
+    private async getAbsenceDates(
+        doctorId: number,
+        from: string | null,
+        to: string | null,
+        executor: Queryable
+    ): Promise<Set<string>> {
+        const params: Array<number | string> = [doctorId];
+        let sql = `
+            SELECT
+                DATE_FORMAT(start_date, '%Y-%m-%d') AS startDate,
+                DATE_FORMAT(end_date, '%Y-%m-%d') AS endDate
+            FROM doctor_absences
+            WHERE doctor_id = ?
+        `;
+
+        if (from && to) {
+            sql += ' AND start_date <= ? AND end_date >= ?';
+            params.push(to, from);
+        }
+
+        const [rows] = await executor.query<(RowDataPacket & { startDate: string; endDate: string })[]>(sql, params);
+        const dates = new Set<string>();
+
+        for (const row of rows) {
+            const absenceStart = String(row.startDate);
+            const absenceEnd = String(row.endDate);
+            const rangeStart = from && compareIsoDates(absenceStart, from) < 0 ? from : absenceStart;
+            const rangeEnd = to && compareIsoDates(absenceEnd, to) > 0 ? to : absenceEnd;
+            if (compareIsoDates(rangeStart, rangeEnd) > 0) {
+                continue;
+            }
+            for (const date of eachDateInclusive(rangeStart, rangeEnd)) {
+                dates.add(date);
+            }
+        }
+
+        return dates;
     }
 
     private async countById(

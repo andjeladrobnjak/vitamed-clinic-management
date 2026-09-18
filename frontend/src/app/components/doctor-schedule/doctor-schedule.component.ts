@@ -1,9 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { LucideCalendarOff } from '@lucide/angular';
 import { DoctorAuthService } from '../../services/doctor-auth.service';
 import {
   DoctorPortalMonthSchedule,
+  DoctorPortalScheduleAbsence,
   DoctorPortalScheduleAppointment,
   DoctorPortalScheduleDay,
   DoctorPortalScheduleShift,
@@ -20,9 +22,11 @@ interface CalendarCell {
   date: string;
   dayNumber: number;
   inMonth: boolean;
+  isToday: boolean;
   shift: DoctorPortalScheduleShift | null;
   appointmentCount: number;
   appointments: DoctorPortalScheduleAppointment[];
+  absence: DoctorPortalScheduleAbsence | null;
 }
 
 @Component({
@@ -30,10 +34,11 @@ interface CalendarCell {
   standalone: true,
   imports: [DoctorPortalHeaderComponent, RouterLink, DoctorCancelAppointmentModalComponent],
   templateUrl: './doctor-schedule.component.html',
-  styleUrl: './doctor-schedule.component.css'
+  styleUrls: ['./doctor-schedule.component.css', './doctor-schedule-absences.css']
 })
 export class DoctorScheduleComponent implements OnInit {
   readonly weekdayLabels = ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
+  readonly calendarOffIcon = LucideCalendarOff.icon.node;
 
   year: number;
   month: number;
@@ -120,10 +125,33 @@ export class DoctorScheduleComponent implements OnInit {
   }
 
   selectDay(cell: CalendarCell): void {
-    if (!cell.shift) {
+    if (!this.canSelectDay(cell)) {
       return;
     }
     this.selectedDate = this.selectedDate === cell.date ? null : cell.date;
+  }
+
+  canSelectDay(cell: CalendarCell): boolean {
+    if (!cell.shift) {
+      return false;
+    }
+    if (cell.absence && cell.appointments.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  absenceLabel(reason: DoctorPortalScheduleAbsence['reason']): string {
+    if (reason === 'annual_leave') {
+      return 'Godišnji odmor';
+    }
+    if (reason === 'sick_leave') {
+      return 'Bolovanje';
+    }
+    if (reason === 'day_off') {
+      return 'Slobodan dan';
+    }
+    return 'Drugo';
   }
 
   closePanel(): void {
@@ -237,6 +265,7 @@ export class DoctorScheduleComponent implements OnInit {
     }
 
     const monthKey = String(schedule.month).padStart(2, '0');
+    const today = this.clinicToday();
     const cells: CalendarCell[] = [];
     let current = schedule.from;
     while (current <= schedule.to) {
@@ -246,13 +275,22 @@ export class DoctorScheduleComponent implements OnInit {
         date: current,
         dayNumber: Number(current.slice(8, 10)),
         inMonth: current.slice(5, 7) === monthKey,
+        isToday: current === today,
         shift: shifts.get(weekday) ?? null,
         appointmentCount: day?.appointmentCount ?? 0,
-        appointments: day?.appointments ?? []
+        appointments: day?.appointments ?? [],
+        absence: this.absenceForDate(current, schedule.absences ?? [])
       });
       current = this.addDay(current, 1);
     }
     return cells;
+  }
+
+  private absenceForDate(
+    date: string,
+    absences: DoctorPortalScheduleAbsence[]
+  ): DoctorPortalScheduleAbsence | null {
+    return absences.find((absence) => absence.startDate <= date && absence.endDate >= date) ?? null;
   }
 
   private formatPanelDate(isoDate: string): string {

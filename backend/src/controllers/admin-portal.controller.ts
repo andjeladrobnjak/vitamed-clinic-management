@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { MailService } from '../mail/mail.service';
 import { AdminAppointmentService } from '../portal/admin-appointment.service';
 import { AdminClinicServiceService } from '../portal/admin-clinic-service.service';
+import { AdminDoctorAbsenceService } from '../portal/admin-doctor-absence.service';
 import { AdminDoctorService } from '../portal/admin-doctor.service';
 import { AdminPortalError, AdminPortalService } from '../portal/admin-portal.service';
 
@@ -11,6 +12,7 @@ export class AdminPortalController {
         private readonly doctorService = new AdminDoctorService(),
         private readonly clinicService = new AdminClinicServiceService(),
         private readonly appointmentService = new AdminAppointmentService(),
+        private readonly absenceService = new AdminDoctorAbsenceService(),
         private readonly mailService = new MailService()
     ) {}
 
@@ -61,6 +63,33 @@ export class AdminPortalController {
             res.status(200).json(doctor);
         } catch (error) {
             this.handleError(res, error, 'Trenutno nije moguće sačuvati izmene.');
+        }
+    }
+
+    async listDoctorAbsences(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await this.absenceService.list(req.params.id);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati odsustva.');
+        }
+    }
+
+    async createDoctorAbsence(req: Request, res: Response): Promise<void> {
+        try {
+            const absence = await this.absenceService.create(req.params.id, req.body ?? {});
+            res.status(201).json(absence);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće dodati odsustvo.');
+        }
+    }
+
+    async deleteDoctorAbsence(req: Request, res: Response): Promise<void> {
+        try {
+            await this.absenceService.remove(req.params.id, req.params.absenceId);
+            res.status(200).json({ message: 'Odsustvo je uspešno uklonjeno.' });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće ukloniti odsustvo.');
         }
     }
 

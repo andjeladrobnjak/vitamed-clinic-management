@@ -1,0 +1,71 @@
+.day-cell.is-today .day-number {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  text-decoration-thickness: 1px;
+}
+
+.day-cell.is-absence {
+  background: #eceae6;
+  border-color: #cfcbc3;
+  color: #5c6564;
+}
+
+button.day-cell.is-absence {
+  cursor: pointer;
+}
+
+button.day-cell.is-absence:hover,
+button.day-cell.is-absence:focus-visible {
+  border-color: #b7b2a8;
+}
+
+.day-cell.is-absence .day-number {
+  color: #17343a;
+}
+
+.day-cell.is-absence.is-selected {
+  border-color: #b7b2a8;
+  box-shadow: inset 2px 0 0 #8a8580;
+}
+
+.absence-label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.28rem;
+  margin-top: auto;
+  max-width: 100%;
+  color: #5c6564;
+  font-size: 0.64rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.absence-label svg {
+  width: 0.78rem;
+  height: 0.78rem;
+  flex-shrink: 0;
+  margin-top: 0.08rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.day-cell.is-absence .day-count {
+  color: #7a746c;
+}
+
+.panel-absence {
+  margin: 0.45rem 0 0;
+  color: #5c6564;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .absence-label {
+    font-size: 0.58rem;
+  }
+}

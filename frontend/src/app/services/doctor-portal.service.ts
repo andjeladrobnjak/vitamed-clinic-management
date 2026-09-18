@@ -159,6 +159,14 @@ export interface DoctorPortalMonthSchedule {
   to: string;
   shifts: DoctorPortalScheduleShift[];
   days: DoctorPortalScheduleDay[];
+  absences: DoctorPortalScheduleAbsence[];
+}
+
+export interface DoctorPortalScheduleAbsence {
+  id: number;
+  startDate: string;
+  endDate: string;
+  reason: 'annual_leave' | 'sick_leave' | 'day_off' | 'other';
 }
 
 @Injectable({

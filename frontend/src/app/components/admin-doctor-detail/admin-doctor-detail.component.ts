@@ -1,10 +1,21 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
-import { LucideArrowLeft, LucideCheck, LucideCircleAlert, LucideCircleCheck, LucideImageUp, LucideUserRound } from '@lucide/angular';
 import {
+  LucideArrowLeft,
+  LucideCheck,
+  LucideCircleAlert,
+  LucideCircleCheck,
+  LucideImageUp,
+  LucidePlus,
+  LucideTriangleAlert,
+  LucideUserRound
+} from '@lucide/angular';
+import {
+  AdminDoctorAbsence,
+  AdminDoctorAbsenceReason,
   AdminDoctorDetail,
   AdminDoctorSchedule,
   AdminDoctorUpdatePayload,
@@ -41,7 +52,8 @@ const WEEKDAYS: { dayOfWeek: number; label: string }[] = [
   templateUrl: './admin-doctor-detail.component.html',
   styleUrls: [
     './admin-doctor-detail.component.css',
-    './admin-doctor-detail-editor.css'
+    './admin-doctor-detail-editor.css',
+    './admin-doctor-detail-absences.css'
   ]
 })
 export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
@@ -53,6 +65,8 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   readonly alertIcon = LucideCircleAlert.icon.node;
   readonly uploadIcon = LucideImageUp.icon.node;
   readonly backIcon = LucideArrowLeft.icon.node;
+  readonly plusIcon = LucidePlus.icon.node;
+  readonly warningIcon = LucideTriangleAlert.icon.node;
 
   @ViewChild('saveFeedback') private saveFeedback?: ElementRef<HTMLElement>;
 
@@ -67,8 +81,23 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   saveSuccess = '';
   firstNameError = '';
   lastNameError = '';
-  confirmKind: 'leave' | 'specialty' | null = null;
+  confirmKind: 'leave' | 'specialty' | 'absence-remove' | null = null;
   pendingSpecialtyId: number | null = null;
+  absences: AdminDoctorAbsence[] = [];
+  absencesError = '';
+  absenceSuccess = '';
+  absenceModalOpen = false;
+  isSavingAbsence = false;
+  isRemovingAbsence = false;
+  absenceFormStart = '';
+  absenceFormEnd = '';
+  absenceFormReason: AdminDoctorAbsenceReason | '' = '';
+  absenceStartError = '';
+  absenceEndError = '';
+  absenceReasonError = '';
+  absenceModalError = '';
+  removeAbsenceError = '';
+  pendingAbsence: AdminDoctorAbsence | null = null;
 
   firstName = '';
   lastName = '';
@@ -90,6 +119,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
 
   private snapshot = '';
   private successTimer: ReturnType<typeof setTimeout> | null = null;
+  private absenceSuccessTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly portalService = inject(AdminPortalService);
@@ -111,7 +141,24 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearSuccessTimer();
+    this.clearAbsenceSuccessTimer();
     this.revokePreviewUrl();
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || this.isSavingAbsence || this.isRemovingAbsence) {
+      return;
+    }
+    if (this.confirmKind === 'absence-remove') {
+      event.preventDefault();
+      this.cancelConfirm();
+      return;
+    }
+    if (this.absenceModalOpen) {
+      event.preventDefault();
+      this.closeAbsenceModal();
+    }
   }
 
   retryLoad(): void {
@@ -322,6 +369,11 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.confirmKind === 'absence-remove') {
+      this.confirmRemoveAbsence();
+      return;
+    }
+
     if (this.confirmKind === 'specialty' && this.pendingSpecialtyId) {
       const nextId = this.pendingSpecialtyId;
       this.confirmKind = null;
@@ -333,17 +385,31 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   }
 
   cancelConfirm(): void {
+    if (this.isRemovingAbsence) {
+      return;
+    }
     this.confirmKind = null;
     this.pendingSpecialtyId = null;
+    this.pendingAbsence = null;
+    this.removeAbsenceError = '';
   }
 
   confirmTitle(): string {
-    return this.confirmKind === 'leave' ? 'Nesačuvane izmene' : 'Promena specijalizacije';
+    if (this.confirmKind === 'leave') {
+      return 'Nesačuvane izmene';
+    }
+    if (this.confirmKind === 'absence-remove') {
+      return 'Uklonite odsustvo?';
+    }
+    return 'Promena specijalizacije';
   }
 
   confirmMessage(): string {
     if (this.confirmKind === 'leave') {
       return 'Imate nesačuvane izmene. Da li želite da napustite stranicu?';
+    }
+    if (this.confirmKind === 'absence-remove' && this.pendingAbsence) {
+      return `Uklanjanjem odsustva lekar će ponovo biti dostupan za zakazivanje u skladu sa svojim redovnim rasporedom. Period: ${this.absencePeriod(this.pendingAbsence)}. Razlog: ${this.absenceReasonLabel(this.pendingAbsence.reason)}.`;
     }
     return 'Promena specijalizacije ukloniće usluge koje joj ne pripadaju. Da li želite da nastavite?';
   }
@@ -456,6 +522,208 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     return this.isSaving ? 'Čuvanje...' : 'Sačuvaj izmene';
   }
 
+  readonly absenceReasons: { value: AdminDoctorAbsenceReason; label: string }[] = [
+    { value: 'annual_leave', label: 'Godišnji odmor' },
+    { value: 'sick_leave', label: 'Bolovanje' },
+    { value: 'day_off', label: 'Slobodan dan' },
+    { value: 'other', label: 'Drugo' }
+  ];
+
+  clinicToday(): string {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Belgrade',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  }
+
+  absencePeriod(absence: AdminDoctorAbsence): string {
+    if (absence.startDate === absence.endDate) {
+      return this.formatAbsenceDate(absence.startDate);
+    }
+    return `${this.formatAbsenceDate(absence.startDate)} - ${this.formatAbsenceDate(absence.endDate)}`;
+  }
+
+  absenceReasonLabel(reason: string): string {
+    return this.absenceReasons.find((item) => item.value === reason)?.label ?? reason;
+  }
+
+  absenceStatus(absence: AdminDoctorAbsence): 'upcoming' | 'current' | 'ended' {
+    const today = this.clinicToday();
+    if (absence.endDate < today) {
+      return 'ended';
+    }
+    if (absence.startDate > today) {
+      return 'upcoming';
+    }
+    return 'current';
+  }
+
+  absenceStatusLabel(absence: AdminDoctorAbsence): string {
+    const status = this.absenceStatus(absence);
+    if (status === 'ended') {
+      return 'Završeno';
+    }
+    if (status === 'current') {
+      return 'U toku';
+    }
+    return 'Predstoji';
+  }
+
+  canRemoveAbsence(absence: AdminDoctorAbsence): boolean {
+    return this.absenceStatus(absence) !== 'ended';
+  }
+
+  openAbsenceModal(): void {
+    this.absenceFormStart = '';
+    this.absenceFormEnd = '';
+    this.absenceFormReason = '';
+    this.absenceStartError = '';
+    this.absenceEndError = '';
+    this.absenceReasonError = '';
+    this.absenceModalError = '';
+    this.absenceModalOpen = true;
+  }
+
+  closeAbsenceModal(): void {
+    if (this.isSavingAbsence) {
+      return;
+    }
+    this.absenceModalOpen = false;
+  }
+
+  onAbsenceStartChange(value: string): void {
+    this.absenceFormStart = value;
+    if (this.absenceFormEnd && this.absenceFormEnd < value) {
+      this.absenceFormEnd = value;
+    }
+  }
+
+  submitAbsence(): void {
+    this.absenceStartError = '';
+    this.absenceEndError = '';
+    this.absenceReasonError = '';
+    this.absenceModalError = '';
+
+    const today = this.clinicToday();
+    if (!this.absenceFormStart) {
+      this.absenceStartError = 'Datum od je obavezan.';
+    } else if (this.absenceFormStart < today) {
+      this.absenceStartError = 'Odsustvo ne može početi u prošlosti.';
+    }
+    if (!this.absenceFormEnd) {
+      this.absenceEndError = 'Datum do je obavezan.';
+    } else if (this.absenceFormStart && this.absenceFormEnd < this.absenceFormStart) {
+      this.absenceEndError = 'Datum početka ne može biti posle datuma završetka.';
+    }
+    if (!this.absenceFormReason) {
+      this.absenceReasonError = 'Razlog odsustva je obavezan.';
+    }
+
+    if (this.absenceStartError || this.absenceEndError || this.absenceReasonError || this.isSavingAbsence) {
+      return;
+    }
+
+    const reason = this.absenceFormReason;
+    if (!reason) {
+      return;
+    }
+
+    this.isSavingAbsence = true;
+    this.portalService
+      .createDoctorAbsence(this.doctorId, {
+        startDate: this.absenceFormStart,
+        endDate: this.absenceFormEnd,
+        reason
+      })
+      .subscribe({
+        next: () => {
+          this.isSavingAbsence = false;
+          this.absenceModalOpen = false;
+          this.showAbsenceSuccess('Odsustvo je uspešno dodato.');
+          this.reloadAbsences();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.isSavingAbsence = false;
+          this.absenceModalError = error.error?.message || 'Trenutno nije moguće dodati odsustvo.';
+        }
+      });
+  }
+
+  openRemoveAbsence(absence: AdminDoctorAbsence): void {
+    if (!this.canRemoveAbsence(absence) || this.isRemovingAbsence) {
+      return;
+    }
+    this.pendingAbsence = absence;
+    this.removeAbsenceError = '';
+    this.confirmKind = 'absence-remove';
+  }
+
+  retryAbsences(): void {
+    this.reloadAbsences();
+  }
+
+  private confirmRemoveAbsence(): void {
+    if (!this.pendingAbsence || this.isRemovingAbsence) {
+      return;
+    }
+
+    this.isRemovingAbsence = true;
+    this.removeAbsenceError = '';
+    const absenceId = this.pendingAbsence.id;
+    this.portalService.deleteDoctorAbsence(this.doctorId, absenceId).subscribe({
+      next: () => {
+        this.isRemovingAbsence = false;
+        this.confirmKind = null;
+        this.pendingAbsence = null;
+        this.showAbsenceSuccess('Odsustvo je uspešno uklonjeno.');
+        this.reloadAbsences();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isRemovingAbsence = false;
+        this.removeAbsenceError = error.error?.message || 'Trenutno nije moguće ukloniti odsustvo.';
+      }
+    });
+  }
+
+  private reloadAbsences(): void {
+    this.portalService.getDoctorAbsences(this.doctorId).subscribe({
+      next: (result) => {
+        this.absences = result.absences;
+        this.absencesError = '';
+      },
+      error: () => {
+        this.absencesError = 'Trenutno nije moguće učitati odsustva.';
+      }
+    });
+  }
+
+  private formatAbsenceDate(isoDate: string): string {
+    const [year, month, day] = isoDate.split('-');
+    if (!year || !month || !day) {
+      return isoDate;
+    }
+    return `${day}.${month}.${year}.`;
+  }
+
+  private showAbsenceSuccess(message: string): void {
+    this.absenceSuccess = message;
+    this.absencesError = '';
+    this.clearAbsenceSuccessTimer();
+    this.absenceSuccessTimer = setTimeout(() => {
+      this.absenceSuccess = '';
+      this.absenceSuccessTimer = null;
+    }, 4000);
+  }
+
+  private clearAbsenceSuccessTimer(): void {
+    if (this.absenceSuccessTimer !== null) {
+      clearTimeout(this.absenceSuccessTimer);
+      this.absenceSuccessTimer = null;
+    }
+  }
+
   private createDoctorRequest(payload: AdminDoctorUpdatePayload) {
     const createPayload: AdminDoctorUpdatePayload = { ...payload, imageUrl: null };
     return this.portalService.createDoctor(createPayload).pipe(
@@ -522,6 +790,9 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       endTime: '14:00',
       locationId: null
     }));
+    this.absences = [];
+    this.absencesError = '';
+    this.absenceSuccess = '';
     this.snapshot = this.serialize();
 
     forkJoin({
@@ -552,6 +823,8 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     this.pendingImageFile = null;
     this.activeTab = 'profile';
     this.doctorId = id;
+    this.absences = [];
+    this.absencesError = '';
 
     if (!Number.isInteger(id) || id <= 0) {
       this.isLoading = false;
@@ -562,12 +835,20 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     forkJoin({
       doctor: this.portalService.getDoctor(id),
       specialties: this.doctorService.getSpecialties(),
-      locations: this.locationService.getLocations()
+      locations: this.locationService.getLocations(),
+      absences: this.portalService.getDoctorAbsences(id).pipe(catchError(() => of(null)))
     }).subscribe({
-      next: ({ doctor, specialties, locations }) => {
+      next: ({ doctor, specialties, locations, absences }) => {
         this.specialties = specialties;
         this.locations = locations;
         this.applyDoctor(doctor);
+        if (absences) {
+          this.absences = absences.absences;
+          this.absencesError = '';
+        } else {
+          this.absences = [];
+          this.absencesError = 'Trenutno nije moguće učitati odsustva.';
+        }
         this.clinicServiceApi.getServices(doctor.specialty.id).subscribe({
           next: (services) => {
             this.specialtyServices = services;

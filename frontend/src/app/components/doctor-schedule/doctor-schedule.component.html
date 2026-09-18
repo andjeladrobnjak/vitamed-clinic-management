@@ -30,11 +30,90 @@
 
             <div class="day-grid">
               @for (cell of cells; track cell.date) {
-                @if (cell.shift) {
+                @if (cell.absence) {
+                  @if (canSelectDay(cell)) {
+                    <button
+                      type="button"
+                      class="day-cell is-absence"
+                      [class.is-outside]="!cell.inMonth"
+                      [class.is-today]="cell.isToday"
+                      [class.is-selected]="selectedDate === cell.date"
+                      (click)="selectDay(cell)"
+                    >
+                      <span class="day-number">{{ cell.dayNumber }}</span>
+                      <span class="absence-label">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          @for (node of calendarOffIcon; track $index) {
+                            @if (node[0] === 'path') {
+                              <path [attr.d]="$any(node[1]).d"></path>
+                            } @else if (node[0] === 'line') {
+                              <line
+                                [attr.x1]="$any(node[1]).x1"
+                                [attr.y1]="$any(node[1]).y1"
+                                [attr.x2]="$any(node[1]).x2"
+                                [attr.y2]="$any(node[1]).y2"
+                              ></line>
+                            } @else if (node[0] === 'polyline') {
+                              <polyline [attr.points]="$any(node[1]).points"></polyline>
+                            } @else if (node[0] === 'rect') {
+                              <rect
+                                [attr.x]="$any(node[1]).x"
+                                [attr.y]="$any(node[1]).y"
+                                [attr.width]="$any(node[1]).width"
+                                [attr.height]="$any(node[1]).height"
+                                [attr.rx]="$any(node[1]).rx"
+                              ></rect>
+                            }
+                          }
+                        </svg>
+                        {{ absenceLabel(cell.absence.reason) }}
+                      </span>
+                      @if (cell.appointmentCount > 0) {
+                        <span class="day-count">{{ appointmentCountLabel(cell.appointmentCount) }}</span>
+                      }
+                    </button>
+                  } @else {
+                    <div
+                      class="day-cell is-absence"
+                      [class.is-outside]="!cell.inMonth"
+                      [class.is-today]="cell.isToday"
+                    >
+                      <span class="day-number">{{ cell.dayNumber }}</span>
+                      <span class="absence-label">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          @for (node of calendarOffIcon; track $index) {
+                            @if (node[0] === 'path') {
+                              <path [attr.d]="$any(node[1]).d"></path>
+                            } @else if (node[0] === 'line') {
+                              <line
+                                [attr.x1]="$any(node[1]).x1"
+                                [attr.y1]="$any(node[1]).y1"
+                                [attr.x2]="$any(node[1]).x2"
+                                [attr.y2]="$any(node[1]).y2"
+                              ></line>
+                            } @else if (node[0] === 'polyline') {
+                              <polyline [attr.points]="$any(node[1]).points"></polyline>
+                            } @else if (node[0] === 'rect') {
+                              <rect
+                                [attr.x]="$any(node[1]).x"
+                                [attr.y]="$any(node[1]).y"
+                                [attr.width]="$any(node[1]).width"
+                                [attr.height]="$any(node[1]).height"
+                                [attr.rx]="$any(node[1]).rx"
+                              ></rect>
+                            }
+                          }
+                        </svg>
+                        {{ absenceLabel(cell.absence.reason) }}
+                      </span>
+                    </div>
+                  }
+                } @else if (cell.shift) {
                   <button
                     type="button"
                     class="day-cell is-working"
                     [class.is-outside]="!cell.inMonth"
+                    [class.is-today]="cell.isToday"
                     [class.is-selected]="selectedDate === cell.date"
                     (click)="selectDay(cell)"
                   >
@@ -44,7 +123,7 @@
                     <span class="day-count">{{ appointmentCountLabel(cell.appointmentCount) }}</span>
                   </button>
                 } @else {
-                  <div class="day-cell" [class.is-outside]="!cell.inMonth">
+                  <div class="day-cell" [class.is-outside]="!cell.inMonth" [class.is-today]="cell.isToday">
                     <span class="day-number">{{ cell.dayNumber }}</span>
                   </div>
                 }
@@ -60,6 +139,9 @@
               </div>
               <p class="panel-place">{{ selectedCell.shift.location.name }}</p>
               <p class="panel-hours">{{ selectedCell.shift.startTime }}–{{ selectedCell.shift.endTime }}</p>
+              @if (selectedCell.absence) {
+                <p class="panel-absence">{{ absenceLabel(selectedCell.absence.reason) }}</p>
+              }
 
               @if (selectedCell.appointments.length === 0) {
                 <p class="panel-empty">Nema zakazanih pregleda za ovaj dan.</p>

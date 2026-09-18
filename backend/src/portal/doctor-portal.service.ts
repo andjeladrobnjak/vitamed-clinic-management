@@ -154,6 +154,14 @@ export interface DoctorPortalMonthSchedule {
     to: string;
     shifts: DoctorPortalScheduleShift[];
     days: DoctorPortalScheduleDay[];
+    absences: DoctorPortalScheduleAbsence[];
+}
+
+export interface DoctorPortalScheduleAbsence {
+    id: number;
+    startDate: string;
+    endDate: string;
+    reason: 'annual_leave' | 'sick_leave' | 'day_off' | 'other';
 }
 
 export interface DoctorCancelledAppointment {
@@ -883,6 +891,25 @@ export class DoctorPortalService {
             daysByDate.set(date, day);
         }
 
+        const [absenceRows] = await pool.query<(RowDataPacket & {
+            id: number;
+            startDate: string;
+            endDate: string;
+            reason: string;
+        })[]>(
+            `SELECT
+                id,
+                DATE_FORMAT(start_date, '%Y-%m-%d') AS startDate,
+                DATE_FORMAT(end_date, '%Y-%m-%d') AS endDate,
+                reason
+             FROM doctor_absences
+             WHERE doctor_id = ?
+               AND start_date <= ?
+               AND end_date >= ?
+             ORDER BY start_date ASC, end_date ASC, id ASC`,
+            [doctorId, to, from]
+        );
+
         return {
             year,
             month,
@@ -894,7 +921,13 @@ export class DoctorPortalService {
                 endTime: String(row.endTime),
                 location: { name: String(row.locationName) }
             })),
-            days: [...daysByDate.values()]
+            days: [...daysByDate.values()],
+            absences: absenceRows.map((row) => ({
+                id: Number(row.id),
+                startDate: String(row.startDate),
+                endDate: String(row.endDate),
+                reason: this.mapAbsenceReason(String(row.reason))
+            }))
         };
     }
 
@@ -1203,6 +1236,15 @@ export class DoctorPortalService {
             return 'no_show';
         }
         return 'confirmed';
+    }
+
+    private mapAbsenceReason(
+        reason: string
+    ): 'annual_leave' | 'sick_leave' | 'day_off' | 'other' {
+        if (reason === 'annual_leave' || reason === 'sick_leave' || reason === 'day_off') {
+            return reason;
+        }
+        return 'other';
     }
 
     private mapAppointment(row: DashboardAppointmentRow): DoctorDashboardAppointment {

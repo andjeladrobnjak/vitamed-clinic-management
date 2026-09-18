@@ -218,6 +218,37 @@ CREATE TABLE IF NOT EXISTS doctor_schedules (
 
 
 -- =====================================================
+-- DOCTOR ABSENCES
+-- Date-specific periods when a doctor is unavailable.
+-- Regular weekly hours remain in doctor_schedules.
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS doctor_absences (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id BIGINT NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_doctor_absences_doctor
+        FOREIGN KEY (doctor_id)
+        REFERENCES doctors(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_doctor_absences_dates
+        CHECK (start_date <= end_date),
+
+    CONSTRAINT chk_doctor_absences_reason
+        CHECK (reason IN ('annual_leave', 'sick_leave', 'day_off', 'other')),
+
+    INDEX idx_doctor_absences_doctor_dates (doctor_id, start_date, end_date)
+);
+
+
+-- =====================================================
 -- APPOINTMENTS
 -- Runtime bookings (authenticated patients or guests).
 -- Not seed/configuration data. Starts empty.
