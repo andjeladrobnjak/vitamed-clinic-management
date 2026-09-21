@@ -13,6 +13,9 @@ const imageUpload = multer({
 adminPortalRouter.get('/dashboard', authenticateAdmin, (req, res) =>
     adminPortalController.dashboard(req, res)
 );
+adminPortalRouter.get('/doctors', authenticateAdmin, (req, res) =>
+    adminPortalController.listDoctors(req, res)
+);
 adminPortalRouter.post('/doctors', authenticateAdmin, (req, res) =>
     adminPortalController.createDoctor(req, res)
 );
@@ -41,6 +44,12 @@ adminPortalRouter.post(
 );
 adminPortalRouter.put('/doctors/:id', authenticateAdmin, (req, res) =>
     adminPortalController.updateDoctor(req, res)
+);
+adminPortalRouter.patch('/doctors/:id/deactivate', authenticateAdmin, (req, res) =>
+    adminPortalController.deactivateDoctor(req, res)
+);
+adminPortalRouter.patch('/doctors/:id/activate', authenticateAdmin, (req, res) =>
+    adminPortalController.activateDoctor(req, res)
 );
 adminPortalRouter.get('/doctors/:id/absences', authenticateAdmin, (req, res) =>
     adminPortalController.listDoctorAbsences(req, res)

@@ -66,6 +66,7 @@ export class DoctorController {
                  FROM doctors d
                  INNER JOIN specialties s ON s.id = d.specialty_id
                  ${DOCTOR_RATINGS_JOIN}
+                 WHERE d.is_active = TRUE
                  ORDER BY d.last_name, d.first_name`
             );
 
@@ -159,7 +160,7 @@ export class DoctorController {
                  FROM doctors d
                  INNER JOIN specialties s ON s.id = d.specialty_id
                  ${DOCTOR_RATINGS_JOIN}
-                 WHERE d.id = ?
+                 WHERE d.id = ? AND d.is_active = TRUE
                  LIMIT 1`,
                 [doctorId]
             );
@@ -247,7 +248,7 @@ export class DoctorController {
             const [doctorRows] = await pool.query<DoctorRow[]>(
                 `SELECT d.id
                  FROM doctors d
-                 WHERE d.id = ?
+                 WHERE d.id = ? AND d.is_active = TRUE
                  LIMIT 1`,
                 [doctorId]
             );

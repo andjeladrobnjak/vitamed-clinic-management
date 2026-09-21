@@ -83,13 +83,14 @@ export class AdminDoctorAccountService {
         try {
             await connection.beginTransaction();
 
-            const [doctorRows] = await connection.query<IdRow[]>(
-                'SELECT id FROM doctors WHERE id = ? LIMIT 1 FOR UPDATE',
+            const [doctorRows] = await connection.query<(IdRow & { isActive?: number | boolean })[]>(
+                'SELECT id, is_active AS isActive FROM doctors WHERE id = ? LIMIT 1 FOR UPDATE',
                 [doctorId]
             );
             if (!doctorRows[0]) {
                 throw new AdminPortalError(404, 'Lekar nije pronađen.');
             }
+            const doctorIsActive = doctorRows[0].isActive === true || doctorRows[0].isActive === 1;
 
             const [existingRows] = await connection.query<IdRow[]>(
                 'SELECT id FROM doctor_accounts WHERE doctor_id = ? LIMIT 1 FOR UPDATE',
@@ -112,8 +113,8 @@ export class AdminDoctorAccountService {
                 await connection.query<ResultSetHeader>(
                     `INSERT INTO doctor_accounts
                         (doctor_id, email, password_hash, is_active, must_change_password)
-                     VALUES (?, ?, ?, TRUE, TRUE)`,
-                    [doctorId, email, passwordHash]
+                     VALUES (?, ?, ?, ?, TRUE)`,
+                    [doctorId, email, passwordHash, doctorIsActive]
                 );
             } catch (error) {
                 if (this.isDuplicate(error)) {
@@ -172,7 +173,7 @@ export class AdminDoctorAccountService {
 
             await connection.query(
                 `UPDATE doctor_accounts
-                 SET password_hash = ?, must_change_password = TRUE, is_active = TRUE
+                 SET password_hash = ?, must_change_password = TRUE
                  WHERE id = ? AND doctor_id = ?`,
                 [passwordHash, Number(account.id), doctorId]
             );

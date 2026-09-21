@@ -19,6 +19,7 @@ interface DoctorRow extends RowDataPacket {
     education: string | null;
     professionalExperience: string | null;
     imageUrl: string | null;
+    isActive: number | boolean;
     specialtyId: number;
     specialtyName: string;
 }
@@ -74,10 +75,21 @@ export interface AdminDoctorDetail {
     education: string | null;
     professionalExperience: string | null;
     imageUrl: string | null;
+    isActive: boolean;
     specialty: { id: number; name: string };
     locations: { id: number; name: string; address: string; city: string; phone: string; workingHours: string }[];
     services: { id: number; name: string; description: string | null; price: number; durationMinutes: number }[];
     schedules: AdminDoctorSchedule[];
+}
+
+export interface AdminDoctorListItem {
+    id: number;
+    firstName: string;
+    lastName: string;
+    imageUrl: string | null;
+    isActive: boolean;
+    specialty: { id: number; name: string };
+    locations: { id: number; name: string }[];
 }
 
 interface ParsedSchedule {
@@ -88,6 +100,57 @@ interface ParsedSchedule {
 }
 
 export class AdminDoctorService {
+    async list(): Promise<AdminDoctorListItem[]> {
+        const [doctorRows] = await pool.query<DoctorRow[]>(
+            `SELECT
+                d.id,
+                d.first_name AS firstName,
+                d.last_name AS lastName,
+                d.image_url AS imageUrl,
+                d.is_active AS isActive,
+                s.id AS specialtyId,
+                s.name AS specialtyName
+             FROM doctors d
+             INNER JOIN specialties s ON s.id = d.specialty_id
+             ORDER BY d.last_name, d.first_name`
+        );
+
+        const [locationRows] = await pool.query<(RowDataPacket & {
+            doctorId: number;
+            id: number;
+            name: string;
+        })[]>(
+            `SELECT
+                dl.doctor_id AS doctorId,
+                l.id,
+                l.name
+             FROM doctor_locations dl
+             INNER JOIN locations l ON l.id = dl.location_id
+             ORDER BY l.id`
+        );
+
+        const locationsByDoctor = new Map<number, { id: number; name: string }[]>();
+        for (const row of locationRows) {
+            const doctorId = Number(row.doctorId);
+            const locations = locationsByDoctor.get(doctorId) ?? [];
+            locations.push({ id: Number(row.id), name: String(row.name) });
+            locationsByDoctor.set(doctorId, locations);
+        }
+
+        return doctorRows.map((row) => ({
+            id: Number(row.id),
+            firstName: row.firstName,
+            lastName: row.lastName,
+            imageUrl: row.imageUrl,
+            isActive: this.isActiveFlag(row.isActive),
+            specialty: {
+                id: Number(row.specialtyId),
+                name: row.specialtyName
+            },
+            locations: locationsByDoctor.get(Number(row.id)) ?? []
+        }));
+    }
+
     async getById(id: number): Promise<AdminDoctorDetail> {
         if (!parsePositiveId(id)) {
             throw new AdminPortalError(404, 'Lekar nije pronađen.');
@@ -99,6 +162,59 @@ export class AdminDoctorService {
         }
 
         return doctor;
+    }
+
+    async setActive(id: number, isActive: boolean): Promise<AdminDoctorDetail> {
+        if (!parsePositiveId(id)) {
+            throw new AdminPortalError(404, 'Lekar nije pronađen.');
+        }
+
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const [doctorRows] = await connection.query<(RowDataPacket & {
+                id: number;
+                isActive: number | boolean;
+            })[]>(
+                `SELECT id, is_active AS isActive
+                 FROM doctors
+                 WHERE id = ?
+                 LIMIT 1
+                 FOR UPDATE`,
+                [id]
+            );
+
+            const doctor = doctorRows[0];
+            if (!doctor) {
+                throw new AdminPortalError(404, 'Lekar nije pronađen.');
+            }
+
+            if (this.isActiveFlag(doctor.isActive) !== isActive) {
+                if (!isActive) {
+                    const upcomingCount = await this.countUpcomingConfirmed(connection, id);
+                    if (upcomingCount > 0) {
+                        throw new AdminPortalError(
+                            409,
+                            'Lekar ima zakazane predstojeće preglede. Pre deaktivacije potrebno je otkazati sve predstojeće termine.',
+                            { upcomingCount }
+                        );
+                    }
+                }
+
+                await connection.query('UPDATE doctors SET is_active = ? WHERE id = ?', [isActive, id]);
+                await connection.query('UPDATE doctor_accounts SET is_active = ? WHERE doctor_id = ?', [isActive, id]);
+            }
+
+            await connection.commit();
+        } catch (error) {
+            await connection.rollback();
+            throw error;
+        } finally {
+            connection.release();
+        }
+
+        return this.getById(id);
     }
 
     async saveImage(id: number, mimeType: string | undefined, buffer: Buffer | undefined): Promise<{ imageUrl: string }> {
@@ -141,8 +257,8 @@ export class AdminDoctorService {
 
             const [result] = await connection.query<ResultSetHeader>(
                 `INSERT INTO doctors
-                    (first_name, last_name, specialty_id, biography, education, professional_experience, image_url)
-                 VALUES (?, ?, ?, ?, ?, ?, NULL)`,
+                    (first_name, last_name, specialty_id, biography, education, professional_experience, image_url, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, NULL, TRUE)`,
                 [
                     payload.firstName,
                     payload.lastName,
@@ -310,6 +426,7 @@ export class AdminDoctorService {
                 d.education,
                 d.professional_experience AS professionalExperience,
                 d.image_url AS imageUrl,
+                d.is_active AS isActive,
                 s.id AS specialtyId,
                 s.name AS specialtyName
              FROM doctors d
@@ -373,6 +490,7 @@ export class AdminDoctorService {
             education: doctor.education,
             professionalExperience: doctor.professionalExperience,
             imageUrl: doctor.imageUrl,
+            isActive: this.isActiveFlag(doctor.isActive),
             specialty: {
                 id: Number(doctor.specialtyId),
                 name: doctor.specialtyName
@@ -672,5 +790,23 @@ export class AdminDoctorService {
                 );
             }
         }
+    }
+
+    private async countUpcomingConfirmed(connection: PoolConnection, doctorId: number): Promise<number> {
+        const clock = clinicClock();
+        const nowTime = minutesToTimeLabel(clock.minutes);
+        const [rows] = await connection.query<(RowDataPacket & { total: number })[]>(
+            `SELECT COUNT(*) AS total
+             FROM appointments
+             WHERE doctor_id = ?
+               AND status = 'confirmed'
+               AND TIMESTAMP(appointment_date, start_time) > TIMESTAMP(?, ?)`,
+            [doctorId, clock.date, nowTime]
+        );
+        return Number(rows[0]?.total ?? 0);
+    }
+
+    private isActiveFlag(value: number | boolean | null | undefined): boolean {
+        return value === true || value === 1;
     }
 }

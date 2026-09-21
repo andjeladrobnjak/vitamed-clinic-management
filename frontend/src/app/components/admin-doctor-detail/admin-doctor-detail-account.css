@@ -45,6 +45,7 @@
 
 .portal-status.is-pending { color: #6d5a3c; }
 .portal-status.is-active { color: var(--petrol); }
+.portal-status.is-inactive { color: var(--burgundy); }
 
 .portal-email {
   margin: 0.18rem 0 0;
@@ -105,6 +106,9 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+.portal-reset.is-danger { color: var(--burgundy); }
+.portal-reset.is-danger:disabled { opacity: 0.42; cursor: default; }
 
 .account-context {
   margin: 0.2rem 0 0.9rem;

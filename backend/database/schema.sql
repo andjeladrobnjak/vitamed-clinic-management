@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS doctors (
     education TEXT,
     professional_experience TEXT,
     image_url VARCHAR(500),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT fk_doctors_specialty
         FOREIGN KEY (specialty_id)

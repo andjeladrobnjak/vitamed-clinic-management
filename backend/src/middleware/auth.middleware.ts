@@ -122,11 +122,13 @@ export function requireDoctorPortalAccess(req: Request, res: Response, next: Nex
     void (async () => {
         const [rows] = await pool.query<(RowDataPacket & {
             isActive: number | boolean;
+            doctorIsActive: number | boolean;
             mustChangePassword: number | boolean;
         })[]>(
-            `SELECT is_active AS isActive, must_change_password AS mustChangePassword
-             FROM doctor_accounts
-             WHERE id = ? AND doctor_id = ?
+            `SELECT a.is_active AS isActive, d.is_active AS doctorIsActive, a.must_change_password AS mustChangePassword
+             FROM doctor_accounts a
+             INNER JOIN doctors d ON d.id = a.doctor_id
+             WHERE a.id = ? AND a.doctor_id = ?
              LIMIT 1`,
             [accountId, doctorId]
         );
@@ -137,7 +139,8 @@ export function requireDoctorPortalAccess(req: Request, res: Response, next: Nex
         }
 
         const isActive = row.isActive === true || row.isActive === 1;
-        if (!isActive) {
+        const doctorIsActive = row.doctorIsActive === true || row.doctorIsActive === 1;
+        if (!isActive || !doctorIsActive) {
             res.status(401).json({ message: UNAUTHORIZED_MESSAGE });
             return;
         }

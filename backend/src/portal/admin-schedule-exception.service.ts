@@ -392,7 +392,8 @@ export class AdminScheduleExceptionService {
              FROM doctors d
              INNER JOIN specialties s ON s.id = d.specialty_id
              INNER JOIN doctor_locations dl ON dl.doctor_id = d.id AND dl.location_id = ?
-             WHERE NOT EXISTS (
+             WHERE d.is_active = TRUE
+             AND NOT EXISTS (
                 SELECT 1
                 FROM doctor_absences da
                 WHERE da.doctor_id = d.id

@@ -43,10 +43,21 @@ export interface AdminDoctorDetail {
   education: string | null;
   professionalExperience: string | null;
   imageUrl: string | null;
+  isActive: boolean;
   specialty: { id: number; name: string };
   locations: { id: number; name: string }[];
   services: { id: number; name: string }[];
   schedules: AdminDoctorSchedule[];
+}
+
+export interface AdminDoctorListItem {
+  id: number;
+  firstName: string;
+  lastName: string;
+  imageUrl: string | null;
+  isActive: boolean;
+  specialty: { id: number; name: string };
+  locations: { id: number; name: string }[];
 }
 
 export type AdminDoctorAccountStatus = 'missing' | 'pending' | 'active';
@@ -282,8 +293,26 @@ export class AdminPortalService {
     return this.http.get<AdminDashboard>(`${this.portalUrl}/dashboard`);
   }
 
+  listDoctors(): Observable<AdminDoctorListItem[]> {
+    return this.http.get<AdminDoctorListItem[]>(`${this.portalUrl}/doctors`);
+  }
+
   getDoctor(id: number): Observable<AdminDoctorDetail> {
     return this.http.get<AdminDoctorDetail>(`${this.portalUrl}/doctors/${id}`);
+  }
+
+  deactivateDoctor(id: number): Observable<{ message: string; doctor: AdminDoctorDetail; upcomingCount?: number }> {
+    return this.http.patch<{ message: string; doctor: AdminDoctorDetail }>(
+      `${this.portalUrl}/doctors/${id}/deactivate`,
+      {}
+    );
+  }
+
+  activateDoctor(id: number): Observable<{ message: string; doctor: AdminDoctorDetail }> {
+    return this.http.patch<{ message: string; doctor: AdminDoctorDetail }>(
+      `${this.portalUrl}/doctors/${id}/activate`,
+      {}
+    );
   }
 
   getDoctorAccount(id: number): Observable<AdminDoctorAccount> {

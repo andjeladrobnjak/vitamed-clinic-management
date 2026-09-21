@@ -268,6 +268,16 @@ export class AvailabilityService {
             throw new AvailabilityContextError(404, 'Lekar nije pronađen.');
         }
 
+        const [activeRows] = await executor.query<CountRow[]>(
+            `SELECT COUNT(*) AS total
+             FROM doctors
+             WHERE id = ? AND is_active = TRUE`,
+            [params.doctorId]
+        );
+        if (Number(activeRows[0]?.total ?? 0) === 0) {
+            throw new AvailabilityContextError(409, 'Ovaj lekar trenutno nije dostupan za zakazivanje.');
+        }
+
         const serviceExists = await this.countById(executor, 'services', params.serviceId);
         if (!serviceExists) {
             throw new AvailabilityContextError(404, 'Usluga nije pronađena.');

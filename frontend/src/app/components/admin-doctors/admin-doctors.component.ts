@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { LucideChevronRight, LucidePlus, LucideSearch, LucideUser } from '@lucide/angular';
-import { Doctor, DoctorService, Specialty } from '../../services/doctor.service';
+import { AdminDoctorListItem, AdminPortalService } from '../../services/admin-portal.service';
+import { DoctorService, Specialty } from '../../services/doctor.service';
 import { resolveMediaUrl } from '../../utils/media-url';
 import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 
@@ -20,7 +21,7 @@ export class AdminDoctorsComponent implements OnInit {
   readonly userIcon = LucideUser.icon.node;
   readonly mediaUrl = resolveMediaUrl;
 
-  doctors: Doctor[] = [];
+  doctors: AdminDoctorListItem[] = [];
   specialties: Specialty[] = [];
   searchQuery = '';
   selectedSpecialtyId = '';
@@ -30,6 +31,7 @@ export class AdminDoctorsComponent implements OnInit {
   failedImages = new Set<number>();
 
   private readonly pageSize = 10;
+  private readonly portalService = inject(AdminPortalService);
   private readonly doctorService = inject(DoctorService);
 
   ngOnInit(): void {
@@ -42,7 +44,7 @@ export class AdminDoctorsComponent implements OnInit {
       }
     });
 
-    this.doctorService.getDoctors().subscribe({
+    this.portalService.listDoctors().subscribe({
       next: (doctors) => {
         this.doctors = doctors;
         this.isLoading = false;
@@ -75,15 +77,15 @@ export class AdminDoctorsComponent implements OnInit {
     this.failedImages = new Set(this.failedImages).add(doctorId);
   }
 
-  showPhoto(doctor: Doctor): boolean {
+  showPhoto(doctor: AdminDoctorListItem): boolean {
     return !!doctor.imageUrl && !this.failedImages.has(doctor.id);
   }
 
-  doctorName(doctor: Doctor): string {
+  doctorName(doctor: AdminDoctorListItem): string {
     return `dr ${doctor.firstName} ${doctor.lastName}`;
   }
 
-  locationLabel(doctor: Doctor): string {
+  locationLabel(doctor: AdminDoctorListItem): string {
     return (doctor.locations ?? []).map((location) => location.name).join(' · ');
   }
 
@@ -96,7 +98,7 @@ export class AdminDoctorsComponent implements OnInit {
     return `${count} lekara`;
   }
 
-  get filteredDoctors(): Doctor[] {
+  get filteredDoctors(): AdminDoctorListItem[] {
     const query = this.searchQuery.trim().toLowerCase();
     const specialtyId = this.selectedSpecialtyId ? Number(this.selectedSpecialtyId) : null;
 
@@ -125,7 +127,7 @@ export class AdminDoctorsComponent implements OnInit {
     return Math.max(1, Math.ceil(this.filteredTotal / this.pageSize));
   }
 
-  get pagedDoctors(): Doctor[] {
+  get pagedDoctors(): AdminDoctorListItem[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredDoctors.slice(start, start + this.pageSize);
   }

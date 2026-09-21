@@ -32,6 +32,7 @@ interface DoctorAccountAuthRow extends RowDataPacket {
     email: string;
     passwordHash: string;
     isActive: number | boolean;
+    doctorIsActive: number | boolean;
     mustChangePassword: number | boolean;
     firstName: string;
     lastName: string;
@@ -58,7 +59,7 @@ export class DoctorAuthService {
         }
 
         const passwordMatches = await bcrypt.compare(String(password), row.passwordHash);
-        if (!passwordMatches || !this.isActive(row.isActive)) {
+        if (!passwordMatches || !this.isActive(row.isActive) || !this.isActive(row.doctorIsActive)) {
             throw new DoctorAuthError(401, GENERIC_LOGIN_ERROR);
         }
 
@@ -102,6 +103,7 @@ export class DoctorAuthService {
                     a.email,
                     a.password_hash AS passwordHash,
                     a.is_active AS isActive,
+                    d.is_active AS doctorIsActive,
                     a.must_change_password AS mustChangePassword,
                     d.first_name AS firstName,
                     d.last_name AS lastName,
@@ -122,6 +124,7 @@ export class DoctorAuthService {
                 || Number(row.accountId) !== accountId
                 || Number(row.doctorId) !== doctorId
                 || !this.isActive(row.isActive)
+                || !this.isActive(row.doctorIsActive)
             ) {
                 throw new DoctorAuthError(401, 'Niste prijavljeni.');
             }
@@ -170,6 +173,7 @@ export class DoctorAuthService {
             doctorId: number;
             email: string;
             isActive: number | boolean;
+            doctorIsActive: number | boolean;
             mustChangePassword: number | boolean;
             firstName: string;
             lastName: string;
@@ -181,6 +185,7 @@ export class DoctorAuthService {
                 a.doctor_id AS doctorId,
                 a.email,
                 a.is_active AS isActive,
+                d.is_active AS doctorIsActive,
                 a.must_change_password AS mustChangePassword,
                 d.first_name AS firstName,
                 d.last_name AS lastName,
@@ -200,6 +205,7 @@ export class DoctorAuthService {
             || Number(row.accountId) !== accountId
             || Number(row.doctorId) !== doctorId
             || !this.isActive(row.isActive)
+            || !this.isActive(row.doctorIsActive)
         ) {
             throw new DoctorAuthError(401, 'Niste prijavljeni.');
         }
@@ -215,6 +221,7 @@ export class DoctorAuthService {
                 a.email,
                 a.password_hash AS passwordHash,
                 a.is_active AS isActive,
+                d.is_active AS doctorIsActive,
                 a.must_change_password AS mustChangePassword,
                 d.first_name AS firstName,
                 d.last_name AS lastName,

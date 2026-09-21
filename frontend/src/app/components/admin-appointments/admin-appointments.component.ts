@@ -4,9 +4,9 @@ import { RouterLink } from '@angular/router';
 import { LucideCircleAlert, LucideCircleCheck, LucidePlus, LucideSearch, LucideTriangleAlert, LucideX } from '@lucide/angular';
 import {
   AdminAppointment,
+  AdminDoctorListItem,
   AdminPortalService
 } from '../../services/admin-portal.service';
-import { Doctor, DoctorService } from '../../services/doctor.service';
 import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 
 @Component({
@@ -39,7 +39,7 @@ export class AdminAppointmentsComponent implements OnInit, OnDestroy {
   @ViewChild('closeDetailsButton') private closeDetailsButton?: ElementRef<HTMLButtonElement>;
 
   appointments: AdminAppointment[] = [];
-  doctors: Doctor[] = [];
+  doctors: AdminDoctorListItem[] = [];
   searchQuery = '';
   selectedDate = '';
   selectedStatus = '';
@@ -65,10 +65,9 @@ export class AdminAppointmentsComponent implements OnInit, OnDestroy {
   private previousOverflow = '';
   private scrollLocked = false;
   private readonly portalService = inject(AdminPortalService);
-  private readonly doctorService = inject(DoctorService);
 
   ngOnInit(): void {
-    this.doctorService.getDoctors().subscribe({
+    this.portalService.listDoctors().subscribe({
       next: (doctors) => {
         this.doctors = [...doctors].sort((a, b) =>
           `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'sr')
@@ -191,8 +190,9 @@ export class AdminAppointmentsComponent implements OnInit, OnDestroy {
     return `dr ${appointment.doctor.firstName} ${appointment.doctor.lastName}`.trim();
   }
 
-  doctorOptionLabel(doctor: Doctor): string {
-    return `dr ${doctor.firstName} ${doctor.lastName}`.trim();
+  doctorOptionLabel(doctor: AdminDoctorListItem): string {
+    const name = `dr ${doctor.firstName} ${doctor.lastName}`.trim();
+    return doctor.isActive ? name : `${name} (Neaktivan)`;
   }
 
   get doctorFilterOptions(): VitamedSelectOption<string>[] {

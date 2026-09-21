@@ -98,6 +98,9 @@
             <span class="doctor-copy">
               <span class="doctor-name">{{ doctorName(doctor) }}</span>
               <span class="doctor-specialty">{{ doctor.specialty.name }}</span>
+              <span class="status-badge" [class.is-inactive]="!doctor.isActive">
+                {{ doctor.isActive ? 'Aktivan' : 'Neaktivan' }}
+              </span>
               @if (locationLabel(doctor)) {
                 <span class="doctor-locations">{{ locationLabel(doctor) }}</span>
               }

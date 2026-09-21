@@ -96,7 +96,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   saveSuccess = '';
   firstNameError = '';
   lastNameError = '';
-  confirmKind: 'leave' | 'specialty' | 'absence-remove' | null = null;
+  confirmKind: 'leave' | 'specialty' | 'absence-remove' | 'deactivate' | null = null;
   pendingSpecialtyId: number | null = null;
   absences: AdminDoctorAbsence[] = [];
   absencesError = '';
@@ -124,6 +124,10 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   isSavingAccount = false;
   revealedPassword = '';
   copyState = '';
+  doctorIsActive = true;
+  statusActionMessage = '';
+  statusActionError = '';
+  isTogglingStatus = false;
 
   firstName = '';
   lastName = '';
@@ -173,7 +177,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onDocumentKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'Escape' || this.isSavingAbsence || this.isRemovingAbsence || this.isSavingAccount) {
+    if (event.key !== 'Escape' || this.isSavingAbsence || this.isRemovingAbsence || this.isSavingAccount || this.isTogglingStatus) {
       return;
     }
     if (this.accountModal) {
@@ -181,7 +185,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       this.closeAccountModal();
       return;
     }
-    if (this.confirmKind === 'absence-remove') {
+    if (this.confirmKind === 'absence-remove' || this.confirmKind === 'deactivate') {
       event.preventDefault();
       this.cancelConfirm();
       return;
@@ -217,6 +221,59 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       return this.specialtyName();
     }
     return this.specialtyName() || 'Unesite podatke novog lekara u sistem.';
+  }
+
+  openDeactivate(): void {
+    if (!this.doctorIsActive || this.isTogglingStatus) {
+      return;
+    }
+    this.statusActionError = '';
+    this.statusActionMessage = '';
+    this.confirmKind = 'deactivate';
+  }
+
+  activateDoctor(): void {
+    if (this.doctorIsActive || this.isTogglingStatus) {
+      return;
+    }
+    this.isTogglingStatus = true;
+    this.statusActionError = '';
+    this.statusActionMessage = '';
+    this.portalService.activateDoctor(this.doctorId).subscribe({
+      next: (result) => {
+        this.isTogglingStatus = false;
+        this.applyDoctor(result.doctor);
+        this.statusActionMessage = result.message || 'Lekar je aktiviran.';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isTogglingStatus = false;
+        this.statusActionError = error.error?.message || 'Trenutno nije moguće aktivirati lekara.';
+      }
+    });
+  }
+
+  private submitDeactivate(): void {
+    if (this.isTogglingStatus) {
+      return;
+    }
+    this.isTogglingStatus = true;
+    this.statusActionError = '';
+    this.portalService.deactivateDoctor(this.doctorId).subscribe({
+      next: (result) => {
+        this.isTogglingStatus = false;
+        this.confirmKind = null;
+        this.applyDoctor(result.doctor);
+        this.statusActionMessage = result.message || 'Lekar je deaktiviran.';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isTogglingStatus = false;
+        const count = Number(error.error?.upcomingCount);
+        const message = error.error?.message || 'Trenutno nije moguće deaktivirati lekara.';
+        this.statusActionError = Number.isFinite(count) && count > 0
+          ? `${message} Broj predstojećih termina: ${count}.`
+          : message;
+      }
+    });
   }
 
   get accountVisibilityIcon() {
@@ -568,6 +625,11 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.confirmKind === 'deactivate') {
+      this.submitDeactivate();
+      return;
+    }
+
     if (this.confirmKind === 'specialty' && this.pendingSpecialtyId) {
       const nextId = this.pendingSpecialtyId;
       this.confirmKind = null;
@@ -579,7 +641,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
   }
 
   cancelConfirm(): void {
-    if (this.isRemovingAbsence) {
+    if (this.isRemovingAbsence || this.isTogglingStatus) {
       return;
     }
     this.confirmKind = null;
@@ -595,6 +657,9 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     if (this.confirmKind === 'absence-remove') {
       return 'Uklonite odsustvo?';
     }
+    if (this.confirmKind === 'deactivate') {
+      return 'Deaktivacija lekara';
+    }
     return 'Promena specijalizacije';
   }
 
@@ -604,6 +669,9 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     }
     if (this.confirmKind === 'absence-remove' && this.pendingAbsence) {
       return `Uklanjanjem odsustva lekar će ponovo biti dostupan za zakazivanje u skladu sa svojim redovnim rasporedom. Period: ${this.absencePeriod(this.pendingAbsence)}. Razlog: ${this.absenceReasonLabel(this.pendingAbsence.reason)}.`;
+    }
+    if (this.confirmKind === 'deactivate') {
+      return 'Da li ste sigurni da želite da deaktivirate ovog lekara? Lekar više neće biti dostupan pacijentima za zakazivanje i neće moći da pristupi lekarskom portalu.';
     }
     return 'Promena specijalizacije ukloniće usluge koje joj ne pripadaju. Da li želite da nastavite?';
   }
@@ -1021,6 +1089,8 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     this.absencesError = '';
     this.portalAccount = null;
     this.portalAccountError = '';
+    this.statusActionMessage = '';
+    this.statusActionError = '';
     this.closeAccountModal();
 
     if (!Number.isInteger(id) || id <= 0) {
@@ -1170,6 +1240,7 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     this.biography = doctor.biography ?? '';
     this.education = doctor.education ?? '';
     this.professionalExperience = doctor.professionalExperience ?? '';
+    this.doctorIsActive = doctor.isActive !== false;
     this.locationIds = doctor.locations.map((location) => location.id);
     this.serviceIds = doctor.services.map((service) => service.id);
     this.days = WEEKDAYS.map((weekday) => {

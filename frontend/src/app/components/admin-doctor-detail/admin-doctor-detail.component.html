@@ -57,6 +57,61 @@
     </header>
 
     @if (!isCreate) {
+      <section class="portal-access" aria-labelledby="doctor-status-title">
+        <p id="doctor-status-title" class="portal-eyebrow">Status lekara</p>
+        @if (statusActionMessage) {
+          <div class="alert" role="status">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of successIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'circle') {
+                  <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                }
+              }
+            </svg>
+            <p>{{ statusActionMessage }}</p>
+          </div>
+        }
+        @if (statusActionError && confirmKind !== 'deactivate') {
+          <div class="alert is-error" role="alert">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of alertIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'circle') {
+                  <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                }
+              }
+            </svg>
+            <p>{{ statusActionError }}</p>
+          </div>
+        }
+        <div class="portal-row">
+          <div>
+            <p class="portal-status" [class.is-active]="doctorIsActive" [class.is-inactive]="!doctorIsActive">
+              {{ doctorIsActive ? 'Aktivan' : 'Neaktivan' }}
+            </p>
+            <p class="portal-help">
+              @if (doctorIsActive) {
+                Lekar je vidljiv pacijentima i može da koristi lekarski portal.
+              } @else {
+                Lekar nije dostupan za novo zakazivanje i nema pristup lekarskom portalu.
+              }
+            </p>
+          </div>
+          @if (doctorIsActive) {
+            <button class="portal-reset is-danger" type="button" (click)="openDeactivate()" [disabled]="isTogglingStatus">
+              Deaktiviraj
+            </button>
+          } @else {
+            <button class="btn-save portal-create" type="button" (click)="activateDoctor()" [disabled]="isTogglingStatus">
+              {{ isTogglingStatus ? 'Aktiviranje...' : 'Aktiviraj' }}
+            </button>
+          }
+        </div>
+      </section>
+
       <section class="portal-access" aria-labelledby="portal-access-title">
         <p id="portal-access-title" class="portal-eyebrow">Pristup portalu</p>
         @if (portalAccountError && !portalAccount) {
@@ -504,11 +559,11 @@
 </section>
 
 @if (confirmKind) {
-  <div class="overlay" [class.is-top]="confirmKind === 'absence-remove'" (click)="cancelConfirm()">
+  <div class="overlay" [class.is-top]="confirmKind === 'absence-remove' || confirmKind === 'deactivate'" (click)="cancelConfirm()">
     <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <p class="eyebrow">Lekari</p>
       <h2>{{ confirmTitle() }}</h2>
-      @if (confirmKind === 'absence-remove') {
+      @if (confirmKind === 'absence-remove' || confirmKind === 'deactivate') {
         <p class="confirm-lead">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             @for (node of warningIcon; track $index) {
@@ -526,7 +581,7 @@
           </svg>
           <span>{{ confirmMessage() }}</span>
         </p>
-        @if (removeAbsenceError) {
+        @if (confirmKind === 'absence-remove' && removeAbsenceError) {
           <div class="alert is-error" role="alert">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               @for (node of alertIcon; track $index) {
@@ -547,14 +602,32 @@
             <p>{{ removeAbsenceError }}</p>
           </div>
         }
+        @if (confirmKind === 'deactivate' && statusActionError) {
+          <div class="alert is-error" role="alert">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (node of alertIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'circle') {
+                  <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                }
+              }
+            </svg>
+            <p>{{ statusActionError }}</p>
+          </div>
+        }
       } @else {
         <p class="lead">{{ confirmMessage() }}</p>
       }
       <div class="dialog-actions">
-        <button class="btn-secondary" type="button" (click)="cancelConfirm()" [disabled]="isRemovingAbsence">Odustani</button>
+        <button class="btn-secondary" type="button" (click)="cancelConfirm()" [disabled]="isRemovingAbsence || isTogglingStatus">Odustani</button>
         @if (confirmKind === 'absence-remove') {
           <button class="btn-danger" type="button" (click)="confirmAction()" [disabled]="isRemovingAbsence">
             {{ isRemovingAbsence ? 'Uklanjanje...' : 'Ukloni odsustvo' }}
+          </button>
+        } @else if (confirmKind === 'deactivate') {
+          <button class="btn-danger" type="button" (click)="confirmAction()" [disabled]="isTogglingStatus">
+            {{ isTogglingStatus ? 'Deaktiviranje...' : 'Deaktiviraj' }}
           </button>
         } @else {
           <button class="btn-confirm" type="button" (click)="confirmAction()">Nastavi</button>

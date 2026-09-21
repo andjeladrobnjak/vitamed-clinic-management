@@ -109,7 +109,7 @@ export class SpecialtyController {
                     COALESCE(rating_stats.reviewCount, 0) AS reviewCount
                  FROM doctors d
                  ${DOCTOR_RATINGS_JOIN}
-                 WHERE d.specialty_id = ?
+                 WHERE d.specialty_id = ? AND d.is_active = TRUE
                  ORDER BY d.last_name, d.first_name`,
                 [specialtyId]
             );

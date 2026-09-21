@@ -45,6 +45,15 @@ export class AdminPortalController {
         }
     }
 
+    async listDoctors(_req: Request, res: Response): Promise<void> {
+        try {
+            const doctors = await this.doctorService.list();
+            res.status(200).json(doctors);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće učitati lekare.');
+        }
+    }
+
     async getDoctor(req: Request, res: Response): Promise<void> {
         try {
             const doctor = await this.doctorService.getById(Number(req.params.id));
@@ -74,6 +83,30 @@ export class AdminPortalController {
             res.status(200).json(doctor);
         } catch (error) {
             this.handleError(res, error, 'Trenutno nije moguće sačuvati izmene.');
+        }
+    }
+
+    async deactivateDoctor(req: Request, res: Response): Promise<void> {
+        try {
+            const doctor = await this.doctorService.setActive(Number(req.params.id), false);
+            res.status(200).json({
+                message: 'Lekar je deaktiviran.',
+                doctor
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće deaktivirati lekara.');
+        }
+    }
+
+    async activateDoctor(req: Request, res: Response): Promise<void> {
+        try {
+            const doctor = await this.doctorService.setActive(Number(req.params.id), true);
+            res.status(200).json({
+                message: 'Lekar je aktiviran.',
+                doctor
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće aktivirati lekara.');
         }
     }
 
@@ -339,7 +372,12 @@ export class AdminPortalController {
     }
 
     private handleError(res: Response, error: unknown, fallback: string): void {
-        if (error instanceof AdminPortalError || error instanceof AvailabilityContextError) {
+        if (error instanceof AdminPortalError) {
+            res.status(error.statusCode).json({ message: error.message, ...error.details });
+            return;
+        }
+
+        if (error instanceof AvailabilityContextError) {
             res.status(error.statusCode).json({ message: error.message });
             return;
         }

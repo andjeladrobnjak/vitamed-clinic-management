@@ -189,6 +189,25 @@ h1 {
 }
 .doctor-locations { overflow-wrap: anywhere; }
 
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 0.18rem;
+  padding: 0.16rem 0.48rem;
+  border-radius: 3px;
+  background: rgba(23, 52, 58, 0.08);
+  color: var(--petrol);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.status-badge.is-inactive {
+  background: rgba(122, 63, 70, 0.12);
+  color: var(--burgundy);
+}
+
 .row-chevron { width: 1rem; height: 1rem; color: #8a9391; stroke-width: 1.7; }
 
 .table-foot {
