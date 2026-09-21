@@ -13,12 +13,14 @@ import {
   AdminDashboardAppointment,
   AdminPortalService
 } from '../../services/admin-portal.service';
+import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 
 type AppointmentStatusFilter = '' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
 @Component({
   selector: 'app-admin-portal',
   standalone: true,
+  imports: [VitamedSelectComponent],
   templateUrl: './admin-portal.component.html',
   styleUrl: './admin-portal.component.css'
 })
@@ -27,6 +29,13 @@ export class AdminPortalComponent implements OnInit {
   readonly usersIcon = LucideUsers.icon.node;
   readonly calendarDaysIcon = LucideCalendarDays.icon.node;
   readonly calendarClockIcon = LucideCalendarClock.icon.node;
+  readonly statusFilterOptions: VitamedSelectOption<AppointmentStatusFilter>[] = [
+    { value: '', label: 'Svi statusi' },
+    { value: 'confirmed', label: 'Zakazano' },
+    { value: 'completed', label: 'Završeno' },
+    { value: 'cancelled', label: 'Otkazano' },
+    { value: 'no_show', label: 'Nije se pojavio' }
+  ];
 
   dashboard: AdminDashboard | null = null;
   isLoading = true;
@@ -136,9 +145,9 @@ export class AdminPortalComponent implements OnInit {
     return this.filteredTotal > this.pageSize;
   }
 
-  onStatusFilterChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    this.statusFilter = value as AppointmentStatusFilter;
+  onStatusFilterChange(value: string | number | boolean | null): void {
+    const next = (value == null ? '' : String(value)) as AppointmentStatusFilter;
+    this.statusFilter = next;
     this.page = 1;
   }
 

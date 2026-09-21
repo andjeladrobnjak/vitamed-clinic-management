@@ -79,7 +79,7 @@ h1 {
 
 .search-icon svg { width: 0.95rem; height: 0.95rem; stroke-width: 1.7; }
 
-.search input, .specialty-filter select {
+.search input {
   width: 100%;
   padding: 0.42rem 0.7rem;
   border: 1px solid var(--stone);

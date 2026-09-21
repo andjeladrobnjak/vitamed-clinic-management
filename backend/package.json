@@ -5,7 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test:mail": "npx tsc && node dist/scripts/test-mail.js"
+    "test:mail": "npx tsc && node dist/scripts/test-mail.js",
+    "demo:data": "npx tsc && node dist/scripts/generate-demo-data.js"
   },
   "author": "Andjela",
   "license": "ISC",

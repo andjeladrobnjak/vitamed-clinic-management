@@ -13,11 +13,12 @@ import {
   AdminWeeklyScheduleEntry
 } from '../../services/admin-portal.service';
 import { ClinicLocation, LocationService } from '../../services/location.service';
+import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 
 @Component({
   selector: 'app-admin-schedule',
   standalone: true,
-  imports: [FormsModule, RouterLink, NgTemplateOutlet],
+  imports: [FormsModule, RouterLink, NgTemplateOutlet, VitamedSelectComponent],
   templateUrl: './admin-schedule.component.html',
   styleUrls: ['./admin-schedule.component.css', './admin-schedule-week.css', './admin-schedule-modals.css']
 })
@@ -26,6 +27,8 @@ export class AdminScheduleComponent implements OnInit {
   readonly weekdayFull = ['Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja'];
   readonly hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
   readonly minuteOptions = ['00', '15', '30', '45'];
+  readonly hourSelectOptions = this.hourOptions.map((hour) => ({ value: hour, label: hour }));
+  readonly minuteSelectOptions = this.minuteOptions.map((minute) => ({ value: minute, label: minute }));
   readonly calendarOffIcon = LucideCalendarOff.icon.node;
   readonly plusIcon = LucidePlus.icon.node;
   readonly closeIcon = LucideX.icon.node;
@@ -111,6 +114,24 @@ export class AdminScheduleComponent implements OnInit {
     return this.schedule?.location ? [this.schedule.location] : [];
   }
 
+  get locationFilterOptions(): VitamedSelectOption<number>[] {
+    return this.locations.map((location) => ({ value: location.id, label: location.name }));
+  }
+
+  get createDoctorOptions(): VitamedSelectOption<number | null>[] {
+    return [
+      { value: null, label: 'Izaberite lekara' },
+      ...this.eligibleDoctors.map((doctor) => ({
+        value: doctor.id,
+        label: `${this.doctorName(doctor.firstName, doctor.lastName)} · ${doctor.specialtyName}`
+      }))
+    ];
+  }
+
+  get exceptionLocationOptions(): VitamedSelectOption<number>[] {
+    return this.locationChoices.map((location) => ({ value: location.id, label: location.name }));
+  }
+
   doctorLabel(entry: AdminWeeklyScheduleEntry): string {
     return this.doctorName(entry.firstName, entry.lastName);
   }
@@ -171,12 +192,12 @@ export class AdminScheduleComponent implements OnInit {
     return `${weekdayLabel}, ${dateLabel}`;
   }
 
-  onLocationChange(event: Event): void {
-    const value = Number((event.target as HTMLSelectElement).value);
-    if (!Number.isInteger(value) || value <= 0 || value === this.selectedLocationId) {
+  onLocationChange(value: string | number | boolean | null): void {
+    const next = Number(value);
+    if (!Number.isInteger(next) || next <= 0 || next === this.selectedLocationId) {
       return;
     }
-    this.selectedLocationId = value;
+    this.selectedLocationId = next;
     this.closeAll();
     this.loadSchedule();
   }
@@ -308,14 +329,15 @@ export class AdminScheduleComponent implements OnInit {
     });
   }
 
-  onCreateDoctorChange(doctorId: number | null): void {
-    this.createDoctorId = doctorId;
-    if (!doctorId) {
+  onCreateDoctorChange(value: string | number | boolean | null): void {
+    const doctorId = value == null || value === '' ? null : Number(value);
+    this.createDoctorId = doctorId && Number.isInteger(doctorId) ? doctorId : null;
+    if (!this.createDoctorId) {
       this.createLocations = [];
       this.editorLocationId = this.selectedLocationId;
       return;
     }
-    this.portalService.getScheduleDay(doctorId, this.createDate).subscribe({
+    this.portalService.getScheduleDay(this.createDoctorId, this.createDate).subscribe({
       next: (detail) => {
         this.createLocations = detail.locations;
         const stillAssigned = detail.locations.some((location) => location.id === this.selectedLocationId);

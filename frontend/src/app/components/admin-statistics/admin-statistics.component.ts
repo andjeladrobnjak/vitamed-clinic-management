@@ -8,11 +8,12 @@ import {
   AdminStatisticsPopularService
 } from '../../services/admin-portal.service';
 import { AdminChartComponent, AdminChartPoint } from './admin-chart.component';
+import { VitamedSelectComponent } from '../vitamed-select/vitamed-select.component';
 
 @Component({
   selector: 'app-admin-statistics',
   standalone: true,
-  imports: [AdminChartComponent],
+  imports: [AdminChartComponent, VitamedSelectComponent],
   templateUrl: './admin-statistics.component.html',
   styleUrls: ['./admin-statistics.component.css', './admin-statistics-charts.css']
 })
@@ -39,12 +40,12 @@ export class AdminStatisticsComponent implements OnInit {
     this.loadStatistics();
   }
 
-  onPeriodChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as AdminStatisticsPeriod;
-    if (this.periods.every((period) => period.value !== value) || value === this.selectedPeriod) {
+  onPeriodChange(value: string | number | boolean | null): void {
+    const next = String(value || '') as AdminStatisticsPeriod;
+    if (this.periods.every((period) => period.value !== next) || next === this.selectedPeriod) {
       return;
     }
-    this.selectedPeriod = value;
+    this.selectedPeriod = next;
     this.loadStatistics();
   }
 

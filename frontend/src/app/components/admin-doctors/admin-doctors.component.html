@@ -30,12 +30,12 @@
 
       <label class="specialty-filter">
         <span class="visually-hidden">Specijalizacija</span>
-        <select [value]="selectedSpecialtyId" (change)="onSpecialtyChange($event)">
-          <option value="">Sve specijalizacije</option>
-          @for (specialty of specialties; track specialty.id) {
-            <option [value]="specialty.id">{{ specialty.name }}</option>
-          }
-        </select>
+        <app-vitamed-select
+          [options]="specialtyFilterOptions"
+          [value]="selectedSpecialtyId"
+          ariaLabel="Specijalizacija"
+          (valueChange)="onSpecialtyChange($event)"
+        />
       </label>
     </div>
 

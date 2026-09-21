@@ -60,15 +60,8 @@ h1 {
   text-transform: uppercase;
 }
 
-.location-filter select {
+.location-filter app-vitamed-select {
   width: 100%;
-  padding: 0.42rem 0.7rem;
-  border: 1px solid var(--stone);
-  border-radius: 4px;
-  background: #fff;
-  color: var(--petrol);
-  font: inherit;
-  font-size: 0.86rem;
 }
 
 .week-nav {

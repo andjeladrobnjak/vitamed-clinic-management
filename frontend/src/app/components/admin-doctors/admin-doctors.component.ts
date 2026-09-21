@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { LucideChevronRight, LucidePlus, LucideSearch, LucideUser } from '@lucide/angular';
 import { Doctor, DoctorService, Specialty } from '../../services/doctor.service';
 import { resolveMediaUrl } from '../../utils/media-url';
+import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 
 @Component({
   selector: 'app-admin-doctors',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, VitamedSelectComponent],
   templateUrl: './admin-doctors.component.html',
   styleUrl: './admin-doctors.component.css'
 })
@@ -58,8 +59,15 @@ export class AdminDoctorsComponent implements OnInit {
     this.page = 1;
   }
 
-  onSpecialtyChange(event: Event): void {
-    this.selectedSpecialtyId = (event.target as HTMLSelectElement).value;
+  get specialtyFilterOptions(): VitamedSelectOption<string>[] {
+    return [
+      { value: '', label: 'Sve specijalizacije' },
+      ...this.specialties.map((specialty) => ({ value: String(specialty.id), label: specialty.name }))
+    ];
+  }
+
+  onSpecialtyChange(value: string | number | boolean | null): void {
+    this.selectedSpecialtyId = value == null ? '' : String(value);
     this.page = 1;
   }
 

@@ -156,13 +156,12 @@
       @if (!isLoading && !loadError && todayTotal > 0) {
         <label class="status-filter">
           <span class="visually-hidden">Status</span>
-          <select [value]="statusFilter" (change)="onStatusFilterChange($event)">
-            <option value="">Svi statusi</option>
-            <option value="confirmed">Zakazano</option>
-            <option value="completed">Završeno</option>
-            <option value="cancelled">Otkazano</option>
-            <option value="no_show">Nije se pojavio</option>
-          </select>
+          <app-vitamed-select
+            [options]="statusFilterOptions"
+            [value]="statusFilter"
+            ariaLabel="Status"
+            (valueChange)="onStatusFilterChange($event)"
+          />
         </label>
       }
     </div>

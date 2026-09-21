@@ -34,7 +34,7 @@
 .field { display: grid; gap: 0.28rem; }
 .field > span { font-size: 0.74rem; font-weight: 600; }
 
-.field input, .field select, .field textarea {
+.field input, .field textarea {
   width: 100%;
   padding: 0.42rem 0.7rem;
   border: 1px solid var(--stone);
@@ -47,7 +47,11 @@
 
 .field textarea { resize: vertical; min-height: 5.5rem; }
 .field input:disabled { background: var(--ivory); color: var(--muted); }
-.field input.invalid, .field select.invalid { border-color: #a56b70; }
+.field input.invalid { border-color: #a56b70; }
+
+.dialog:has(app-vitamed-select.is-open) {
+  overflow: visible;
+}
 .hint, .hint-error { margin: 0; font-size: 0.78rem; }
 .hint { color: var(--muted); }
 .hint-error { color: #8d555b; }

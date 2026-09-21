@@ -60,23 +60,22 @@
 
     <label class="select-filter">
       <span class="visually-hidden">Status</span>
-      <select [value]="selectedStatus" (change)="onStatusChange($event)">
-        <option value="">Svi statusi</option>
-        <option value="confirmed">Zakazano</option>
-        <option value="completed">Završeno</option>
-        <option value="cancelled">Otkazano</option>
-        <option value="no_show">Nije se pojavio</option>
-      </select>
+      <app-vitamed-select
+        [options]="statusFilterOptions"
+        [value]="selectedStatus"
+        ariaLabel="Status"
+        (valueChange)="onStatusChange($event)"
+      />
     </label>
 
     <label class="select-filter">
       <span class="visually-hidden">Lekar</span>
-      <select [value]="selectedDoctorId" (change)="onDoctorChange($event)">
-        <option value="">Svi lekari</option>
-        @for (doctor of doctors; track doctor.id) {
-          <option [value]="doctor.id">{{ doctorOptionLabel(doctor) }}</option>
-        }
-      </select>
+      <app-vitamed-select
+        [options]="doctorFilterOptions"
+        [value]="selectedDoctorId"
+        ariaLabel="Lekar"
+        (valueChange)="onDoctorChange($event)"
+      />
     </label>
   </div>
 

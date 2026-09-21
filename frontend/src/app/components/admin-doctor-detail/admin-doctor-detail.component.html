@@ -195,14 +195,13 @@
             </label>
             <label class="field">
               <span>Specijalizacija</span>
-              <select name="specialtyId" [ngModel]="specialtyId" (ngModelChange)="onSpecialtyChange(+$event)">
-                @if (isCreate) {
-                  <option [ngValue]="0">Izaberite specijalizaciju</option>
-                }
-                @for (specialty of specialties; track specialty.id) {
-                  <option [ngValue]="specialty.id">{{ specialty.name }}</option>
-                }
-              </select>
+              <app-vitamed-select
+                name="specialtyId"
+                [options]="specialtySelectOptions"
+                [ngModel]="specialtyId"
+                (ngModelChange)="onSpecialtyChange($event)"
+                placeholder="Izaberite specijalizaciju"
+              />
             </label>
             <div class="field">
               <span>Fotografija</span>
@@ -368,60 +367,53 @@
                 </label>
                 @if (day.works) {
                   <div class="time">
-                    <select
+                    <app-vitamed-select
+                      size="compact"
+                      [options]="hourSelectOptions"
                       [ngModel]="hourOf(day.startTime)"
                       (ngModelChange)="setHour(day, 'startTime', $event)"
                       [name]="'sh-' + day.dayOfWeek"
-                      aria-label="Početak, sati"
-                    >
-                      @for (hour of hourOptions; track hour) {
-                        <option [ngValue]="hour">{{ hour }}</option>
-                      }
-                    </select>
+                      ariaLabel="Početak, sati"
+                    />
                     <span>:</span>
-                    <select
+                    <app-vitamed-select
+                      size="compact"
+                      [options]="minuteSelectOptionsFor(day.startTime)"
                       [ngModel]="minuteOf(day.startTime)"
                       (ngModelChange)="setMinute(day, 'startTime', $event)"
                       [name]="'sm-' + day.dayOfWeek"
-                      aria-label="Početak, minuti"
-                    >
-                      @for (minute of minuteChoices(day.startTime); track minute) {
-                        <option [ngValue]="minute">{{ minute }}</option>
-                      }
-                    </select>
+                      ariaLabel="Početak, minuti"
+                    />
                   </div>
                   <div class="time">
-                    <select
+                    <app-vitamed-select
+                      size="compact"
+                      [options]="hourSelectOptions"
                       [ngModel]="hourOf(day.endTime)"
                       (ngModelChange)="setHour(day, 'endTime', $event)"
                       [name]="'eh-' + day.dayOfWeek"
-                      aria-label="Kraj, sati"
-                    >
-                      @for (hour of hourOptions; track hour) {
-                        <option [ngValue]="hour">{{ hour }}</option>
-                      }
-                    </select>
+                      ariaLabel="Kraj, sati"
+                    />
                     <span>:</span>
-                    <select
+                    <app-vitamed-select
+                      size="compact"
+                      [options]="minuteSelectOptionsFor(day.endTime)"
                       [ngModel]="minuteOf(day.endTime)"
                       (ngModelChange)="setMinute(day, 'endTime', $event)"
                       [name]="'em-' + day.dayOfWeek"
-                      aria-label="Kraj, minuti"
-                    >
-                      @for (minute of minuteChoices(day.endTime); track minute) {
-                        <option [ngValue]="minute">{{ minute }}</option>
-                      }
-                    </select>
+                      ariaLabel="Kraj, minuti"
+                    />
                   </div>
                   @if (selectedLocations().length === 0) {
                     <span class="loc-empty">Izaberite lokaciju na kartici Usluge i lokacije.</span>
                   } @else {
-                    <select class="loc" [(ngModel)]="day.locationId" [name]="'loc-' + day.dayOfWeek">
-                      <option [ngValue]="null">Lokacija</option>
-                      @for (location of selectedLocations(); track location.id) {
-                        <option [ngValue]="location.id">{{ location.name }}</option>
-                      }
-                    </select>
+                    <app-vitamed-select
+                      class="loc"
+                      [options]="dayLocationOptions()"
+                      [(ngModel)]="day.locationId"
+                      [name]="'loc-' + day.dayOfWeek"
+                      placeholder="Lokacija"
+                    />
                   }
                 } @else {
                   <span class="idle"></span>
@@ -630,16 +622,14 @@
         </label>
         <label class="field">
           <span>Razlog *</span>
-          <select
+          <app-vitamed-select
             name="absenceReason"
+            [options]="absenceReasonOptions"
             [(ngModel)]="absenceFormReason"
-            [class.invalid]="absenceReasonError"
-          >
-            <option value="">Izaberite razlog</option>
-            @for (reason of absenceReasons; track reason.value) {
-              <option [ngValue]="reason.value">{{ reason.label }}</option>
-            }
-          </select>
+            [invalid]="!!absenceReasonError"
+            placeholder="Izaberite razlog"
+            [required]="true"
+          />
           @if (absenceReasonError) {
             <p class="hint-error">{{ absenceReasonError }}</p>
           }

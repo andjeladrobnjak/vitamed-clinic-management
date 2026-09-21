@@ -6,10 +6,12 @@ import {
   AdminPortalService
 } from '../../services/admin-portal.service';
 import { Doctor, DoctorService } from '../../services/doctor.service';
+import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 
 @Component({
   selector: 'app-admin-appointments',
   standalone: true,
+  imports: [VitamedSelectComponent],
   templateUrl: './admin-appointments.component.html',
   styleUrls: [
     './admin-appointments.component.css',
@@ -23,6 +25,14 @@ export class AdminAppointmentsComponent implements OnInit, OnDestroy {
   readonly successIcon = LucideCircleCheck.icon.node;
   readonly alertIcon = LucideCircleAlert.icon.node;
   readonly warningIcon = LucideTriangleAlert.icon.node;
+
+  readonly statusFilterOptions: VitamedSelectOption<string>[] = [
+    { value: '', label: 'Svi statusi' },
+    { value: 'confirmed', label: 'Zakazano' },
+    { value: 'completed', label: 'Završeno' },
+    { value: 'cancelled', label: 'Otkazano' },
+    { value: 'no_show', label: 'Nije se pojavio' }
+  ];
 
   @ViewChild('closeDetailsButton') private closeDetailsButton?: ElementRef<HTMLButtonElement>;
 
@@ -109,14 +119,14 @@ export class AdminAppointmentsComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  onStatusChange(event: Event): void {
-    this.selectedStatus = (event.target as HTMLSelectElement).value;
+  onStatusChange(value: string | number | boolean | null): void {
+    this.selectedStatus = value == null ? '' : String(value);
     this.page = 1;
     this.load();
   }
 
-  onDoctorChange(event: Event): void {
-    this.selectedDoctorId = (event.target as HTMLSelectElement).value;
+  onDoctorChange(value: string | number | boolean | null): void {
+    this.selectedDoctorId = value == null ? '' : String(value);
     this.page = 1;
     this.load();
   }
@@ -181,6 +191,13 @@ export class AdminAppointmentsComponent implements OnInit, OnDestroy {
 
   doctorOptionLabel(doctor: Doctor): string {
     return `dr ${doctor.firstName} ${doctor.lastName}`.trim();
+  }
+
+  get doctorFilterOptions(): VitamedSelectOption<string>[] {
+    return [
+      { value: '', label: 'Svi lekari' },
+      ...this.doctors.map((doctor) => ({ value: String(doctor.id), label: this.doctorOptionLabel(doctor) }))
+    ];
   }
 
   statusLabel(status: string): string {

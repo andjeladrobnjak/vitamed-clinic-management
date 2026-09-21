@@ -130,17 +130,7 @@ h2 {
 
 .status-filter {
   flex-shrink: 0;
-}
-
-.status-filter select {
   min-width: 11.5rem;
-  padding: 0.38rem 0.65rem;
-  border: 1px solid var(--stone);
-  border-radius: 4px;
-  background: #fff;
-  color: var(--petrol);
-  font: inherit;
-  font-size: 0.86rem;
 }
 
 .visually-hidden {

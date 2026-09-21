@@ -109,7 +109,6 @@
 .absence-form { display: grid; gap: 0.75rem; }
 .hint-error { margin: 0; color: #8d555b; font-size: 0.78rem; }
 .empty-note.is-error { color: #8d555b; }
-.absence-form .field select.invalid,
 .absence-form .field input.invalid { border-color: #a56b70; }
 
 .btn-danger {

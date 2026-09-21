@@ -28,6 +28,7 @@ import {
   AdminDoctorUpdatePayload,
   AdminPortalService
 } from '../../services/admin-portal.service';
+import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/vitamed-select.component';
 import { ClinicService, ClinicServiceApi } from '../../services/clinic-service.service';
 import { DoctorService, Specialty } from '../../services/doctor.service';
 import { ClinicLocation, LocationService } from '../../services/location.service';
@@ -55,7 +56,7 @@ const WEEKDAYS: { dayOfWeek: number; label: string }[] = [
 @Component({
   selector: 'app-admin-doctor-detail',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, VitamedSelectComponent],
   templateUrl: './admin-doctor-detail.component.html',
   styleUrls: [
     './admin-doctor-detail.component.css',
@@ -447,28 +448,29 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSpecialtyChange(nextId: number): void {
-    if (nextId === this.specialtyId) {
+  onSpecialtyChange(nextId: string | number | boolean | null): void {
+    const specialtyId = Number(nextId || 0);
+    if (specialtyId === this.specialtyId) {
       return;
     }
 
-    if (!nextId) {
+    if (!specialtyId) {
       this.specialtyId = 0;
       this.specialtyServices = [];
       this.serviceIds = [];
       return;
     }
 
-    this.clinicServiceApi.getServices(nextId).subscribe({
+    this.clinicServiceApi.getServices(specialtyId).subscribe({
       next: (services) => {
         const allowed = new Set(services.map((service) => service.id));
         const invalid = this.serviceIds.filter((serviceId) => !allowed.has(serviceId));
         if (invalid.length > 0) {
-          this.pendingSpecialtyId = nextId;
+          this.pendingSpecialtyId = specialtyId;
           this.confirmKind = 'specialty';
           return;
         }
-        this.applySpecialty(nextId, services);
+        this.applySpecialty(specialtyId, services);
       },
       error: () => {
         this.showSaveError('Trenutno nije moguće učitati usluge za izabranu specijalizaciju.');
@@ -478,6 +480,30 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
 
   readonly hourOptions = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
   readonly minuteOptions = ['00', '15', '30', '45'];
+  readonly hourSelectOptions = this.hourOptions.map((hour) => ({ value: hour, label: hour }));
+
+  get specialtySelectOptions(): VitamedSelectOption<number>[] {
+    const items = this.specialties.map((specialty) => ({ value: specialty.id, label: specialty.name }));
+    return this.isCreate ? [{ value: 0, label: 'Izaberite specijalizaciju' }, ...items] : items;
+  }
+
+  get absenceReasonOptions(): VitamedSelectOption<AdminDoctorAbsenceReason | ''>[] {
+    return [
+      { value: '', label: 'Izaberite razlog' },
+      ...this.absenceReasons
+    ];
+  }
+
+  dayLocationOptions(): VitamedSelectOption<number | null>[] {
+    return [
+      { value: null, label: 'Lokacija' },
+      ...this.selectedLocations().map((location) => ({ value: location.id, label: location.name }))
+    ];
+  }
+
+  minuteSelectOptionsFor(time: string): VitamedSelectOption<string>[] {
+    return this.minuteChoices(time).map((minute) => ({ value: minute, label: minute }));
+  }
 
   onWorksToggle(day: ScheduleDay): void {
     if (day.works) {
@@ -503,12 +529,14 @@ export class AdminDoctorDetailComponent implements OnInit, OnDestroy {
     return [...this.minuteOptions, minute].sort();
   }
 
-  setHour(day: ScheduleDay, field: 'startTime' | 'endTime', hour: string): void {
-    day[field] = `${hour}:${this.minuteOf(day[field])}`;
+  setHour(day: ScheduleDay, field: 'startTime' | 'endTime', hour: string | number | boolean | null): void {
+    const nextHour = String(hour ?? this.hourOf(day[field])).padStart(2, '0').slice(-2);
+    day[field] = `${nextHour}:${this.minuteOf(day[field])}`;
   }
 
-  setMinute(day: ScheduleDay, field: 'startTime' | 'endTime', minute: string): void {
-    day[field] = `${this.hourOf(day[field])}:${minute}`;
+  setMinute(day: ScheduleDay, field: 'startTime' | 'endTime', minute: string | number | boolean | null): void {
+    const nextMinute = String(minute ?? this.minuteOf(day[field])).padStart(2, '0').slice(-2);
+    day[field] = `${this.hourOf(day[field])}:${nextMinute}`;
   }
 
   selectTab(tab: 'profile' | 'places' | 'schedule'): void {

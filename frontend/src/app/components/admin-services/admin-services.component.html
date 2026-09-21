@@ -48,12 +48,12 @@
 
     <label class="specialty-filter">
       <span class="visually-hidden">Specijalizacija</span>
-      <select [value]="selectedSpecialtyId" (change)="onSpecialtyChange($event)">
-        <option value="">Sve specijalizacije</option>
-        @for (specialty of specialties; track specialty.id) {
-          <option [value]="specialty.id">{{ specialty.name }}</option>
-        }
-      </select>
+      <app-vitamed-select
+        [options]="specialtyFilterOptions"
+        [value]="selectedSpecialtyId"
+        ariaLabel="Specijalizacija"
+        (valueChange)="onSpecialtyChange($event)"
+      />
     </label>
   </div>
 
@@ -191,16 +191,13 @@
         @if (isCreate) {
           <label class="field">
             <span>Specijalizacija</span>
-            <select
+            <app-vitamed-select
               name="specialtyId"
+              [options]="specialtyFormOptions"
               [(ngModel)]="formSpecialtyId"
-              [class.invalid]="specialtyError"
-            >
-              <option [ngValue]="0">Izaberite specijalizaciju</option>
-              @for (specialty of specialties; track specialty.id) {
-                <option [ngValue]="specialty.id">{{ specialty.name }}</option>
-              }
-            </select>
+              [invalid]="!!specialtyError"
+              placeholder="Izaberite specijalizaciju"
+            />
             @if (specialtyError) {
               <p class="hint-error">{{ specialtyError }}</p>
             }

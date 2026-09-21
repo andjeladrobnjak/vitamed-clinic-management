@@ -1,0 +1,89 @@
+<button
+  #trigger
+  type="button"
+  class="trigger"
+  [id]="inputId"
+  [disabled]="isDisabled"
+  [class.is-placeholder]="showPlaceholder"
+  [attr.aria-label]="ariaLabel || null"
+  [attr.aria-required]="required ? true : null"
+  [attr.aria-invalid]="isInvalid ? true : null"
+  [attr.aria-expanded]="isOpen"
+  [attr.aria-controls]="listId"
+  [attr.aria-activedescendant]="isOpen && activeIndex >= 0 ? optionId(activeIndex) : null"
+  aria-haspopup="listbox"
+  role="combobox"
+  (click)="toggle()"
+  (blur)="markTouched()"
+  (keydown)="onTriggerKeydown($event)"
+>
+  <span class="value">{{ showPlaceholder ? placeholder : displayLabel }}</span>
+  <span class="chevron" [class.is-open]="isOpen" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      @for (node of chevronIcon; track $index) {
+        @if (node[0] === 'path') {
+          <path [attr.d]="$any(node[1]).d"></path>
+        } @else if (node[0] === 'polyline') {
+          <polyline [attr.points]="$any(node[1]).points"></polyline>
+        } @else if (node[0] === 'line') {
+          <line
+            [attr.x1]="$any(node[1]).x1"
+            [attr.y1]="$any(node[1]).y1"
+            [attr.x2]="$any(node[1]).x2"
+            [attr.y2]="$any(node[1]).y2"
+          ></line>
+        }
+      }
+    </svg>
+  </span>
+</button>
+
+@if (isOpen) {
+  <ul
+    class="panel"
+    [id]="listId"
+    role="listbox"
+    [style.top]="panelStyle['top']"
+    [style.bottom]="panelStyle['bottom']"
+    [style.left]="panelStyle['left']"
+    [style.width]="panelStyle['width']"
+    [style.maxHeight]="panelStyle['maxHeight']"
+  >
+    @for (option of options; track $index) {
+      <li
+        [id]="optionId($index)"
+        role="option"
+        class="option"
+        [class.is-active]="$index === activeIndex"
+        [class.is-selected]="isSelected(option)"
+        [class.is-disabled]="option.disabled"
+        [attr.aria-selected]="isSelected(option)"
+        [attr.aria-disabled]="option.disabled ? true : null"
+        (mousedown)="$event.preventDefault()"
+        (click)="selectOption(option, $index)"
+      >
+        <span class="option-label">{{ option.label }}</span>
+        @if (isSelected(option)) {
+          <span class="check" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              @for (node of checkIcon; track $index) {
+                @if (node[0] === 'path') {
+                  <path [attr.d]="$any(node[1]).d"></path>
+                } @else if (node[0] === 'polyline') {
+                  <polyline [attr.points]="$any(node[1]).points"></polyline>
+                } @else if (node[0] === 'line') {
+                  <line
+                    [attr.x1]="$any(node[1]).x1"
+                    [attr.y1]="$any(node[1]).y1"
+                    [attr.x2]="$any(node[1]).x2"
+                    [attr.y2]="$any(node[1]).y2"
+                  ></line>
+                }
+              }
+            </svg>
+          </span>
+        }
+      </li>
+    }
+  </ul>
+}

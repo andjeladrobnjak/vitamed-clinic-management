@@ -72,11 +72,12 @@
         </div>
         <label class="period-control">
           <span class="period-label">Period</span>
-          <select [value]="selectedPeriod" (change)="onPeriodChange($event)">
-            @for (period of periods; track period.value) {
-              <option [value]="period.value">{{ period.label }}</option>
-            }
-          </select>
+          <app-vitamed-select
+            [options]="periods"
+            [value]="selectedPeriod"
+            ariaLabel="Period"
+            (valueChange)="onPeriodChange($event)"
+          />
         </label>
       </div>
 

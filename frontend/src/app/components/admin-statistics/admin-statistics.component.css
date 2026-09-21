@@ -135,21 +135,14 @@ h1 {
   text-transform: uppercase;
 }
 
-.period-control select {
+.period-control app-vitamed-select {
   min-width: 11.5rem;
   max-width: 14.5rem;
-  padding: 0.32rem 0.55rem;
-  border: 1px solid var(--stone);
-  border-radius: 4px;
-  background: #fff;
-  color: var(--petrol);
-  font: inherit;
-  font-size: 0.8rem;
 }
 
 @media (max-width: 760px) {
   .insights { grid-template-columns: 1fr; }
   .analysis-head { flex-direction: column; }
   .period-control { justify-items: start; width: 100%; }
-  .period-control select { width: 100%; max-width: none; }
+  .period-control app-vitamed-select { width: 100%; max-width: none; }
 }
