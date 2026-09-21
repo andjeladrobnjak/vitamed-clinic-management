@@ -16,6 +16,8 @@ interface PatientRow extends RowDataPacket {
     firstName: string;
     lastName: string;
     jmbg: string;
+    email?: string;
+    phone?: string;
 }
 
 interface CreatedAppointmentRow extends RowDataPacket {
@@ -51,6 +53,18 @@ export interface CreateAppointmentInput {
     email?: unknown;
     phone?: unknown;
     authenticatedPatientId?: number | null;
+    bookedByAdmin?: boolean;
+}
+
+export interface AdminPatientLookup {
+    found: boolean;
+    patient: {
+        firstName: string;
+        lastName: string;
+        jmbg: string;
+        email: string;
+        phone: string;
+    } | null;
 }
 
 export interface UpcomingAppointment {
@@ -244,6 +258,25 @@ export class AppointmentBookingService {
         };
     }
 
+    async lookupPatientByJmbg(jmbgInput: unknown): Promise<AdminPatientLookup> {
+        const jmbg = this.requiredJmbg(jmbgInput);
+        const patient = await this.findPatientByJmbg(jmbg);
+        if (!patient) {
+            return { found: false, patient: null };
+        }
+
+        return {
+            found: true,
+            patient: {
+                firstName: String(patient.firstName).trim(),
+                lastName: String(patient.lastName).trim(),
+                jmbg: String(patient.jmbg).trim(),
+                email: String(patient.email ?? '').trim(),
+                phone: String(patient.phone ?? '').trim()
+            }
+        };
+    }
+
     async cancel(patientId: number, appointmentId: number): Promise<void> {
         const [rows] = await pool.query<UpcomingAppointmentRow[]>(
             `SELECT
@@ -384,6 +417,10 @@ export class AppointmentBookingService {
         email: string;
         phone: string;
     }> {
+        if (input.bookedByAdmin) {
+            return this.resolveAdminPatientSnapshot(input);
+        }
+
         const email = this.requiredEmail(input.email);
         const phone = this.requiredPhone(input.phone);
 
@@ -411,22 +448,72 @@ export class AppointmentBookingService {
             };
         }
 
-        const firstName = this.requiredName(input.firstName, 'Ime je obavezno.');
-        const lastName = this.requiredName(input.lastName, 'Prezime je obavezno.');
-        const jmbg = String(input.jmbg ?? '').trim();
+        return this.resolveGuestSnapshot(input, email, phone);
+    }
 
-        if (!JMBG_PATTERN.test(jmbg)) {
-            throw new AvailabilityContextError(400, 'JMBG mora sadržati tačno 13 cifara.');
+    private async resolveAdminPatientSnapshot(input: CreateAppointmentInput): Promise<{
+        patientId: number | null;
+        firstName: string;
+        lastName: string;
+        jmbg: string;
+        email: string;
+        phone: string;
+    }> {
+        const jmbg = this.requiredJmbg(input.jmbg);
+        const patient = await this.findPatientByJmbg(jmbg);
+
+        if (patient) {
+            return {
+                patientId: Number(patient.id),
+                firstName: String(patient.firstName).trim(),
+                lastName: String(patient.lastName).trim(),
+                jmbg: String(patient.jmbg).trim(),
+                email: this.requiredEmail(input.email),
+                phone: this.requiredPhone(input.phone)
+            };
         }
 
+        return this.resolveGuestSnapshot(input);
+    }
+
+    private resolveGuestSnapshot(
+        input: CreateAppointmentInput,
+        email = this.requiredEmail(input.email),
+        phone = this.requiredPhone(input.phone)
+    ): {
+        patientId: number | null;
+        firstName: string;
+        lastName: string;
+        jmbg: string;
+        email: string;
+        phone: string;
+    } {
         return {
             patientId: null,
-            firstName,
-            lastName,
-            jmbg,
+            firstName: this.requiredName(input.firstName, 'Ime je obavezno.'),
+            lastName: this.requiredName(input.lastName, 'Prezime je obavezno.'),
+            jmbg: this.requiredJmbg(input.jmbg),
             email,
             phone
         };
+    }
+
+    private async findPatientByJmbg(jmbg: string): Promise<PatientRow | null> {
+        const [rows] = await pool.query<PatientRow[]>(
+            `SELECT
+                id,
+                first_name AS firstName,
+                last_name AS lastName,
+                jmbg,
+                email,
+                phone
+             FROM patients
+             WHERE jmbg = ?
+             LIMIT 1`,
+            [jmbg]
+        );
+
+        return rows[0] ?? null;
     }
 
     private async readCreatedAppointment(connection: PoolConnection, id: number): Promise<CreatedAppointment> {
@@ -607,19 +694,37 @@ export class AppointmentBookingService {
         return name;
     }
 
+    private requiredJmbg(value: unknown): string {
+        const jmbg = String(value ?? '').trim();
+        if (!JMBG_PATTERN.test(jmbg)) {
+            throw new AvailabilityContextError(400, 'JMBG mora sadržati tačno 13 cifara.');
+        }
+        return jmbg;
+    }
+
     private requiredEmail(value: unknown): string {
-        const email = String(value ?? '').trim().toLowerCase();
-        if (!EMAIL_PATTERN.test(email)) {
+        const email = this.optionalEmail(value);
+        if (!email) {
             throw new AvailabilityContextError(400, 'Unesite ispravnu email adresu.');
         }
         return email;
     }
 
     private requiredPhone(value: unknown): string {
-        const phone = String(value ?? '').trim();
-        if (!PHONE_PATTERN.test(phone)) {
+        const phone = this.optionalPhone(value);
+        if (!phone) {
             throw new AvailabilityContextError(400, 'Unesite ispravan broj telefona.');
         }
         return phone;
+    }
+
+    private optionalEmail(value: unknown): string | null {
+        const email = String(value ?? '').trim().toLowerCase();
+        return EMAIL_PATTERN.test(email) ? email : null;
+    }
+
+    private optionalPhone(value: unknown): string | null {
+        const phone = String(value ?? '').trim();
+        return PHONE_PATTERN.test(phone) ? phone : null;
     }
 }

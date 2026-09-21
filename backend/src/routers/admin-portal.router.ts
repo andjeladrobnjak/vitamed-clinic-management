@@ -90,8 +90,14 @@ adminPortalRouter.put('/doctors/:id/schedule-exceptions/:date', authenticateAdmi
 adminPortalRouter.delete('/doctors/:id/schedule-exceptions/:date', authenticateAdmin, (req, res) =>
     adminPortalController.deleteScheduleException(req, res)
 );
+adminPortalRouter.get('/patients/by-jmbg', authenticateAdmin, (req, res) =>
+    adminPortalController.lookupPatientByJmbg(req, res)
+);
 adminPortalRouter.get('/appointments', authenticateAdmin, (req, res) =>
     adminPortalController.listAppointments(req, res)
+);
+adminPortalRouter.post('/appointments', authenticateAdmin, (req, res) =>
+    adminPortalController.createAppointment(req, res)
 );
 adminPortalRouter.patch('/appointments/:id/cancel', authenticateAdmin, (req, res) =>
     adminPortalController.cancelAppointment(req, res)

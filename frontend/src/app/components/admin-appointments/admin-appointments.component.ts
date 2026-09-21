@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { LucideCircleAlert, LucideCircleCheck, LucideSearch, LucideTriangleAlert, LucideX } from '@lucide/angular';
+import { RouterLink } from '@angular/router';
+import { LucideCircleAlert, LucideCircleCheck, LucidePlus, LucideSearch, LucideTriangleAlert, LucideX } from '@lucide/angular';
 import {
   AdminAppointment,
   AdminPortalService
@@ -11,7 +12,7 @@ import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/v
 @Component({
   selector: 'app-admin-appointments',
   standalone: true,
-  imports: [VitamedSelectComponent],
+  imports: [RouterLink, VitamedSelectComponent],
   templateUrl: './admin-appointments.component.html',
   styleUrls: [
     './admin-appointments.component.css',
@@ -21,6 +22,7 @@ import { VitamedSelectComponent, VitamedSelectOption } from '../vitamed-select/v
 })
 export class AdminAppointmentsComponent implements OnInit, OnDestroy {
   readonly searchIcon = LucideSearch.icon.node;
+  readonly plusIcon = LucidePlus.icon.node;
   readonly closeIcon = LucideX.icon.node;
   readonly successIcon = LucideCircleCheck.icon.node;
   readonly alertIcon = LucideCircleAlert.icon.node;

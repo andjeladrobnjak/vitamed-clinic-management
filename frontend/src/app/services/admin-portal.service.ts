@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ClinicService } from './clinic-service.service';
+import { CreatedAppointmentResponse } from './appointment-availability.service';
 
 export interface AdminDashboardAppointment {
   id: number;
@@ -78,9 +79,33 @@ export interface AdminDoctorUpdatePayload {
 export interface AdminClinicServicePayload {
   name: string;
   specialtyId?: number;
-  price: number;
   durationMinutes: number;
+  price: number;
   description: string | null;
+}
+
+export interface AdminPatientLookup {
+  found: boolean;
+  patient: {
+    firstName: string;
+    lastName: string;
+    jmbg: string;
+    email: string;
+    phone: string;
+  } | null;
+}
+
+export interface AdminCreateAppointmentPayload {
+  doctorId: number;
+  serviceId: number;
+  locationId: number;
+  appointmentDate: string;
+  startTime: string;
+  firstName: string;
+  lastName: string;
+  jmbg: string;
+  email: string;
+  phone: string;
 }
 
 export interface AdminAppointment {
@@ -311,6 +336,16 @@ export class AdminPortalService {
 
   getAppointments(params: AdminAppointmentListParams): Observable<AdminAppointmentList> {
     return this.http.get<AdminAppointmentList>(`${this.portalUrl}/appointments`, { params: this.toParams(params) });
+  }
+
+  lookupPatientByJmbg(jmbg: string): Observable<AdminPatientLookup> {
+    return this.http.get<AdminPatientLookup>(`${this.portalUrl}/patients/by-jmbg`, {
+      params: { jmbg }
+    });
+  }
+
+  createAppointment(payload: AdminCreateAppointmentPayload): Observable<CreatedAppointmentResponse> {
+    return this.http.post<CreatedAppointmentResponse>(`${this.portalUrl}/appointments`, payload);
   }
 
   cancelAppointment(id: number): Observable<{ message: string; appointment: AdminAppointment }> {

@@ -26,6 +26,7 @@ import { AdminDoctorDetailComponent } from './components/admin-doctor-detail/adm
 import { AdminDoctorNewComponent } from './components/admin-doctor-new/admin-doctor-new.component';
 import { AdminServicesComponent } from './components/admin-services/admin-services.component';
 import { AdminAppointmentsComponent } from './components/admin-appointments/admin-appointments.component';
+import { AdminAppointmentBookingComponent } from './components/admin-appointment-booking/admin-appointment-booking.component';
 import { AdminSectionComponent } from './components/admin-section/admin-section.component';
 import { AdminStatisticsComponent } from './components/admin-statistics/admin-statistics.component';
 import { AdminScheduleComponent } from './components/admin-schedule/admin-schedule.component';
@@ -132,7 +133,10 @@ export const routes: Routes = [
       },
       {
         path: 'appointments',
-        component: AdminAppointmentsComponent
+        children: [
+          { path: '', component: AdminAppointmentsComponent },
+          { path: 'new', component: AdminAppointmentBookingComponent }
+        ]
       },
       {
         path: 'schedule',

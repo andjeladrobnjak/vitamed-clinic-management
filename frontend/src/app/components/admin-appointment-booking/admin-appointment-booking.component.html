@@ -1,0 +1,508 @@
+<section class="page">
+  <header class="intro">
+    <p class="eyebrow">Zakazivanje</p>
+    <h1>Zakaži pregled</h1>
+  </header>
+
+  @if (isLoading) {
+    <p class="state">Učitavanje zakazivanja...</p>
+  } @else if (loadError) {
+    <div class="alert is-error" role="alert">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of alertIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'circle') {
+            <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+          }
+        }
+      </svg>
+      <div>
+        <p>{{ loadError }}</p>
+        <button class="text-retry" type="button" (click)="retryLoad()">Pokušajte ponovo</button>
+      </div>
+    </div>
+  } @else {
+    <ol class="stepper" aria-label="Koraci zakazivanja">
+      @for (step of steps; track step.id) {
+        <li
+          class="stepper-item"
+          [class.is-done]="stepState(step.id) === 'done'"
+          [class.is-current]="stepState(step.id) === 'current'"
+        >
+          <button
+            class="stepper-btn"
+            type="button"
+            [disabled]="!canOpenStep(step.id)"
+            (click)="goToStep(step.id)"
+          >
+            <span class="stepper-index">{{ step.id }}</span>
+            <span class="stepper-label">{{ step.label }}</span>
+          </button>
+        </li>
+      }
+    </ol>
+
+    <div class="stepper-mobile" aria-label="Koraci zakazivanja">
+      <p class="stepper-mobile-kicker">Korak {{ activeStep }} od 7</p>
+      <p class="stepper-mobile-title">{{ activeStepLabel }}</p>
+    </div>
+
+    <article class="panel">
+      @if (activeStep > 1 && !bookingResult) {
+        <button class="step-back" type="button" (click)="goToPreviousStep()">Nazad</button>
+      }
+
+      @if (activeStep === 1) {
+        <section class="step" aria-labelledby="step-service">
+          <h2 id="step-service">Izaberite uslugu</h2>
+
+          <label class="search">
+            <span class="visually-hidden">Pretraga usluga</span>
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                @for (node of searchIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+            </span>
+            <input
+              type="search"
+              [value]="serviceSearchQuery"
+              placeholder="Pretražite uslugu po nazivu..."
+              (input)="onServiceSearchInput($event)"
+              autocomplete="off"
+            />
+          </label>
+
+          @if (displayedSpecialties.length > 1) {
+            <div class="chip-row" role="tablist" aria-label="Oblasti">
+              @for (specialty of displayedSpecialties; track specialty.id) {
+                <button
+                  class="chip"
+                  type="button"
+                  role="tab"
+                  [class.is-selected]="selectedSpecialtyId === specialty.id"
+                  (click)="selectSpecialty(specialty.id)"
+                >
+                  {{ specialty.name }}
+                </button>
+              }
+            </div>
+          }
+
+          @if (isSearchingServices && visibleServices.length === 0) {
+            <p class="hint">Nema usluga koje odgovaraju pretrazi.</p>
+          } @else if (visibleServices.length === 0) {
+            <p class="hint">Nema unetih usluga.</p>
+          } @else {
+            <div class="option-list">
+              @for (service of visibleServices; track service.id) {
+                <button
+                  class="option-card"
+                  type="button"
+                  [class.is-selected]="selectedService?.id === service.id"
+                  (click)="selectService(service)"
+                >
+                  <span class="option-copy">
+                    <span class="option-title">{{ service.name }}</span>
+                    <span class="option-meta">{{ formatDuration(service.durationMinutes) }}</span>
+                  </span>
+                  <span class="option-aside">{{ formatPrice(service.price) }}</span>
+                </button>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (activeStep === 2) {
+        <section class="step" aria-labelledby="step-location">
+          <h2 id="step-location">Izaberite lokaciju</h2>
+          <div class="option-list">
+            @for (location of locations; track location.id) {
+              <button
+                class="option-card"
+                type="button"
+                [class.is-selected]="selectedLocation?.id === location.id"
+                (click)="selectLocation(location)"
+              >
+                <span class="option-copy">
+                  <span class="option-title">{{ location.name }}</span>
+                  <span class="option-meta">{{ location.address }}, {{ location.city }}</span>
+                </span>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
+      @if (activeStep === 3) {
+        <section class="step" aria-labelledby="step-doctor">
+          <h2 id="step-doctor">Izaberite lekara</h2>
+          @if (!selectedService || !selectedLocation) {
+            <p class="hint">Izaberite uslugu i lokaciju da biste videli dostupne lekare.</p>
+          } @else if (!doctorRelationshipsReady) {
+            <p class="hint">Učitavanje lekara...</p>
+          } @else if (eligibleDoctors.length === 0) {
+            <p class="hint">Nema lekara za izabranu kombinaciju usluge i lokacije.</p>
+          } @else {
+            <div class="option-list">
+              @for (doctor of eligibleDoctors; track doctor.id) {
+                <button
+                  class="option-card doctor-option"
+                  type="button"
+                  [class.is-selected]="selectedDoctor?.id === doctor.id"
+                  (click)="selectDoctor(doctor)"
+                >
+                  <span class="doctor-photo">
+                    @if (doctor.imageUrl) {
+                      <img [src]="mediaUrl(doctor.imageUrl)" [alt]="doctorDisplayName(doctor)">
+                    } @else {
+                      <span>{{ doctor.firstName.charAt(0) }}{{ doctor.lastName.charAt(0) }}</span>
+                    }
+                  </span>
+                  <span class="option-copy">
+                    <span class="option-title">{{ doctorDisplayName(doctor) }}</span>
+                    <span class="option-meta">{{ doctor.specialty.name }}</span>
+                  </span>
+                </button>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (activeStep === 4) {
+        <section class="step" aria-labelledby="step-date">
+          <h2 id="step-date">Izaberite datum</h2>
+          @if (!canSelectDate) {
+            <p class="hint">Datum je dostupan nakon izbora usluge, lokacije i lekara.</p>
+          } @else if (datesError) {
+            <div class="alert is-error" role="alert">
+              <p>{{ datesError }}</p>
+              <button class="text-retry" type="button" (click)="refreshAvailableDates()">Pokušajte ponovo</button>
+            </div>
+          } @else {
+            <div class="calendar" aria-label="Kalendar dostupnih datuma">
+              <div class="calendar-nav">
+                <button type="button" (click)="previousCalendarMonth()" [disabled]="!canGoToPreviousMonth" aria-label="Prethodni mesec">←</button>
+                <p>{{ calendarTitle }}</p>
+                <button type="button" (click)="nextCalendarMonth()" [disabled]="!canGoToNextMonth" aria-label="Sledeći mesec">→</button>
+              </div>
+              <div class="calendar-weekdays" aria-hidden="true">
+                @for (label of weekdayLabels; track label) {
+                  <span>{{ label }}</span>
+                }
+              </div>
+              <div class="calendar-grid">
+                @for (week of calendarWeeks; track $index) {
+                  @for (cell of week; track cell.date) {
+                    <button
+                      class="calendar-day"
+                      type="button"
+                      [class.is-outside]="!cell.inMonth"
+                      [class.is-available]="!datesLoading && isDateAvailable(cell.date)"
+                      [class.is-selected]="selectedDate === cell.date"
+                      [disabled]="datesLoading || !isDateAvailable(cell.date)"
+                      (click)="selectCalendarDate(cell.date)"
+                    >
+                      {{ cell.day }}
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+            @if (datesLoading) {
+              <p class="hint">Učitavanje dostupnih datuma...</p>
+            } @else if (!visibleMonthHasAvailableDate) {
+              <p class="hint">Nema dostupnih termina u ovom periodu.</p>
+            } @else {
+              <p class="hint">Dostupni datumi su označeni i mogu se izabrati.</p>
+            }
+          }
+        </section>
+      }
+
+      @if (activeStep === 5) {
+        <section class="step" aria-labelledby="step-time">
+          <h2 id="step-time">Izaberite termin</h2>
+          @if (slotConflictMessage) {
+            <div class="alert is-error" role="alert">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of alertIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+              <p>{{ slotConflictMessage }}</p>
+            </div>
+          }
+          @if (!selectedDate) {
+            <p class="hint">Izaberite datum da biste videli dostupne termine.</p>
+          } @else if (timesError) {
+            <div class="alert is-error" role="alert">
+              <p>{{ timesError }}</p>
+              <button class="text-retry" type="button" (click)="loadAvailableTimes()">Pokušajte ponovo</button>
+            </div>
+          } @else if (timesLoading) {
+            <p class="hint">Učitavanje dostupnih termina...</p>
+          } @else if (availableTimes.length === 0) {
+            <p class="hint">Nema dostupnih termina za izabrani datum. Izaberite drugi datum.</p>
+            <button class="btn btn-secondary" type="button" (click)="goToDateStep()">Izaberite drugi datum</button>
+          } @else {
+            <div class="time-slots">
+              @for (time of availableTimes; track time) {
+                <button
+                  class="time-slot"
+                  type="button"
+                  [class.is-selected]="selectedTime === time"
+                  (click)="selectTime(time)"
+                >
+                  {{ time }}
+                </button>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (activeStep === 6) {
+        <section class="step" aria-labelledby="step-patient">
+          <h2 id="step-patient">Podaci pacijenta</h2>
+          <p class="hint">Prvo pretražite pacijenta po JMBG-u. Ako nalog postoji, podaci se popunjavaju automatski.</p>
+
+          <form class="patient-form" [formGroup]="patientForm" autocomplete="off">
+            <div class="lookup-card">
+              <p class="lookup-title">Pretraga pacijenta po JMBG-u</p>
+              <div class="lookup-row">
+                <label class="field">
+                  <span>JMBG</span>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="13"
+                    autocomplete="off"
+                    [value]="patientForm.controls.jmbg.value"
+                    (input)="onJmbgInput($event)"
+                    [class.field-invalid]="patientForm.controls.jmbg.touched && patientForm.controls.jmbg.invalid"
+                  >
+                  @if (patientForm.controls.jmbg.touched && patientForm.controls.jmbg.invalid) {
+                    @if (patientForm.controls.jmbg.errors?.['required']) {
+                      <p class="error-message">JMBG je obavezan.</p>
+                    } @else {
+                      <p class="error-message">JMBG mora sadržati tačno 13 cifara.</p>
+                    }
+                  }
+                </label>
+                <button class="btn btn-primary" type="button" (click)="searchPatient()" [disabled]="isSearchingPatient">
+                  {{ isSearchingPatient ? 'Pretraga...' : 'Pretraži pacijenta' }}
+                </button>
+              </div>
+              @if (lookupError) {
+                <p class="error-message">{{ lookupError }}</p>
+              }
+              @if (lookupStatus === 'found' && isLookupCurrent) {
+                <div class="lookup-status is-found">Pacijent je pronađen u sistemu.</div>
+              } @else if (lookupStatus === 'not_found' && isLookupCurrent) {
+                <div class="lookup-status">Pacijent sa unetim JMBG-om nema registrovan nalog.</div>
+              } @else if (!isLookupCurrent && patientForm.controls.jmbg.value) {
+                <p class="hint">Pretražite pacijenta po JMBG-u da biste nastavili.</p>
+              }
+            </div>
+
+            @if (isLookupCurrent) {
+              <div class="field-pair">
+                <label class="field">
+                  <span>Ime</span>
+                  <input
+                    type="text"
+                    formControlName="firstName"
+                    [attr.readonly]="identityLocked ? true : null"
+                    [class.is-readonly]="identityLocked"
+                    [class.field-invalid]="patientForm.controls.firstName.touched && patientForm.controls.firstName.invalid"
+                  >
+                  @if (patientForm.controls.firstName.touched && patientForm.controls.firstName.invalid) {
+                    <p class="error-message">Ime je obavezno.</p>
+                  }
+                </label>
+                <label class="field">
+                  <span>Prezime</span>
+                  <input
+                    type="text"
+                    formControlName="lastName"
+                    [attr.readonly]="identityLocked ? true : null"
+                    [class.is-readonly]="identityLocked"
+                    [class.field-invalid]="patientForm.controls.lastName.touched && patientForm.controls.lastName.invalid"
+                  >
+                  @if (patientForm.controls.lastName.touched && patientForm.controls.lastName.invalid) {
+                    <p class="error-message">Prezime je obavezno.</p>
+                  }
+                </label>
+              </div>
+
+              @if (identityLocked) {
+                <p class="hint">Email i telefon možete prilagoditi samo za ovaj pregled.</p>
+              }
+
+              <div class="field-pair">
+                <label class="field">
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    [class.field-invalid]="patientForm.controls.email.touched && patientForm.controls.email.invalid"
+                  >
+                  @if (patientForm.controls.email.touched && patientForm.controls.email.invalid) {
+                    <p class="error-message">Unesite ispravnu email adresu.</p>
+                  }
+                </label>
+                <label class="field">
+                  <span>Telefon</span>
+                  <div class="phone-input" [class.field-invalid]="patientForm.controls.phone.touched && patientForm.controls.phone.invalid">
+                    <span class="phone-prefix" aria-hidden="true">+381</span>
+                    <input
+                      type="tel"
+                      inputmode="numeric"
+                      placeholder="60 111 2334"
+                      [value]="phoneNationalNumber"
+                      (input)="onPhoneInput($event)"
+                      (blur)="onPhoneBlur()"
+                      aria-label="Broj telefona"
+                    >
+                  </div>
+                  @if (patientForm.controls.phone.touched && patientForm.controls.phone.invalid) {
+                    <p class="error-message">Unesite ispravan broj telefona.</p>
+                  }
+                </label>
+              </div>
+
+              <button class="btn btn-primary" type="button" (click)="continueToReview()">Nastavite na pregled</button>
+            }
+          </form>
+        </section>
+      }
+
+      @if (activeStep === 7) {
+        <section class="step" aria-labelledby="step-review">
+          @if (bookingResult) {
+            <div class="alert" role="status">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                @for (node of successIcon; track $index) {
+                  @if (node[0] === 'path') {
+                    <path [attr.d]="$any(node[1]).d"></path>
+                  } @else if (node[0] === 'circle') {
+                    <circle [attr.cx]="$any(node[1]).cx" [attr.cy]="$any(node[1]).cy" [attr.r]="$any(node[1]).r"></circle>
+                  }
+                }
+              </svg>
+              <div>
+                <p>Pregled je uspešno zakazan.</p>
+                @if (bookingResult.emailSent) {
+                  <p class="hint">Potvrdu zakazivanja poslali smo na {{ bookingResult.email }}.</p>
+                } @else {
+                  <p class="hint">Pregled je uspešno zakazan, ali potvrdu trenutno nije moguće poslati na email.</p>
+                }
+              </div>
+            </div>
+            <dl class="review-list">
+              <div>
+                <dt>Pacijent</dt>
+                <dd>{{ patientForm.getRawValue().firstName }} {{ patientForm.getRawValue().lastName }}</dd>
+              </div>
+              <div>
+                <dt>JMBG</dt>
+                <dd>{{ patientForm.getRawValue().jmbg }}</dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>{{ bookingResult.registered ? 'Registrovan pacijent' : 'Pacijent bez naloga' }}</dd>
+              </div>
+              <div>
+                <dt>Usluga</dt>
+                <dd>{{ bookingResult.service.name }}</dd>
+              </div>
+              <div>
+                <dt>Lekar</dt>
+                <dd>dr {{ bookingResult.doctor.firstName }} {{ bookingResult.doctor.lastName }}</dd>
+              </div>
+              <div>
+                <dt>Lokacija</dt>
+                <dd>{{ bookingResult.location.name }}</dd>
+              </div>
+              <div>
+                <dt>Datum</dt>
+                <dd>{{ formatDisplayDate(bookingResult.appointmentDate) }}</dd>
+              </div>
+              <div>
+                <dt>Vreme</dt>
+                <dd>{{ bookingResult.startTime }}</dd>
+              </div>
+            </dl>
+            <div class="actions">
+              <a class="btn btn-primary" routerLink="/admin/appointments">Pregled termina</a>
+              <button class="btn btn-secondary" type="button" (click)="startAnotherBooking()">Zakaži još jedan pregled</button>
+            </div>
+          } @else {
+            <h2 id="step-review">Pregled i potvrda</h2>
+            <dl class="review-list">
+              <div>
+                <dt>Pacijent</dt>
+                <dd>
+                  @if (patientForm.getRawValue().firstName && patientForm.getRawValue().lastName) {
+                    {{ patientForm.getRawValue().firstName }} {{ patientForm.getRawValue().lastName }}
+                  } @else {
+                    Nije uneto
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>JMBG</dt>
+                <dd>{{ summaryValue(patientForm.getRawValue().jmbg) }}</dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>{{ patientKindLabel || 'Nije utvrđeno' }}</dd>
+              </div>
+              <div>
+                <dt>Usluga</dt>
+                <dd>{{ summaryValue(selectedService?.name) }}</dd>
+              </div>
+              <div>
+                <dt>Lekar</dt>
+                <dd>{{ selectedDoctor ? doctorDisplayName(selectedDoctor) : 'Nije izabrano' }}</dd>
+              </div>
+              <div>
+                <dt>Lokacija</dt>
+                <dd>{{ selectedLocation ? selectedLocation.name : 'Nije izabrano' }}</dd>
+              </div>
+              <div>
+                <dt>Datum</dt>
+                <dd>{{ selectedDate ? formatDisplayDate(selectedDate) : 'Nije izabrano' }}</dd>
+              </div>
+              <div>
+                <dt>Vreme</dt>
+                <dd>{{ selectedTime || 'Nije izabrano' }}</dd>
+              </div>
+            </dl>
+            @if (confirmError) {
+              <div class="alert is-error" role="alert">
+                <p>{{ confirmError }}</p>
+              </div>
+            }
+            <button class="btn btn-primary" type="button" (click)="confirmBooking()" [disabled]="isSubmitting">
+              {{ isSubmitting ? 'Zakazivanje...' : 'Potvrdi zakazivanje' }}
+            </button>
+          }
+        </section>
+      }
+    </article>
+  }
+</section>

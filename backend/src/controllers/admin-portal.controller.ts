@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import { AppointmentBookingService } from '../appointments/appointment-booking.service';
+import { AvailabilityContextError } from '../availability/availability.service';
 import { MailService } from '../mail/mail.service';
 import { AdminAppointmentService } from '../portal/admin-appointment.service';
 import { AdminClinicServiceService } from '../portal/admin-clinic-service.service';
@@ -21,7 +23,8 @@ export class AdminPortalController {
         private readonly weeklyScheduleService = new AdminWeeklyScheduleService(),
         private readonly scheduleExceptionService = new AdminScheduleExceptionService(),
         private readonly statisticsService = new AdminStatisticsService(),
-        private readonly mailService = new MailService()
+        private readonly mailService = new MailService(),
+        private readonly bookingService = new AppointmentBookingService()
     ) {}
 
     async dashboard(_req: Request, res: Response): Promise<void> {
@@ -229,6 +232,55 @@ export class AdminPortalController {
         }
     }
 
+    async lookupPatientByJmbg(req: Request, res: Response): Promise<void> {
+        try {
+            const result = await this.bookingService.lookupPatientByJmbg(req.query.jmbg);
+            res.status(200).json(result);
+        } catch (error) {
+            this.handleError(res, error, 'Trenutno nije moguće pretražiti pacijenta.');
+        }
+    }
+
+    async createAppointment(req: Request, res: Response): Promise<void> {
+        try {
+            const appointment = await this.bookingService.create({
+                ...req.body,
+                authenticatedPatientId: null,
+                bookedByAdmin: true
+            });
+
+            const emailSent = await this.mailService.sendAppointmentConfirmation(appointment.email, {
+                patientFirstName: appointment.patientFirstName,
+                serviceName: appointment.service.name,
+                doctorName: `dr ${appointment.doctor.firstName} ${appointment.doctor.lastName}`,
+                locationName: appointment.location.name,
+                locationAddress: `${appointment.location.address}, ${appointment.location.city}`,
+                locationPhone: appointment.location.phone,
+                appointmentDateLabel: this.formatSerbianDate(appointment.appointmentDate),
+                startTime: appointment.startTime,
+                durationMinutes: appointment.durationMinutes,
+                isRegistered: appointment.registered
+            });
+
+            res.status(201).json({
+                id: appointment.id,
+                status: appointment.status,
+                appointmentDate: appointment.appointmentDate,
+                startTime: appointment.startTime,
+                endTime: appointment.endTime,
+                durationMinutes: appointment.durationMinutes,
+                email: appointment.email,
+                registered: appointment.registered,
+                emailSent,
+                service: appointment.service,
+                doctor: appointment.doctor,
+                location: appointment.location
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Došlo je do problema prilikom zakazivanja pregleda. Pokušajte ponovo.');
+        }
+    }
+
     async listAppointments(req: Request, res: Response): Promise<void> {
         try {
             const result = await this.appointmentService.list(req.query as Record<string, unknown>);
@@ -276,8 +328,18 @@ export class AdminPortalController {
         }
     }
 
+    private formatSerbianDate(isoDate: string): string {
+        const [year, month, day] = isoDate.split('-').map(Number);
+        return new Intl.DateTimeFormat('sr-Latn-RS', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC'
+        }).format(new Date(Date.UTC(year, month - 1, day)));
+    }
+
     private handleError(res: Response, error: unknown, fallback: string): void {
-        if (error instanceof AdminPortalError) {
+        if (error instanceof AdminPortalError || error instanceof AvailabilityContextError) {
             res.status(error.statusCode).json({ message: error.message });
             return;
         }

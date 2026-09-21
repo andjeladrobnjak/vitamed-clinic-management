@@ -86,7 +86,8 @@ export class AppointmentController {
             const authenticatedPatientId = (req as AuthenticatedRequest).patientId ?? null;
             const appointment = await this.bookingService.create({
                 ...req.body,
-                authenticatedPatientId
+                authenticatedPatientId,
+                bookedByAdmin: false
             });
 
             console.log(`[MAIL] Appointment ${appointment.id} committed; sending confirmation email`);

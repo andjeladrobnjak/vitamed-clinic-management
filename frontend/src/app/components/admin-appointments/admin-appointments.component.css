@@ -8,7 +8,14 @@
 }
 
 .page * { box-sizing: border-box; }
-.intro { margin-bottom: 1.2rem; }
+.intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
 
 .eyebrow {
   margin: 0 0 0.4rem;
@@ -55,7 +62,7 @@ h1 {
   pointer-events: none;
 }
 
-.search-icon svg, .clear-date svg, .alert svg, .confirm-lead svg {
+.search-icon svg, .clear-date svg, .alert svg, .confirm-lead svg, .btn svg {
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -78,6 +85,26 @@ h1 {
 .search input { padding-left: 2.15rem; }
 .search input::-webkit-search-decoration,
 .search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.48rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.84rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn svg { width: 0.95rem; height: 0.95rem; stroke-width: 1.8; }
+.btn-primary { background: var(--petrol); color: var(--ivory); }
+.btn-primary:hover, .btn-primary:focus-visible { background: #23454c; }
 
 .date-filter { position: relative; flex: 0 1 11.5rem; }
 .date-filter input { padding-right: 2rem; }
@@ -159,5 +186,7 @@ h1 {
 .alert svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; margin-top: 0.08rem; stroke-width: 1.8; }
 
 @media (max-width: 960px) {
+  .intro { flex-direction: column; }
+  .btn-primary { width: 100%; }
   .date-filter, .select-filter { flex: 1 1 11rem; }
 }

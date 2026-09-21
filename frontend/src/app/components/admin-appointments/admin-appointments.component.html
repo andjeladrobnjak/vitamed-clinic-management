@@ -1,8 +1,27 @@
 <section class="page">
   <header class="intro">
-    <p class="eyebrow">Termini</p>
-    <h1>Pregled termina</h1>
-    <p class="lead">Pregledajte i upravljajte zakazanim pregledima klinike.</p>
+    <div>
+      <p class="eyebrow">Termini</p>
+      <h1>Pregled termina</h1>
+      <p class="lead">Pregledajte i upravljajte zakazanim pregledima klinike.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/admin/appointments/new">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        @for (node of plusIcon; track $index) {
+          @if (node[0] === 'path') {
+            <path [attr.d]="$any(node[1]).d"></path>
+          } @else if (node[0] === 'line') {
+            <line
+              [attr.x1]="$any(node[1]).x1"
+              [attr.y1]="$any(node[1]).y1"
+              [attr.x2]="$any(node[1]).x2"
+              [attr.y2]="$any(node[1]).y2"
+            ></line>
+          }
+        }
+      </svg>
+      Zakaži pregled
+    </a>
   </header>
 
   <div class="toolbar">
