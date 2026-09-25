@@ -4,10 +4,9 @@ import pool from '../db/connection';
 import { ISO_DATE_PATTERN } from '../availability/availability.constants';
 import {
     clinicClock,
-    compareIsoDates,
+    isClinicStartInFuture,
     isIsoDate,
-    normalizeTimeLabel,
-    timeToMinutes
+    normalizeTimeLabel
 } from '../availability/availability.logic';
 import { AvailabilityContextError, AvailabilityService, parsePositiveId } from '../availability/availability.service';
 
@@ -312,7 +311,7 @@ export class AppointmentBookingService {
             throw new AvailabilityContextError(409, 'Ovaj pregled nije moguće otkazati.');
         }
 
-        if (!this.isStartInFuture(String(row.appointmentDate), String(row.startTime))) {
+        if (!isClinicStartInFuture(String(row.appointmentDate), String(row.startTime))) {
             throw new AvailabilityContextError(409, 'Termin koji je već počeo nije moguće otkazati.');
         }
 
@@ -666,18 +665,6 @@ export class AppointmentBookingService {
                 city: String(row.locationCity)
             }
         };
-    }
-
-    private isStartInFuture(appointmentDate: string, startTime: string): boolean {
-        const clock = clinicClock();
-        const dateOrder = compareIsoDates(appointmentDate, clock.date);
-        if (dateOrder > 0) {
-            return true;
-        }
-        if (dateOrder < 0) {
-            return false;
-        }
-        return timeToMinutes(startTime) > clock.minutes;
     }
 
     private minutesToSqlTime(totalMinutes: number): string {

@@ -1,8 +1,8 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import pool from '../db/connection';
 import {
+    isClinicStartInFuture,
     isIsoDate,
-    isMoreThanHoursAhead,
     parsePositiveId
 } from '../availability/availability.logic';
 import { AdminPortalError } from './admin-portal.service';
@@ -182,11 +182,8 @@ export class AdminAppointmentService {
 
             const appointmentDate = String(appointment.appointmentDate);
             const startTime = String(appointment.startTime);
-            if (!isMoreThanHoursAhead(appointmentDate, startTime, 24)) {
-                throw new AdminPortalError(
-                    409,
-                    'Termin je moguće otkazati samo ako počinje za više od 24 sata.'
-                );
+            if (!isClinicStartInFuture(appointmentDate, startTime)) {
+                throw new AdminPortalError(409, 'Termin koji je već počeo nije moguće otkazati.');
             }
 
             const [updateResult] = await connection.query<ResultSetHeader>(
@@ -371,7 +368,7 @@ export class AdminAppointmentService {
                 id: Number(row.locationId),
                 name: String(row.locationName)
             },
-            cancellable: status === 'confirmed' && isMoreThanHoursAhead(appointmentDate, startTime, 24)
+            cancellable: status === 'confirmed' && isClinicStartInFuture(appointmentDate, startTime)
         };
     }
 }
