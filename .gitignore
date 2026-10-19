@@ -1,0 +1,22 @@
+
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Environment variables
+**/.env
+**/.env.*
+!**/.env.example
+
+# Uploaded files
+**/uploads/*
+!**/uploads/doctors/
+!**/uploads/doctors/.gitkeep
+
+# Logs and system files
+**/*.log
+**/.DS_Store
+**/Thumbs.db
+
+# Demo data used for thesis presentation
+backend/database/demo_doctor_schedule.sql

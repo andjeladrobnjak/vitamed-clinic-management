@@ -249,6 +249,8 @@ interface ReportIdRow extends RowDataPacket {
 export class DoctorPortalService {
     async getDashboard(doctorId: number): Promise<DoctorDashboard> {
         const clock = clinicClock();
+        // DEMO ONLY - fixed current date for presentation recording
+        const dashboardDate = '2026-09-27';
         const [rows] = await pool.query<DashboardAppointmentRow[]>(
             `SELECT
                 a.id,
@@ -271,7 +273,7 @@ export class DoctorPortalService {
                AND a.appointment_date = ?
                AND a.status IN ('confirmed', 'completed', 'no_show')
              ORDER BY a.start_time ASC, a.id ASC`,
-            [doctorId, clock.date]
+            [doctorId, dashboardDate]
         );
 
         const appointments = rows.map((row) => this.mapAppointment(row));
@@ -284,7 +286,7 @@ export class DoctorPortalService {
 
         return {
             today: {
-                date: clock.date,
+                date: dashboardDate,
                 appointmentCount: appointments.length,
                 nextAppointment,
                 appointments

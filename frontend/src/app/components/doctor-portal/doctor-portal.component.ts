@@ -312,18 +312,10 @@ export class DoctorPortalComponent implements OnInit, OnDestroy {
 
   private clinicClock(): { date: string; minutes: number } {
     this.nowTick();
-    const date = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Europe/Belgrade'
-    }).format(new Date());
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Belgrade',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23'
-    }).formatToParts(new Date());
-    const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
-    const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
-    return { date, minutes: hour * 60 + minute };
+
+    // DEMO ONLY - fixed current time for presentation recording
+    // Revert after recording: restore date/hour/minute from Europe/Belgrade `new Date()`.
+    return { date: '2026-09-27', minutes: 10 * 60 + 35 };
   }
 
   private timeToMinutes(value: string): number {
