@@ -1,4 +1,4 @@
-# VitaMed — Clinic Management Web Application
+# VitaMed - Clinic Management Web Application
 
 VitaMed is a full-stack web application developed as a bachelor's thesis project to support appointment scheduling and everyday operations in a private medical clinic. It brings together a public-facing website, a patient portal, a doctor portal, and an administration portal in one system.
 
